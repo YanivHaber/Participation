@@ -1,0 +1,10 @@
+{
+    "sqltools.connections": [
+        {
+            "database": ".\\Participation/Participation.db",
+            "dialect": "SQLite",
+            "name": "participation"
+        }
+    ],
+    "sqltools.useNodeRuntime": true
+}
