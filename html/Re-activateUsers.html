@@ -1,0 +1,84 @@
+<html dir='rtl' lang='heb'>
+    <head>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script language="javascript">
+
+    //var urlParams = new URLSearchParams(location.search);
+    //instID = urlParams.get("instid");
+
+    function getMembers()
+            {
+                $.get("/getInactiveUsers", function (json)
+                {
+                    drawMembers(json);
+                });
+            }
+
+            function drawMembers(json)
+            {
+                var membersHtml = "<table><tr><th>שם</th><th>הפוך אקטיבי!</th></tr>";
+
+                try 
+                {
+                    var members = JSON.parse(json);
+
+
+                    members.forEach(m => 
+                    {
+                        membersHtml += "<tr><td>"+m.name+"</td><td><input id=\"ID-"+m.memberID+"\" name=\"ID-"+m.memberID+"\" type=\"checkbox\" onclick=\"setUsersInput('ID-"+m.memberID+"')\"></td></tr>";
+                    });
+                    membersHtml += "</table>";
+                    document.getElementById("membersTable").innerHTML = membersHtml;
+                    //document.getElementById("submitButt").style.visibility = "visible";
+                }
+                catch(e)
+                {
+                    alert(e);
+                }     
+            }
+            var changedVars = "";
+
+            function setUsersInput(usr)
+            {
+              var newVal = "";
+              var val = document.getElementById("activateUsers").value;
+
+              var index = document.getElementById("activateUsers").value.indexOf(usr);
+              if ( index > -1)
+              {
+                // take that user OFF the list of changed values as it was probably double clicked...
+                newVal = document.getElementById("activateUsers").value.substring(0, index);
+                newVal += document.getElementById("activateUsers").value.substring(index + usr.length + 1);
+              }
+              else
+              {
+                  newVal = document.getElementById("activateUsers").value;
+                if (newVal.length > 0) newVal += ",";
+                
+                newVal += usr;
+              }
+                document.getElementById("activateUsers").value = newVal;
+            }
+     
+</script>
+
+</head>
+<body onLoad="getMembers()">
+
+  <form action="/getInactiveUsers">
+    
+    <input type="text" style="visibility:visible" name="activateUsers" id="activateUsers" value="" onclick="submit">
+ 
+<h1>חניכים אשר סומנו כ'לא אקטיביים' הינם:</h1>
+
+    <div id="membersTable"></div>
+    <input type="submit" value="Submit"></button>
+  </form>
+
+    <br><br></br></br><hr>
+    
+
+     
+</body>
+</html>

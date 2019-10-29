@@ -1,0 +1,116 @@
+<html dir='rtl' lang='heb'>
+    <head>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script language="javascript">
+
+    var urlParams = new URLSearchParams(location.search);
+    instID = urlParams.get("instID");
+
+    function getMembers(inst)
+            {
+                $.get("/membersForInstructor?instID="+inst, function (json2)
+                {
+                    drawMembers(json2);
+                });
+            }
+
+            function selectAll()
+            {
+                var boxes = $('*[id^="ID-"]');
+                for (i = 0; i < boxes.length; i++)
+                {
+                    boxes[i].checked = !boxes[i].checked;
+                }
+            }
+
+            function drawMembers(json2)
+            {
+                var membersHtml = "<table><tr><th>אקטיבי?</th><th>שם</tr><form id=\"form1\" action=\"/editMembers\" method=\"get\">";
+
+                try 
+                {
+                    var members = JSON.parse(json2);
+
+
+                    members.forEach(m => 
+                    {
+                        membersHtml += "<tr><td><input id=\"ID-"+m.memberID+"\" name=\"ID-"+m.memberID+"\" type=\"checkbox\" onclick=\"setChangeVars('ID-"+m.memberID+"')\" checked></td><td>"+m.name+"</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>";
+                    });
+                    membersHtml += "</table>";
+                    document.getElementById("membersTable").innerHTML = membersHtml;
+                    //document.getElementById("submitButt").style.visibility = "visible";
+                }
+                catch(e)
+                {
+                    alert(e);
+                }     
+            }
+            var changedVars = "";
+
+            function setChangeVars(checkId)
+            {
+                var chk = document.getElementById(checkId);
+                var loc = changedVars.indexOf(chk.id);
+                if (loc > 0)
+                {
+                    var loc2 = changedVars.indexOf("&", loc);
+                    changedVars = changedVars.substring(0, loc) + changedVars.substring(loc2);
+                }
+                else
+                {
+                    if (changedVars.length > 0) changedVars += "&";
+                    changedVars += chk.id + "=" + chk.checked;
+                }
+
+            }
+            function memberName(memID)
+            {
+                
+            }
+            function instName(instructorID)
+            {
+                var instructor = "";
+                document.getElementById("InstructorID").value = instructorID;
+                $.get("/rakazById?instID="+instructorID, "", function (json)
+                {
+                    let instructor = JSON.parse(json);
+                    
+                });
+                alertInst(instructor);
+            }
+
+            function alertInst(instructor)
+            {
+                document.getElementById("instNameHtml").textContent = instructor;
+                document.getElementById("branch").textContent = instructor;
+                getMembers(instID);
+            }
+
+            function deactivateMembers()
+            {
+                var url = "/deactivateUsers?" + changedVars;
+                var res = "";
+                $.get(url, function (json2)
+                {
+                    alert(json2);
+                });
+                location.reload();
+                
+            }
+</script>
+
+</head>
+<body onLoad="instName(instID);">
+
+    <input type="text" style="visibility: hidden" name="InstructorID" id="InstructorID">
+
+        החניכים של המדריך: '<span id="instNameHtml"></span> (מסניף '<span id='branch'></span>'):<br>
+<button id="selAll" type="button" onclick="selectAll()" value="">הפוך את הבחירה בכווווווולם!</button>
+    <div id="membersTable"></div>
+    <br><br></br></br><hr>
+    <button id='deactivateMembers' type="button" onclick="deactivateMembers()" value="">הפוך חניכים ל'לא אקטיביים'!</button>
+
+     
+</body>
+</html>

@@ -1,0 +1,92 @@
+    <html dir='rtl' lang='heb'>
+     <head>
+
+     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+     <script language="javascript">
+
+    
+        var varStr = window.location.search.toString();
+		var instID = this.varStr.substring(varStr.indexOf("=")+1);
+
+            var instructor = "none";
+
+            function instName(instructorID)
+            {
+                $.get("/rakazById?instID="+instructorID, "", function (json)
+                {
+                    instructor = json;
+                    document.getElementById("instructor").textContent = instructor;
+                    getMembers(instID);
+                });
+                document.getElementById("instIDinput").value=instID;
+            }
+
+            function getMembers(inst)
+            {
+                $.get("/membersForInstructor?instID="+inst, function (json2)
+                {
+                    drawMembers(json2);
+                });
+            }
+
+            function drawMembers(json2)
+            {
+                var membersHtml = "<table><tr><th>שם</th><th>השתתף בתאריך הנ\"ל?</th></tr>";
+
+                try 
+                {
+                    var members = JSON.parse(json2);
+
+
+                    members.forEach(m => 
+                    {
+                        membersHtml += "<tr><td>"+m.name+"</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"ID-"+m.memberID+"\" name=\"ID-"+m.memberID+"\" type=\"checkbox\"></td></tr>";
+                    });
+                    membersHtml += "</table>";
+                    document.getElementById("membersTable").innerHTML = membersHtml;
+                    document.getElementById("submitButt").style.visibility = "visible";
+                }
+                catch(e)
+                {
+                    alert(e);
+                }     
+            }
+        
+            var urlParams = new URLSearchParams(location.search);
+            instID = urlParams.get("instid");
+            
+
+            function selectAll()
+            {
+                var inputs = document.getElementsByTagName("input");
+                for (x = 0 ; x < inputs.length ; x++)
+                {
+                    myname = inputs[x].id;
+                    if(myname.substring(0, 3) == "ID-")
+                    {
+                        inputs[x].checked = true;
+                    }
+                }
+            }
+            </script>
+            </head>
+            <body onLoad="instName(instID);">
+                צור פעולה חדשה עבור המדריך '<span id="instructor"></span>':
+                <br><br></br></br>
+                <form id="addForm" action="/addParticipation" method="get">
+                תאריך הפעולה: <input type="date" name="actDate"></input>
+                <br><br></br></br>
+                <b>החניכים של מדריך זה:</b>
+
+                <div id="membersTable"></div>
+                <br><br></br></br>
+                
+                        מספר מדריך: <input id="instIDinput" name="instID" value="99"><br>
+                    <input type="button" onclick="selectAll()" value="סמן את כווווולם!">
+                    <span id="membersTable">
+                    </span>
+                    <input id="submitButt" type="submit" style="visibility: hidden" value="עדכן!">
+                </form>
+                
+            </body>
+    </html>
