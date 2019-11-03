@@ -1,0 +1,229 @@
+<html>
+
+<head>
+        <style>
+                th.rotate {
+                  /* Something you can count on */
+                  height: 160px;
+                  white-space: nowrap;
+                }
+                
+                th.rotate > div {
+                  transform: 
+                    /* Magic Numbers */
+                    translate(55px, 5px)
+                    
+                    /* 45 is really 360 - 45 */
+                    rotate(315deg);
+                  width: 30px;
+                }
+                th.straight > div {
+                 
+                 }
+                th.rotate > div > span {
+                  border-bottom: 1px solid #ccc;
+                  padding: 0px 30px;
+                }
+                </style>
+                
+    <meta charset="utf-8">
+    <script language="javascript">
+    const basicAuth = require('./helpers/basic-auth');
+    </script>
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script-->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const user = urlParams.get('user');
+alert(user);
+
+   function loadRakazim() 
+    {
+        $.get("/rakazim", "", function (json) 
+		{
+            console.log(json);
+            //`("got the following json: "+json);
+            try {
+            var rakazimArray = JSON.parse(json);
+            }
+            catch(e)
+            {
+                alert(e);
+            }
+                loadData(rakazimArray);
+        });
+    }
+
+    function loadData(rakazimArray)
+    {
+        var html = "<select id=\"rakazim\" onChange=\"getMembersToClient(this.options[this.selectedIndex].getAttribute('id'))\">";
+        
+        $.each(rakazimArray, function (i, value) 
+        {
+            html += "<option  id=\""+rakazimArray[i].id+"\" value="+rakazimArray[i].Name+"\">"+rakazimArray[i].Name+"</option>";
+        });
+        html += "</select>";
+        
+        document.getElementById("selector").innerHTML = html;
+    }
+
+var datesArr = {};
+var part;
+var partByMembers = new Array();
+
+function getMembersToClient(instID)
+{
+    
+    var url = "/getParticipation?instID="+instID;
+    var html = "<th class=\"straight\"><div><span></span></div></th>";
+
+    $.get(url, "", function (json2) 
+    {
+        //alert("got participation for "+instID);
+        
+        $.get("/getInstDates?instID="+instID, "", function (datesJson)
+        {    
+            dates = JSON.parse(datesJson);
+            //alert("got dates for "+instID);
+
+            // first add dates as headers
+            //alert("for each one of the "+dates.length+" dates of that instructor...");
+            for (k = dates.length - 1; k > -1; k--)
+            {
+                html += "<th class=\"rotate\"><div><span>"+dates[k]+"</span></div></th>";
+            }
+            html += "<th class=\"rotate\"><div><tbody></tbody>";
+
+            //alert("created html:" + html + "'"+html+"'");
+            try 
+            {
+                part = JSON.parse(json2);
+                //alert("understood json for /getParticipation")
+
+                var members = new Array();
+                var memberInsideAlready = new Array();
+
+                $('#myMembers tbody tr').remove();
+
+                //alert("compare to each of the "+part.length+" participants' dates to show participation for each...");
+                for (p = 0; p < part.length; p++)
+                {
+                    var currName = part[p].member;
+                    
+                    html += "<tr><th class=\"straight\"><div><span></span></div></th>";
+                
+                    html += "<tr>";
+                    html += "<th>"+currName+" ("+(p+1)+")</th><td></td>";
+
+                    var columnsCount = 0;
+                    // go over all available dates (table columns)
+                    for (var cols = dates.length - 1; cols > -1; cols--)
+                    {
+                        var currDate = dates[cols];
+                        var dateAvailable = false;
+                        var dateIndex = -1;
+
+                        var datesCount = dates.length;
+
+
+                        // compare them to the dates returned from prticipation table to un\check them...
+                        for (var dateInd = part[p].dates.length - 1; dateInd > -1; dateInd--)
+                        {
+                            var yaniv = 0;
+                            if (part[p].dates[dateInd].date == currDate) 
+                            {
+                                dateIndex = dateInd;
+                                dateAvailable = true;
+                            }
+                        }
+                        if ( dateAvailable )
+                        {
+                            html += "<td><input type=\"checkbox\"";
+                            html += part[p].dates[dateIndex].participated ? "checked=\"checked\"": "";
+                            html += " disabled></td>"; 
+                            columnsCount++;
+                        } 
+                        else
+                        {
+                            html += "<td>X</td>";
+                            columnsCount++;
+                        }
+                    }
+                    for (var missing = columnsCount; missing < datesCount; missing++)
+                    {
+                        //html += "<td>X</td>";
+                    }
+
+                    html += "</tr>";
+                    //alert("created html for users!");
+                }
+                document.getElementById("myMembers").innerHTML = "<table>"+html+"</table>";    
+    document.getElementById("createbutt").style.visibility = "visible";
+
+            }
+            catch (e)
+            {
+                alert("exception 8:"+e);
+            }
+         });
+
+    });
+
+}
+function ObjNum(obj, arr)
+{
+    for (i = 0; i < arr.length; i++)
+    {
+        if (arr[i].name == obj)
+            return i;
+    }
+    return -1;
+}
+
+function ObjInArray(obj, arr)
+{
+    for (i = 0; i < arr.length; i++)
+    {
+        if (arr[i] == obj)
+            return true;
+    }
+    return false;
+}
+
+function createNew()
+{
+    var sel = document.getElementById("rakazim");
+    window.location = "./newActivity.html?instid="+sel.options[sel.selectedIndex].getAttribute('ID');
+}
+</script>
+</head>
+/<body onload="loadRakazim()" dir="rtl">
+
+    <h2>רישום השתתפות של חניכים</h2>
+    <br>
+     <h3>בחר רכז:
+         <div id="selector"></div>
+        <hr>
+        <table border=0 id="myMembers" >
+                <tbody>
+                    <tr>
+                        <th></th>
+                    </tr>
+                    <tr>
+                        <td></td>
+                    </tr>
+
+                    <hr>
+                    
+                    <button ID="createbutt" type="button" onclick="createNew()" STYLE="visibility: hidden">צור פעולה חדשה</button>
+
+                    
+                </tbody>
+            </table>
+    
+
+    <script lang="=javascript">
+       </script>
+</body>
+
+</html>

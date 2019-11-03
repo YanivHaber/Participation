@@ -26,15 +26,15 @@ passport.use(new LocalStrategy(
         //For now only support Yaniv/king
 
         // check user\pw against db:
-        let ret = await query("select * from users where username = ?", username);
+        let ret = await query("select * from users where username = \"" + username + "\"");
 
         if (ret.length > 0 && ret[0].password == password) {
             // login success!
-            return doneCallback(null, { id: username });
+            return doneCallback(null, { name: username, id: ret[0].id });
         }
         else {
             // login failure!
-            return doneCallback("Error! wrong user and/or password", null);
+            return doneCallback("Error! wrong user and/or password!", null);
         }
 
         /*
@@ -53,7 +53,7 @@ passport.serializeUser((user, callback) => callback(null, user.id));
 
 passport.deserializeUser((id, callback) => {
     //retrieve whatever info from somewhere (e.g. DB), by id and return what ever you want more
-    callback(null, { id: id, someMoreData: 'someMore' });
+    callback(null, { id: id });
 });
 
 app.use(cookieParser());
@@ -68,6 +68,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.get('/login', (req, res) => {
+/*    
     res.send(`
 <form action="/login" method="post">
     <div>
@@ -83,7 +84,9 @@ app.get('/login', (req, res) => {
     </div>
 </form>
 `)
-})
+*/
+res.sendFile(__dirname+"/html/Login.html");
+});
 
 app.post('/login', passport.authenticate('local', {
     successReturnToOrRedirect: '/good-login',
@@ -106,15 +109,13 @@ app.use('/', (req, res, next) => {
 
 
 app.use('/html', express.static('html'));
-const server = app.listen(4000, () => {
-    server.keepAliveTimeout = 0;
-});
 
 
 console.log("starting Instructors.js...");
 
 let db = new sqlite3.Database('Participation.db', (err) => {
-    if (err) {
+    if (err) 
+    {
         console.log("error connecting to db...");
     }
 });
@@ -161,6 +162,25 @@ app.use(function (req, res, next) {
     next();
 });
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+app.get('/htmlForUsers', async (req, res) => {
+
+    var ret = await query("select * from users where id="+req.user.id);
+
+    if (ret.length != 1) return;
+    if (ret[0].admin == 1)
+    {
+        // admin users:
+        res.write("<p><b><a href=\"/html/Participation.html\" target=\"_blank\">צפיה בהשתתפות החניכים שלך</a></b></p>");
+    }
+    else
+    {
+        // regular users:
+        res.write("<p><b><a href=\"/html/PartUser.html?user="+req.user.id+"\" target=\"_blank\">צפיה בהשתתפות החניכים שלך</a></b></p>");
+
+    }
+    res.send();
+});
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/rakazById', async (req, res) => {
     instructor = req.query.instID;
 

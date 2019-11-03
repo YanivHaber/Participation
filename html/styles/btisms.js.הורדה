@@ -1,0 +1,49 @@
+/**
+ * Created by ruturaj on 8/7/16.
+ */
+
+
+$(document).ready(function() {
+
+    var BrowserName;
+    var BrowserVersion;
+
+    var width = screen.width;
+    var height = screen.height;
+
+    console.log(width);
+    console.log(height);
+
+    var ua=navigator.userAgent,tem,M=ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+    if(/trident/i.test(M[1])){
+        tem=/\brv[ :]+(\d+)/g.exec(ua) || [];
+        return {name:'IE',version:(tem[1]||'')};
+    }
+    if(M[1]==='Chrome'){
+        tem=ua.match(/\bOPR\/(\d+)/)
+        if(tem!=null)   {return {name:'Opera', version:tem[1]};}
+    }
+    M=M[2]? [M[1], M[2]]: [navigator.appName, navigator.appVersion, '-?'];
+    if((tem=ua.match(/version\/(\d+)/i))!=null) {M.splice(1,1,tem[1]);}
+
+    BrowserName = M[0];
+    BrowserVersion = M[1];
+
+    if(BrowserName == "Firefox" && BrowserVersion < '38'){
+        alert("Some functionality may not work with this browser version, Please upgrade your browser with latest version.")
+    }
+
+    if(BrowserName == "Chrome" && BrowserVersion < '40'){
+        alert("Some functionality may not work with this browser version, Please upgrade your browser with latest version.")
+    }
+
+    if(BrowserName == "safari" && BrowserVersion < '5'){
+        alert("Some functionality may not work with this browser version, Please upgrade your browser with latest version.")
+    }
+
+    if(BrowserName == "msie" && BrowserVersion < '8'){
+        alert("Some functionality may not work with this browser version, Please upgrade your browser with latest version.")
+    }
+
+
+});

@@ -1,0 +1,132 @@
+/**
+ *
+ * Apply Here your Custom CSS
+ *
+*/
+.errorMessage{
+    word-break: break-word !important;
+    text-align: initial !important;
+}
+body {
+
+}
+.range-padding{
+    padding : 3px;
+}
+
+.refresh_button{
+    display: inline;
+    clear: both;
+    float: right;
+    color: white;
+}
+.selectboxit-container span, .selectboxit-container .selectboxit-options a, .page-body .select2-container .select2-choice {
+    height: 31px !important;
+    line-height: 31px !important;
+}
+.page-body .input-group .selectboxit-container .selectboxit{
+    border-bottom-right-radius:  0px !important; 
+    border-top-right-radius: 0px !important; 
+}
+
+.num{
+    z-index: 100000;
+
+}
+
+.font-size{
+    font-size: 30px !important;
+    margin: 4% !important;
+}
+.clone-padding:first-child{
+    padding-top:0px; 
+    padding-bottom: 5px;
+}
+.clone-padding:last-child{
+    padding-top: 5px;
+    padding-bottom: 0px;
+}
+.clone-padding{
+    padding-top:5px; 
+    padding-bottom: 5px; 
+}
+.pager .next > a,
+.pager .next > span {
+    float: left;
+}
+.suggestion{
+    padding-top:5px; 
+    font-size:10px;
+    color:#808080;
+}
+.customresponsive {
+    overflow-x: auto;
+    display: block;
+}
+.radio label, .checkbox label {
+    min-height: 17px;
+    padding-left: 20px;
+    margin-bottom: 0;
+    font-weight: normal;
+    cursor: pointer;
+    padding-right: 4px;
+}
+/*
+* Added By Kruti
+* Added for term and condition
+* Date : 09/02/2016
+*/
+.custom-color-white{
+    /* color: #949494 !important; */
+    /*    color: #e0e0e0 !important; */
+    color: #949494!important;
+}
+.custom-color-white:hover {
+    color:#fff !important;
+}
+.term{
+    color: #949494!important;
+    float:left;
+}
+/* Added by Kruti Sanghavi
+   Date : 20/09/2016
+   For hide checkbox */
+.hiddencheckbox input {
+/*      display:none !important; */
+    visibility:hidden !important;
+
+}
+/* Added by kruti sanghavi
+ * For visiblity of dropdown in import
+ * Date : 02/12/2016
+*/
+.form-control.multi-select{
+      visibility: visible !important;
+}
+
+.table-bordered > thead > tr > th{
+  text-align:left;
+}
+/***End*****************/
+
+/** Added By : Bhavika Patel
+ */
+.form_loader {
+  border: 5px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 5px solid #333;
+  width: 60px;
+  height: 60px;
+  -webkit-animation: spin 2s linear infinite;
+  animation: spin 2s linear infinite;
+}
+
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

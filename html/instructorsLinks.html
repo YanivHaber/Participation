@@ -1,7 +1,7 @@
 <html>
 <head>
-    
   
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
         <title>לינקים למדריכים...</title>
 <style>
 a:link {
@@ -24,9 +24,22 @@ a:active {
 <body>
     
   <span><section style="height:90px; background: #4a90e2;"><h2>כנפיים של קרמבו <img style="width:70px; height:70px;" src="./style/סמל_קרמבו_חדש_עברית.jpg"><img></h2></section></span>
-
-
-  <p><b><a href="/html/Participation.html" target="_blank">צפיה בהשתתפות החניכים כפי שנרשמה</a></b></p>
+<script language="javascript">
+  $.get("http://localhost:"+location.port+"/htmlForUsers", "", function (json)
+  {
+    if (json != "")
+    {
+      document.getElementById("usersHtml").innerHTML = json;
+    }
+    else
+    {
+        document.getElementById("usersJtml").innerHTML = "<p><b><a href=\"/html/Participation.html\" target=\"_blank\">צפיה בהשתתפות החניכים כפי שנרשמה</a></b></p>";
+    }
+      
+  });
+</script>
+<span id="usersHtml"></span>
+  
   <p><b><a href="/html/newActivity.html?instid=6" target="_blank">יצירת פעולה עבור מדריך 6</a></b></p>
 
 <p><b><a href=/html/membersForRakaz.html?instID=6" target="_blank">ערוך אקטיביות חניכים של ספציפי (נשארה עדיין המטלה של בחירת המדריך)</a></b></p>

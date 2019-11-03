@@ -1,0 +1,31 @@
+// Added By : Bhavika Patel
+function isUnicode(str) {
+    var letters = [];
+    for (var i = 0; i <= str.length; i++) {
+        letters[i] = str.substring((i - 1), i);
+        if (letters[i].charCodeAt() > 255) { return true; }
+    }
+    return false;
+}
+jQuery(document).ready(function () {
+        jQuery('body').on('input propertychange', 'input', function(e) { 
+            checkLanguageDir(this);
+        });
+        jQuery('body').on('keypress', 'textarea', function(e) { 
+            checkLanguageDir(this);
+        });
+
+        function checkLanguageDir($this) { 
+                if (isUnicode(jQuery($this).val())) { 
+                jQuery($this).css('direction', 'rtl');
+            }
+            else {
+                jQuery($this).css('direction', 'ltr');
+            }
+        }
+});
+
+function nl2br (str, is_xhtml) {
+    var breakTag = (is_xhtml || typeof is_xhtml === 'undefined') ? '<br />' : '<br>';
+    return (str + '').replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1' + breakTag + '$2');
+}
