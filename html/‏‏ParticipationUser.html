@@ -69,6 +69,7 @@ alert(user);
 
 var datesArr = {};
 var part;
+var colNum = 0;
 var partByMembers = new Array();
 
 function getMembersToClient(instID)
@@ -90,9 +91,9 @@ function getMembersToClient(instID)
             //alert("for each one of the "+dates.length+" dates of that instructor...");
             for (k = dates.length - 1; k > -1; k--)
             {
-                html += "<th class=\"rotate\"><div><span>"+dates[k]+"</span></div></th>";
+                html += "<th class=\"rotate\"><div><span>"+dates[k].date+"</span></div></th>";
             }
-            html += "<th class=\"rotate\"><div><tbody></tbody>";
+            html += "<th class=\"rotate\"><div><tbod`></tbody>";
 
             //alert("created html:" + html + "'"+html+"'");
             try 
@@ -117,9 +118,10 @@ function getMembersToClient(instID)
 
                     var columnsCount = 0;
                     // go over all available dates (table columns)
+                    colNum = dates.length;
                     for (var cols = dates.length - 1; cols > -1; cols--)
                     {
-                        var currDate = dates[cols];
+                        var currDate = dates[cols].date;
                         var dateAvailable = false;
                         var dateIndex = -1;
 

@@ -13,8 +13,6 @@ var cookieParser = require('cookie-parser');
 var expressSession = require('express-session');
 var ensureLogin = require('connect-ensure-login');
 
-
-
 passport.use(new LocalStrategy(
     {
         usernameField: 'username',
@@ -102,12 +100,35 @@ app.use('/', (req, res, next) => {
     console.log("THE USER:" + JSON.stringify(req.user));
     next();
 });
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+app.get('/good-login', async (req, res) => {
+    res.write("<html dir='rtl' lang='heb'><meta charset=\"utf-8\"><p>הצלחת להיכנס למערכת! :-)</p></html>");
+    res.send();
+});
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // Ariel add until here
+/*
+app.get('/html/re-activateUsers.html', async (req, res) => {
 
+    //check if user has privileges...
+    var t = 8;
+    var user = req.user.id;
 
+    var userRights = await query("select admin from users where id="+user);
 
+    if (!userRights[0].admin)
+    {
+        res.status(401).redirect("/login");
+        
+    }
+    else
+    {
+        next();
+        //app.use('/html', express.static('re-activateUsers.html'));
+    }
+});
+*/
 app.use('/html', express.static('html'));
 
 
@@ -162,6 +183,42 @@ app.use(function (req, res, next) {
     next();
 });
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+async function getParticipationSummary(instID, date)
+{
+
+    var ret = await query("select * from participation where instructorid="+instID+" and date='"+date+"' and participated=true");
+    var participated = ret.length;
+
+    // now find TOTAL amount of users, then find 'not participated'...
+    var total = await query("select DISTINCT ParticipantID from participation where InstructorID = "+instID);
+    var notPart = total.length - participated;
+    
+    var retMsg = "{\"participated\": "+participated+", \"notParticipated\": "+notPart+"}";
+        
+    return retMsg;
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+app.get('/retActivityLink', async (req, res) => 
+{
+    var ret = await query("select * from users where id="+req.user.id);
+
+    if (ret.length != 1) return;
+    if (ret[0].admin == 1)
+    {
+        // admin users:
+        res.write("<p><b><a href=\"/html/re-activateUsers.html?instid=6\" target=\"_blank\">החזר אקטיביות של חניכים</a></b></p>");
+    }
+    else
+    {
+        // regular users:
+        res.write("");
+
+    }
+    res.send();
+});
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/htmlForUsers', async (req, res) => {
 
     var ret = await query("select * from users where id="+req.user.id);
@@ -170,12 +227,12 @@ app.get('/htmlForUsers', async (req, res) => {
     if (ret[0].admin == 1)
     {
         // admin users:
-        res.write("<p><b><a href=\"/html/Participation.html\" target=\"_blank\">צפיה בהשתתפות החניכים שלך</a></b></p>");
+        res.write("<p>שלום '"+ret[0].username+"'</p><b><a href=\"/html/Participation.html\" target=\"_blank\">צפיה בהשתתפות החניכים שלך</a></b></p>");
     }
     else
     {
         // regular users:
-        res.write("<p><b><a href=\"/html/PartUser.html?user="+req.user.id+"\" target=\"_blank\">צפיה בהשתתפות החניכים שלך</a></b></p>");
+        res.write("<p>שלום '"+ret[0].username+"'</p><b><a href=\"/html/PartUser.html?user="+req.user.id+"\" target=\"_blank\">צפיה בהשתתפות החניכים שלך</a></b></p></html>");
 
     }
     res.send();
@@ -198,10 +255,16 @@ app.get('/getInstDates', async (req, res) => {
     var sql = "select distinct Date from Participation where InstructorID = " + instID;
 
     let rows = await query(sql);
+
+    // also add date totals summary:
+
     var op = "[";
-    for (let i = 0; i < rows.length; i++) {
+    for (i = 0; i < rows.length; i++) 
+    {
+        var msg = await getParticipationSummary(instID, rows[i].Date);
+        var datesSummary = JSON.parse(msg);
         if (i > 0) op += ", ";
-        op += "\"" + rows[i].Date + "\"";
+        op += "\{\"date\":\"" + rows[i].Date + "\", \"yes\":\""+datesSummary.participated+"\", \"no\":\""+datesSummary.notParticipated+"\"}";
     }
     op += "]";
     res.write(op);
@@ -230,7 +293,7 @@ app.get('/selectInst', async (req, res) => {
     console.log("/selectInst");
 
     res.header("Content-Type", "text/html; charset=utf-8");
-    //res.write("<body dir=\"rtl\">");
+    //res.write(" dir=\"rtl\">");
 
     try {
         let rows = await query("select distinct district from rakazim");

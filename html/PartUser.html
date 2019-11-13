@@ -31,54 +31,25 @@
     <script language="javascript">
     //const basicAuth = require('./helpers/basic-auth');
     
-    <!--script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script-->
-    
-
     var urlParams = new URLSearchParams(window.location.search);
     var  user = urlParams.get('user');
 
     // show right user selected and bring their participation table...
     getMembersToClient(user);
 
-   function loadRakazim() 
-    {
-        $.get("/rakazim", "", function (json) 
-		{
-            console.log(json);
-            //`("got the following json: "+json);
-            try {
-            var rakazimArray = JSON.parse(json);
-            }
-            catch(e)
-            {
-                alert(e);
-            }
-                loadData(rakazimArray);
-        });
-    }
-
-    function loadData(rakazimArray)
-    {
-        var html = "<select id=\"rakazim\" disabled onChange=\"getMembersToClient(this.options[this.selectedIndex].getAttribute('id'))\">";
-        
-        $.each(rakazimArray, function (i, value) 
-        {
-            var select = "";
-            if ( rakazimArray[i].id == user) select = " selected";
-            html += "<option  id=\""+rakazimArray[i].id+"\" value="+rakazimArray[i].Name+"\""+select+">"+rakazimArray[i].Name+"</option>";
-        });
-        html += "</select disabled>";
-        
-        document.getElementById("selector").innerHTML = html;
-    }
-
+   
 var datesArr = {};
 var part;
 var partByMembers = new Array();
 
+var participatedNum = new Array();
+var didNotPart = new Array();
+var instid;
+var colsNumGlobal = 0;
+
 function getMembersToClient(instID)
 {
-    
+    instid = instID;
     var url = "/getParticipation?instID="+instID;
     var html = "<th class=\"straight\"><div><span></span></div></th>";
 
@@ -91,15 +62,23 @@ function getMembersToClient(instID)
             dates = JSON.parse(datesJson);
             //alert("got dates for "+instID);
 
+            colsNumGlobal = dates.length;
+
             // first add dates as headers
             //alert("for each one of the "+dates.length+" dates of that instructor...");
             for (k = dates.length - 1; k > -1; k--)
             {
-                html += "<th class=\"rotate\"><div><span>"+dates[k]+"</span></div></th>";
+                html += "<th class=\"rotate\"><div><span>"+dates[k].date+"</span></div></th>";
             }
-            html += "<th class=\"rotate\"><div><tbody></tbody>";
 
-            //alert("created html:" + html + "'"+html+"'");
+            // add totals records BEFORE actual listings
+            html += "<tr><td></td>";
+                for (k = dates.length - 1; k > -1; k--)
+            {
+                var totalAmount = Number(dates[k].yes) + Number(dates[k].no);
+                html += "<td style=\"border:2px solid gray;\">כמות חניכים כוללת:"  +totalAmount+ "<br> היו: <font color=\"ForestGreen\">"+dates[k].yes+"</font>\nנעדרו: <font color=\"red\">"+dates[k].no + "</font>";
+            }
+            html += "</tr>";
             try 
             {
                 part = JSON.parse(json2);
@@ -115,29 +94,32 @@ function getMembersToClient(instID)
                 {
                     var currName = part[p].member;
                     
-                    html += "<tr><th class=\"straight\"><div><span></span></div></th>";
+                    //html += "<tr>";
                 
                     html += "<tr>";
-                    html += "<th>"+currName+" ("+(p+1)+")</th><td></td>";
+                    html += "<td>"+currName+" ("+(p+1)+")</td>";
 
                     var columnsCount = 0;
                     // go over all available dates (table columns)
                     for (var cols = dates.length - 1; cols > -1; cols--)
                     {
+                        var colNum = dates.length - cols;
+                        
+                        participatedNum[colNum] = 0;
+                        didNotPart[colNum] = 0;
                         var currDate = dates[cols];
                         var dateAvailable = false;
                         var dateIndex = -1;
 
                         var datesCount = dates.length;
 
-
                         // compare them to the dates returned from prticipation table to un\check them...
                         for (var dateInd = part[p].dates.length - 1; dateInd > -1; dateInd--)
                         {
-                            var yaniv = 0;
-                            if (part[p].dates[dateInd].date == currDate) 
+      
+                            if (part[p].dates[dateInd].date == currDate.date) 
                             {
-                                dateIndex = dateInd;
+                                dateIndex = (dateInd >0)? dateInd:0;
                                 dateAvailable = true;
                             }
                         }
@@ -145,25 +127,28 @@ function getMembersToClient(instID)
                         {
                             html += "<td><input type=\"checkbox\"";
                             html += part[p].dates[dateIndex].participated ? "checked=\"checked\"": "";
+
+
                             html += " disabled></td>"; 
                             columnsCount++;
                         } 
                         else
                         {
-                            html += "<td>X</td>";
+                            html += "<td>?</td>";
                             columnsCount++;
-                        }
+                        };
                     }
-                    for (var missing = columnsCount; missing < datesCount; missing++)
-                    {
-                        //html += "<td>X</td>";
-                    }
-
                     html += "</tr>";
-                    //alert("created html for users!");
+
+                    if (p == part.length - 1)
+                    {
+                    }
                 }
-                document.getElementById("myMembers").innerHTML = "<table>"+html+"</table>";    
-    document.getElementById("createbutt").style.visibility = "visible";
+                var yaniv =9;
+
+                document.getElementById("myMembers").innerHTML = html+"<span id='totals'></span></table>";
+
+                document.getElementById("createbutt").style.visibility = "visible";
 
             }
             catch (e)
@@ -174,6 +159,36 @@ function getMembersToClient(instID)
 
     });
 
+}
+function addTotals()
+{
+    var htmlAddition1 = "<tr><td><font dir=\"rtl\">השתתפו בפעולה:</font><td></td>";
+    var htmlAddition2 = "<tr><td><font dir=\"rtl\"></font><font dir=\"rtl\"><b>לא</b> השתתפו בפעולה: </font><td></td>";
+        
+        // create summary line with totals...
+
+        for (i = 1; i < colsNumGlobal + 1; i++)
+        {
+            htmlAddition1 += "<td>"+i+"</td>";
+            htmlAddition2 += "<td>"+i+"</td>";
+            
+            /*
+            var url = "/getParticipationSummary?instID="+instID+"&date="+dates[i];
+        
+            $.get(url, "", function (json2) 
+            {
+                //alert("got response!: "+json2);
+                participationFromServer = JSON.parse(json2);
+                htmlAddition1 += "<td>"+participationFromServer.participated+"</td>";
+                htmlAddition2 += "<td>"+participationFromServer.notParticipated+"</td>";
+            });
+         */   
+        }
+        htmlAddition1 += "</tr>";
+        htmlAddition2 += "</tr>";
+
+        document.getElementById("totals").outerHTML = htmlAddition1+htmlAddition2;
+        
 }
 function ObjNum(obj, arr)
 {
@@ -197,35 +212,26 @@ function ObjInArray(obj, arr)
 
 function createNew()
 {
-    var sel = document.getElementById("rakazim");
-    window.location = "./newActivity.html?instid="+sel.options[sel.selectedIndex].getAttribute('ID');
+    if (instid === null)
+    {
+        var sel = document.getElementById("rakazim");
+        instid = sel.options[sel.selectedIndex].getAttribute('ID')
+    }
+    window.location = "./newActivity.html?instid="+instid;
 }
 </script>
 </head>
-/<body onload="loadRakazim()" dir="rtl">
+/<body onload="" dir="rtl">
 
     <h2>רישום השתתפות של חניכים</h2>
     <br>
      <h3>בחר רכז:
          <div id="selector"></div>
         <hr>
-        <table border=0 id="myMembers" >
-                <tbody>
-                    <tr>
-                        <th></th>
-                    </tr>
-                    <tr>
-                        <td></td>
-                    </tr>
+        <table border=0 id="myMembers" >            
+        </table>
+        <button ID="createbutt" type="button" onclick="createNew()" STYLE="visibility: hidden">צור פעולה חדשה</button>
 
-                    <hr>
-                    
-                    <button ID="createbutt" type="button" onclick="createNew()" STYLE="visibility: hidden">צור פעולה חדשה</button>
-
-                    
-                </tbody>
-            </table>
-    
 
     <script lang="=javascript">
        </script>

@@ -77,6 +77,7 @@ function getMembersToClient(instID)
 
     $.get(url, "", function (json2) 
     {
+        alert(json2);
         //alert("got participation for "+instID);
         
         $.get("/getInstDates?instID="+instID, "", function (datesJson)
@@ -88,11 +89,20 @@ function getMembersToClient(instID)
             //alert("for each one of the "+dates.length+" dates of that instructor...");
             for (k = dates.length - 1; k > -1; k--)
             {
-                html += "<th class=\"rotate\"><div><span>"+dates[k]+"</span></div></th>";
+                html += "<th class=\"rotate\"><div><span>"+dates[k].date+"</span></div></th>";
             }
             html += "<th class=\"rotate\"><div><tbody></tbody>";
 
-            //alert("created html:" + html + "'"+html+"'");
+            // add totals records BEFORE actual listings
+            html += "<tr><td></td>";
+                for (k = dates.length - 1; k > -1; k--)
+            {
+                var totalAmount = Number(dates[k].yes) + Number(dates[k].no);
+                html += "<td style=\"border:2px solid gray;\">כמות חניכים כוללת:"  +totalAmount+ "<br> היו: <font color=\"ForestGreen\">"+dates[k].yes+"</font>\nנעדרו: <font color=\"red\">"+dates[k].no + "</font>";
+            }
+            html += "</tr>";
+
+            //alert("created html:" + html);
             try 
             {
                 part = JSON.parse(json2);
@@ -128,7 +138,7 @@ function getMembersToClient(instID)
                         for (var dateInd = part[p].dates.length - 1; dateInd > -1; dateInd--)
                         {
                             var yaniv = 0;
-                            if (part[p].dates[dateInd].date == currDate) 
+                            if (part[p].dates[dateInd].date == currDate.date) 
                             {
                                 dateIndex = dateInd;
                                 dateAvailable = true;
