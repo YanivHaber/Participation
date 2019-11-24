@@ -1,7 +1,7 @@
-<html dir='rtl' lang='heb'>
+<html lang='h' dir='rtl'>
 <head>
+    
   
-  <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
         <title>לינקים למדריכים...</title>
 <style>
 a:link {
@@ -22,33 +22,19 @@ a:active {
 </style>
 </head>
 <body>
-    
-  <span><section style="height:90px; background: #4a90e2;"><h2>כנפיים של קרמבו <img style="width:70px; height:70px;" src="./style/סמל_קרמבו_חדש_עברית.jpg"><img></h2></section></span>
-<script language="javascript">
-$.get("http://localhost:"+location.port+"/retActivityLink", "", function (json)
-  {
-      document.getElementById("returnAct").innerHTML = json;
-  }); 
   
-  $.get("http://localhost:"+location.port+"/htmlForUsers", "", function (json)
-  {
-    if (json != "")
-    {
-      document.getElementById("usersHtml").innerHTML = json;
-    }
-    else
-    {
-        document.getElementById("usersJtml").innerHTML = "<p><b><a href=\"/html/Participation.html\" target=\"_blank\">צפיה בהשתתפות החניכים כפי שנרשמה</a></b></p>";
-    }
-      
-  });
-</script>
-<span id="usersHtml"></span>
+  <span><section style="direction: rtl; height:120px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2;; background: #4a90e2;"><img style="width:70px; height:70px;" src="./style/סמל_קרמבו_חדש_עברית.jpg"><h2>כנפיים של קרמבו<img></h2></section></span>
+
+  <script language="javascript">
+    var userid = (new URL(document.location)).searchParams.get('user');
+    document.write("<p><b><a href=\"http://127.0.0.1:1000/changePassword?user="+userid+"\" target=\"_blank\">החלפת סיסמא!</a></b></p>");
+  </script>
   
-  <p><b><a href="/html/newActivity.html?instid=6" target="_blank">יצירת פעולה עבור מדריך 6</a></b></p>
 
-<p><b><a href="/html/membersForRakaz.html?instID=6" target="_blank">ערוך אקטיביות של חניך ספציפי...</a></b></p>
+  <p><b><a href="http://127.0.0.1:1000/html/Participation.html" target="_blank">צפיה בהשתתפות החניכים של מדריך כלשהוא!</a></b></p>
+  <p><b><a href="http://127.0.0.1:1000/html/newActivity.html?instid=6" target="_blank">יצירת פעולה עבור מדריך 6</a></b></p>
 
-  <span id="returnAct"></span>
+<p><b><a href="http://127.0.0.1:1000/html/membersForRakaz.html?instID=6" target="_blank">ערוך אקטיביות חניכים  (כרגע רק של מדריך אחד ספציפי!)</a></b></p>
+<p><b><a href="http://127.0.0.1:1000/html/re-activateUsers.html?instid=6" target="_blank">החזר אקטיביות של חניכים</a></b></p>
 </body>
 </html>

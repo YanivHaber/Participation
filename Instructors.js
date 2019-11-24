@@ -102,7 +102,8 @@ app.use('/', (req, res, next) => {
 });
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/good-login', async (req, res) => {
-    res.write("<html dir='rtl' lang='heb'><meta charset=\"utf-8\"><p>הצלחת להיכנס למערכת! :-)</p></html>");
+    var userid = req.user.id;
+    res.write("<html dir='rtl' lang='heb'><meta charset=\"utf-8\"><p>הצלחת להיכנס למערכת! :-)</p><br><a href=\"/html/instructorslinks.html?user="+userid+"\">לינקים למדריכים...</a></html>");
     res.send();
 });
 
@@ -567,6 +568,52 @@ app.get('/getParticipation', async (req, res) => {
         console.log(e);
     }
 });
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+app.get('/replacePassword', async (req, res) => 
+{
+    var oldPass = req.query.firstPassword;
+    var newPass = req.query.newPassword;
+    var user = req.query.user;
+
+    if (db == null) db = new sqlite3.Database('C:\\develop\\Node.js\\Participation\\Participation.db', (err) => {
+        if (err) 
+        {
+            console.log("error connecting to db...:"+err);
+        }
+    });
+
+    var u = await query("select * from users where id="+user);
+
+    if (u[0].password == oldPass)
+    {
+        // old password is correct :) change to new...
+        var newUser = await query("update users set password = '"+newPass+"' where id="+user);
+        res.write("<h1>Password was changed!</h1><br><h1>סגור חלון זה ועבור חזרה לדף הלינקים...</h1>");
+    }
+    else
+    {
+        res.write("Password does NOT match that user! :( Password will NOT be changed!");
+    }
+    res.send();
+});
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+app.get('/changePassword', async (req, res) => 
+{
+    var user = req.query.user;
+    if (db == null) db = new sqlite3.Database('C:\\develop\\Node.js\\Participation\\Participation.db', (err) => {
+        if (err) 
+        {
+            console.log("error connecting to db...:"+err);
+        }
+    });
+
+    var users = await query("select Name from rakazim where ID="+user);
+
+    res.write("<html lang='h' dir='rtl'><head><meta charset='utf-8'></head><body><br><br><br>שלום "+users[0].Name+ "!<br><br><form method='get' name='updatePassword' action='/replacePassword'>הסיסמא שיוצרה עבורך בצורה אוטומטית: <input type='password' name='firstPassword'><br>סיסמא חדשה (לפחות 6 תוים!):<input type='password' name='newPassword'><input type='hidden' name='user' value='"+user+"'><input type='submit' value='Submit'>Submit</button></form><br><br></body></html>");
+    res.send();
+});
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////
 console.log("random string: " + randomString(10));
 app.listen(port, () => console.log(`Instructor app is now listening on port ${port}!`));
