@@ -103,7 +103,7 @@ app.use('/', (req, res, next) => {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/good-login', async (req, res) => {
     var userid = req.user.id;
-    res.write("<html dir='rtl' lang='heb'><meta charset=\"utf-8\"><p>הצלחת להיכנס למערכת! :-)</p><br><a href=\"/html/instructorslinks.html?user="+userid+"\">לינקים למדריכים...</a></html>");
+    res.write("<html dir='rtl' lang='he'><meta charset=\"utf-8\"><p>הצלחת להיכנס למערכת! :-)</p><br><a href=\"/html/instructorslinks.html?user="+userid+"\">לינקים למדריכים...</a></html>");
     res.send();
 });
 
@@ -589,7 +589,7 @@ app.get('/replacePassword', async (req, res) =>
     {
         // old password is correct :) change to new...
         var newUser = await query("update users set password = '"+newPass+"' where id="+user);
-        res.write("<h1>Password was changed!</h1><br><h1>סגור חלון זה ועבור חזרה לדף הלינקים...</h1>");
+        res.write("<html lang='he' dir='rtl'><head><meta charset=\"UTF-8\"></head><body><h1>Your password was changed!</h1><br><h1>סגור חלון זה ועבור חזרה לדף הלינקים...</h1></body></html>");
     }
     else
     {
