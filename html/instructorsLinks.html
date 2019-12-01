@@ -20,19 +20,35 @@ a:active {
   text-decoration: underline;
 }
 </style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 </head>
 <body>
   
-  <span><section style="direction: rtl; height:120px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2;; background: #4a90e2;"><img style="width:70px; height:70px;" src="./style/סמל_קרמבו_חדש_עברית.jpg"><h2>כנפיים של קרמבו<img></h2></section></span>
+  <span><section style="direction: rtl; height:120px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2;; background: #4a90e2;"><img style="width:70px; height:70px;" src="./style/סמל_קרמבו_חדש_עברית.jpg"><h2> כנפים של קרמבו. שלום '<span id="userName"></span>'<img></h2></section></span>
 
   <script language="javascript">
-    var cookies = document.cookie;
-    var userid = (new URL(document.location)).searchParams.get('user');
-    document.write("<p><b><a href=\"http://127.0.0.1:1000/changePassword?user="+userid+"\" target=\"_blank\">החלפת סיסמא!</a></b></p>");
+
+var userId =999;
+
+    $.get("/userName", "", function (json) 
+    {
+      //alert(json);
+        var res = JSON.parse(json);
+        userId = res.id;
+        //alert(res.name);
+        document.getElementById("userName").innerHTML = res.name;
+    });
+
+    
+        
+    document.write("<p><b><a href=\"http://127.0.0.1:1000/changePassword\" target=\"_blank\">החלפת סיסמא!</a></b></p>"); 
+
+    document.write("<p><b><a href=\"http://127.0.0.1:1000/html/Participation.html?target=\"_blank\">צפיה בהשתתפות החניכים של מדריך כלשהוא!</a></b></p>");
+
   </script>
   
 
-  <p><b><a href="http://127.0.0.1:1000/html/Participation.html" target="_blank">צפיה בהשתתפות החניכים של מדריך כלשהוא!</a></b></p>
+  
   <p><b><a href="http://127.0.0.1:1000/html/newActivity.html?instid=6" target="_blank">יצירת פעולה עבור מדריך 6</a></b></p>
 
 <p><b><a href="http://127.0.0.1:1000/html/membersForRakaz.html?instID=6" target="_blank">ערוך אקטיביות חניכים  (כרגע רק של מדריך אחד ספציפי!)</a></b></p>

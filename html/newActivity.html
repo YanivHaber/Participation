@@ -3,7 +3,6 @@
 
      <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
      <script language="javascript">
-
     
         var varStr = window.location.search.toString();
 		var instID = this.varStr.substring(varStr.indexOf("=")+1);
@@ -15,20 +14,59 @@
                 $.get("/rakazById?instID="+instructorID, "", function (json)
                 {
                     instructor = json;
-                    document.getElementById("instructor").textContent = instructor;
-                    getMembers(instID);
+                    document.getElementById("instructor").value = instructor;
+                    getMembersToClient(instID);
                 });
                 document.getElementById("instIDinput").value=instID;
             }
+//////////////////////////////////////////////////////////////////////////////////////////
+    function loadRakazim() 
+    {
+        $.get("/rakazim", "", function (json) 
+		{
+            console.log(json);
+            //`("got the following json: "+json);
+            try {
+            var rakazimArray = JSON.parse(json);
+            }
+            catch(e)
+            {
+                alert(e);
+            }
+                loadData(rakazimArray);
+        });
+    }
+/////////////////////////////////////////////////////////////////////////////////////////////
+    function loadData(rakazimArray)
+    {
+        if (instID > 0)
+        {
+            html = "<input id=\"instructor\" type=\"text\" value=\"\">";
+            getMembersToClient(instID);
+        }
+        else
+        {
+            var html = "<select id=\"rakazim\" onChange=\"getMembersToClient(this.options[this.selectedIndex].getAttribute('id'))\">";
+            
+            $.each(rakazimArray, function (i, value) 
+            {
+                html += "<option  id=\""+rakazimArray[i].id+"\" value="+rakazimArray[i].Name+"\">"+rakazimArray[i].Name+"</option>";
+            });
+            html += "</select>";
+        }    
+        document.getElementById("selector").innerHTML = html;
+        instName(instID);
+        
+    }
 
-            function getMembers(inst)
+            function getMembersToClient(inst)
             {
                 $.get("/membersForInstructor?instID="+inst, function (json2)
                 {
                     drawMembers(json2);
                 });
             }
-
+////////////////////////////////////////////////////////////////////////////////////////
             function drawMembers(json2)
             {
                 var membersHtml = "<table><tr><th>שם</th><th>השתתף בתאריך הנ\"ל?</th></tr>";
@@ -70,8 +108,8 @@
             }
             </script>
             </head>
-            <body onLoad="instName(instID);">
-                צור פעולה חדשה עבור המדריך '<span id="instructor"></span>':
+            <body onLoad="loadRakazim();">
+                צור פעולה חדשה עבור המדריך:<span id="selector"></span>
                 <br><br></br></br>
                 <form id="addForm" action="/addParticipation" method="get">
                 תאריך הפעולה: <input type="date" name="actDate"></input>

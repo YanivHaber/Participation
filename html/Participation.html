@@ -2,13 +2,15 @@
 
 <head>
         <style>
-                th.rotate {
+                th.rotate 
+                {
                   /* Something you can count on */
                   height: 160px;
                   white-space: nowrap;
                 }
                 
-                th.rotate > div {
+                th.rotate > div 
+                {
                   transform: 
                     /* Magic Numbers */
                     translate(55px, 5px)
@@ -17,10 +19,8 @@
                     rotate(315deg);
                   width: 30px;
                 }
-                th.straight > div {
-                 
-                 }
-                th.rotate > div > span {
+                th.rotate > div > span 
+                {
                   border-bottom: 1px solid #ccc;
                   padding: 0px 30px;
                 }
@@ -28,40 +28,99 @@
                 
     <meta charset="utf-8">
     <script language="javascript">
-    const basicAuth = require('./helpers/basic-auth');
+
+    //const basicAuth = require('./helpers/basic-auth');
     </script>
-    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script-->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 
 <script language="javascript">
+var instID = -1;
+var instructor = "";
+var admin = 0;
+var userName = "";
+var userId = -9;
 
-   function loadRakazim() 
+async function getUserDetails()
+{    
+    $.get("/userName", "", function(json)
     {
-        $.get("/rakazim", "", function (json) 
-		{
-            console.log(json);
-            //`("got the following json: "+json);
-            try {
-            var rakazimArray = JSON.parse(json);
-            }
-            catch(e)
-            {
-                alert(e);
-            }
-                loadData(rakazimArray);
-        });
-    }
+        user = JSON.parse(json);
+        userId = user.id;
+        userName = user.name;
+        admin = user.admin;
 
+        alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
+        document.getElementById("selector").innerHTML = userName;
+        if (admin == 1) loadRakazim();
+        else getMembersToClient(userId);
+    });
+};
+    
+    async function loadRakazim() 
+    {
+        if (userName == "")
+        {
+            await getUserDetails(); 
+        }
+    
+        //if (instID.length < 1)
+
+        if (userId != -9)
+        {
+            instName(userId);
+            //loadData(instID);
+            getMembersToClient(userId);
+            html = instructor;
+
+            $("#currentUser").replaceWith(html);
+        }
+        else
+        {
+            $.get("/rakazim", "", function (json) 
+            {
+                try 
+                {
+                    var rakazimArray = JSON.parse(json);
+                    loadData(rakazimArray);
+                }
+                catch(e)
+                {
+                    alert(e);
+                }
+                loadData(rakazimArray);
+            });
+        }
+    }
+    
     function loadData(rakazimArray)
     {
-        var html = "<select id=\"rakazim\" onChange=\"getMembersToClient(this.options[this.selectedIndex].getAttribute('id'))\">";
-        
-        $.each(rakazimArray, function (i, value) 
+        if (admin)
         {
-            html += "<option  id=\""+rakazimArray[i].id+"\" value="+rakazimArray[i].Name+"\">"+rakazimArray[i].Name+"</option>";
-        });
-        html += "</select>";
-        
+            //loadRakazim();
+
+            // admin user! show ALL rakazim...
+            var html = "<select id=\"rakazim\" onChange=\"getMembersToClient(this.options[this.selectedIndex].getAttribute('id'))\">";
+    
+            $.each(rakazimArray, function (i, value) 
+            {
+                html += "<option  id=\""+rakazimArray[i].id+"\" value="+rakazimArray[i].Name+"\">"+rakazimArray[i].Name+"</option>";
+            });
+            html += "</select>";
+
+        }
+        else
+        {
+            // normal user
+            instName(userId);
+            loadData(userId);
+            getMembersToClient(userId);
+            html = "<input type=\"text\" value=\"" + instructor + "\">";
+
+            $("#rakazim").innerHTML = html;
+        }
+
         document.getElementById("selector").innerHTML = html;
     }
 
@@ -69,9 +128,17 @@ var datesArr = {};
 var part;
 var partByMembers = new Array();
 
+function instName(ID)
+{
+    document.getElementById("instName").innerHTML = userName;
+    $("#rakazim").innerHTML = userName;
+}
+
+//
+// הצג את החניכים של מדריך זה בטבלת השתתפות!
+//
 function getMembersToClient(instID)
 {
-    
     var url = "/getParticipation?instID="+instID;
     var html = "<th class=\"straight\"><div><span></span></div></th>";
 
@@ -95,7 +162,7 @@ function getMembersToClient(instID)
 
             // add totals records BEFORE actual listings
             html += "<tr><td></td>";
-                for (k = dates.length - 1; k > -1; k--)
+            for (k = dates.length - 1; k > -1; k--)
             {
                 var totalAmount = Number(dates[k].yes) + Number(dates[k].no);
                 html += "<td style=\"border:2px solid gray;\">כמות חניכים כוללת:"  +totalAmount+ "<br> היו: <font color=\"ForestGreen\">"+dates[k].yes+"</font>\nנעדרו: <font color=\"red\">"+dates[k].no + "</font>";
@@ -166,7 +233,7 @@ function getMembersToClient(instID)
                     //alert("created html for users!");
                 }
                 document.getElementById("myMembers").innerHTML = "<table>"+html+"</table>";    
-    document.getElementById("createbutt").style.visibility = "visible";
+                document.getElementById("createbutt").style.visibility = "visible";
 
             }
             catch (e)
@@ -200,17 +267,28 @@ function ObjInArray(obj, arr)
 
 function createNew()
 {
-    var sel = document.getElementById("rakazim");
-    window.location = "./newActivity.html?instid="+sel.options[sel.selectedIndex].getAttribute('ID');
+    window.location = "./newActivity.html?instid="+instID;
 }
 </script>
 </head>
-/<body onload="loadRakazim()" dir="rtl">
+<body onload="loadRakazim()" dir="rtl">
 
-    <h2>רישום השתתפות של חניכים</h2>
+    <h2>רישום השתתפות של חניכים של <span id="instName"></span></h2>
     <br>
-     <h3>בחר רכז:
-         <div id="selector"></div>
+    <script language="javascript">
+        
+    if (admin)
+    {
+        document.write("<h3>'<span id=\"Rakazim\">?</span>' בחר רכז:");
+    }
+    else
+    {
+
+    }
+    </script>
+    משתמש: <span id="selector">?</span>
+     
+         <!-- used to be:'selector-->
         <hr>
         <table border=0 id="myMembers" >
                 <tbody>

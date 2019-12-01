@@ -28,22 +28,13 @@ passport.use(new LocalStrategy(
 
         if (ret.length > 0 && ret[0].password == password) {
             // login success!
-            return doneCallback(null, { name: username, id: ret[0].id });
+            return doneCallback(null, { name: "\"" + username + "\"", id: "\""+ret[0].id +"\"" });
         }
         else {
             // login failure!
             return doneCallback("Error! wrong user and/or password!", null);
         }
 
-        /*
-        if (username === 'yaniv' && password === 'king') 
-        {
-            return doneCallback(null, {id: username})
-        } 
-    
-        //failure
-        return doneCallback("Error! wrong user and/or password", null);
-        */
     }));
 
 //methods to serialize the user and deserialize it
@@ -93,6 +84,9 @@ app.post('/login', passport.authenticate('local', {
 
 //this rule will verify that any call has prerequisite of login other than what's above...
 // which is login get and post only
+app.get("/favicon.ico", async(req, res) => {
+    res.status(404);
+});
 app.use('/', ensureLogin.ensureLoggedIn('/login'), (req, res, next) => next());
 
 app.use('/', (req, res, next) => {
@@ -106,7 +100,36 @@ app.get('/good-login', async (req, res) => {
     res.write("<html dir='rtl' lang='he'><meta charset=\"utf-8\"><p>הצלחת להיכנס למערכת! :-)</p><br><a href=\"/html/instructorslinks.html?user="+userid+"\">לינקים למדריכים...</a></html>");
     res.send();
 });
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// return a JSON object that describes ther loggedin user: "{name:john, id:89, admin: 0}"
+//
+app.get("/userName", async(req, res) => 
+{
+    name = await query("select Name from rakazim where ID="+req.user.id);
+    res.write("{ \"name\": \""+name[0].Name+"\", \"id\": "+req.user.id);
 
+    admin = await query("select * from users where id="+req.user.id); 
+    res.write(", \"admin\":"+admin[0].admin + "}");
+    res.send();
+});
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+app.get("/isAdmin", async(req, res) => {
+
+     var userid = req.user.id;
+     var admin = await query("select admin from users where id="+userid);
+     
+     if (admin[0].admin)
+    {
+        res.write("true");
+    }
+    else
+    {
+        res.write("false");
+    }
+    res.send();
+});
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // Ariel add until here
 /*
@@ -152,7 +175,6 @@ function randomString(length) {
     }
     return result;
 }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // function query
 async function query(queryStr, ...params) {
@@ -243,6 +265,7 @@ app.get('/rakazById', async (req, res) => {
     instructor = req.query.instID;
 
     let ret = await query("select Name from rakazim where ID = " + instructor);
+    res.header("Content-Type", "text/html; charset=utf-8");
     res.write("\"" + ret[0].Name + "\"");
     console.log("get name of instructor " + instructor + ", returned: " + ret[0].Name);
     res.send();
@@ -600,7 +623,7 @@ app.get('/replacePassword', async (req, res) =>
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/changePassword', async (req, res) => 
 {
-    var user = req.query.user;
+    var user = req.user.id;
     if (db == null) db = new sqlite3.Database('C:\\develop\\Node.js\\Participation\\Participation.db', (err) => {
         if (err) 
         {
@@ -615,7 +638,6 @@ app.get('/changePassword', async (req, res) =>
 });
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////
-console.log("random string: " + randomString(10));
 app.listen(port, () => console.log(`Instructor app is now listening on port ${port}!`));
 
 
