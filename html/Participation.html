@@ -51,7 +51,7 @@ async function getUserDetails()
         userName = user.name;
         admin = user.admin;
 
-        alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
+        //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
         document.getElementById("selector").innerHTML = userName;
         if (admin == 1) loadRakazim();
         else getMembersToClient(userId);
@@ -87,9 +87,10 @@ async function getUserDetails()
                 }
                 catch(e)
                 {
-                    alert(e);
+                    //alert(e);
                 }
-                loadData(rakazimArray);
+                // delete:
+                //loadData(rakazimArray);
             });
         }
     }
@@ -114,7 +115,7 @@ async function getUserDetails()
         {
             // normal user
             instName(userId);
-            loadData(userId);
+            //loadData(userId);
             getMembersToClient(userId);
             html = "<input type=\"text\" value=\"" + instructor + "\">";
 
@@ -232,8 +233,10 @@ function getMembersToClient(instID)
                     html += "</tr>";
                     //alert("created html for users!");
                 }
-                document.getElementById("myMembers").innerHTML = "<table>"+html+"</table>";    
+                document.getElementById("myMembers").innerHTML = "<table id=\"partTable\">"+html+"</table>";    
                 document.getElementById("createbutt").style.visibility = "visible";
+
+                
 
             }
             catch (e)
@@ -241,6 +244,7 @@ function getMembersToClient(instID)
                 alert("exception 8:"+e);
             }
          });
+         
 
     });
 
@@ -267,7 +271,10 @@ function ObjInArray(obj, arr)
 
 function createNew()
 {
-    window.location = "./newActivity.html?instid="+instID;
+    if (document.getElementById("myMembers").rows.length <= 2) return;
+    var sel = document.getElementById("rakazim");
+    var selecteduser = sel.options[sel.selectedIndex].id;
+    window.location = "./newActivity.html?instid="+selecteduser;
 }
 </script>
 </head>

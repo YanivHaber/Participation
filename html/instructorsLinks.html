@@ -24,17 +24,44 @@ a:active {
 </head>
 <body>
   
-  <span><section style="direction: rtl; height:120px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2;; background: #4a90e2;"><img style="width:70px; height:70px;" src="./style/סמל_קרמבו_חדש_עברית.jpg"><h2> כנפים של קרמבו. שלום '<span id="userName"></span>'<img></h2></section></span>
+  <span><section style="direction: rtl; height:120px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2;; background: #4a90e2;"><img style="width:70px; height:70px;" src="./style/סמל_קרמבו_חדש_עברית.jpg"><h2> כנפים של קרמבו. שלום '<span id="instNameHtml"></span> מסניף <span id="branch"></span>'<img></h2></section></span>
 
   <script language="javascript">
+var userId = -1;
+var instructor = "";
+var admin = 0;
+var userName = "";
 
-var userId =999;
+var district = "";
+
+async function getUserDetails()
+{    
+    $.get("/userName", "", function(json)
+    {
+        user = JSON.parse(json);
+        userId = user.id;
+        userName = user.name;
+        admin = user.admin;
+        district = user.district;
+
+        //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
+        document.getElementById("instNameHtml").innerHTML = userName;
+        
+        document.getElementById("branch").innerHTML = district;
+        document.getElementById("link1").href = "http://127.0.0.1:1000/html/membersForRakaz.html?instID="+userId;
+        document.getElementById("link2").href = "http://127.0.0.1:1000/html/re-activateUsers.html?instid="+user.id;
+        
+    });
+};
+
+
+
 
     $.get("/userName", "", function (json) 
     {
       //alert(json);
         var res = JSON.parse(json);
-        userId = res.id;
+
         //alert(res.name);
         document.getElementById("userName").innerHTML = res.name;
     });
@@ -43,15 +70,22 @@ var userId =999;
         
     document.write("<p><b><a href=\"http://127.0.0.1:1000/changePassword\" target=\"_blank\">החלפת סיסמא!</a></b></p>"); 
 
-    document.write("<p><b><a href=\"http://127.0.0.1:1000/html/Participation.html?target=\"_blank\">צפיה בהשתתפות החניכים של מדריך כלשהוא!</a></b></p>");
+    document.write("<p><b><a id=\"link8\" href=\"http://127.0.0.1:1000/html/Participation.html?target=\">צפיה ברשימות ההשתתפות של החניכים שלי!</a></b></p>");
+    document.getElementById("link8").target = "_blank";
 
   </script>
   
 
   
-  <p><b><a href="http://127.0.0.1:1000/html/newActivity.html?instid=6" target="_blank">יצירת פעולה עבור מדריך 6</a></b></p>
+  <p><b>יצירת פעולה עבור מדריך (פעולה זו אפשר לבצע לאחר בחירת מדריך לצפיה בהשתתפות חניכיו!)</a></b></p>
 
-<p><b><a href="http://127.0.0.1:1000/html/membersForRakaz.html?instID=6" target="_blank">ערוך אקטיביות חניכים  (כרגע רק של מדריך אחד ספציפי!)</a></b></p>
-<p><b><a href="http://127.0.0.1:1000/html/re-activateUsers.html?instid=6" target="_blank">החזר אקטיביות של חניכים (אותו מדריך ספציפי)</a></b></p>
+  <script language="javascript">
+getUserDetails();
+  document.write("<p><b><a id=\"link1\" href=\"wow.com\">ערוך אקטיביות החניכים שלי!)</a></b></p>");
+  document.getElementById("link1").target = "_blank";
+
+document.write("<p><b><a id=\"link2\" href=\"amazing.com\" target\"_blank\">החזר אקטיביות של חניכים (אותו מדריך ספציפי)</a></b></p>");
+document.getElementById("link2").target = "_blank";
+</script>
 </body>
 </html>

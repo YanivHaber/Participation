@@ -1,0 +1,94 @@
+<html lang='h' dir='rtl'>
+<head>
+    
+  
+        <title>לינקים למדריכים...</title>
+<style>
+a:link {
+  text-decoration: none;
+}
+
+a:visited {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+a:active {
+  text-decoration: underline;
+}
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+</head>
+<body>
+  
+  <span><section style="direction: rtl; height:120px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2;; background: #4a90e2;"><img style="width:70px; height:70px;" src="./style/סמל_קרמבו_חדש_עברית.jpg"><h2>  כנפים של קרמבו. שלום אדמין... '<span id="userName"></span>'<img></h2></section></span>
+
+  <script language="javascript">
+var instID = -1;
+var instructor = "";
+var admin = 0;
+var userName = "";
+
+var district = "";
+
+async function getUserDetails()
+{    
+    $.get("/userName", "", function(json)
+    {
+        user = JSON.parse(json);
+        userId = user.id;
+        userName = user.name;
+        admin = user.admin;
+        district = user.district;
+
+        //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
+        document.getElementById("instNameHtml").innerHTML = userName;
+        if (admin == 1) loadRakazim();
+        else alert("you are NOT marked as 'admin' user thus cannot view this page...");
+        document.getElementById("branch").innerHTML = district;
+    });
+};
+
+
+
+
+    $.get("/userName", "", function (json) 
+    {
+      //alert(json);
+        var res = JSON.parse(json);
+
+        //alert(res.name);
+        document.getElementById("userName").innerHTML = res.name;
+    });
+
+    
+        
+    document.write("<p><b><a ID=\"link3\" href=\"http://127.0.0.1:1000/changePassword\">החלפת סיסמא!</a></b></p>"); 
+    document.getElementById("link3").target = "_blank";
+
+    document.write("<p><b><a ID=\"link4\" href=\"http://127.0.0.1:1000/html/Participation.html\">צפיה בהשתתפות החניכים של מדריך כלשהוא!</a></b></p>");
+    document.getElementById("link4").target = "_blank";
+
+  </script>
+  
+
+
+</script>
+
+
+
+<p><b>יצירת פעולה עבור מדריך (פעולה זו אפשר לבצע לאחר בחירת מדריך לצפיה בהשתתפות חניכיו!)</a></b></p>
+
+<script language="javascript">
+
+document.write("<p><b><a id=\"link5\" href=\"http://127.0.0.1:1000/html/activiyut.html\">ערוך אקטיביות חניכים של מדריך לבחירתך!</a></b></p>");
+document.getElementById("link5").target = "_blank";
+
+document.write("<p><b><a id=\"link6\" href=\"http://127.0.0.1:1000/html/re-activateUsers.html?instid=\"+user.id+\">החזר אקטיביות של חניכים (אותו מדריך ספציפי)</a></b></p>");
+document.getElementById("link6").target = "_blank";
+</script>
+</body>
+</html>

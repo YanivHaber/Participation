@@ -3,49 +3,92 @@
 
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script language="javascript">
+        getUserDetails();
+        var urlParams = new URLSearchParams(location.search);
+        var instID = urlParams.get("instID");
+        var loggedUserId = -2;
+        var instructor = "";
+        var admin = 0;
+        var userName = "";
+        var userId = -9;
 
-    var urlParams = new URLSearchParams(location.search);
-    instID = urlParams.get("instID");
+
+
+        function affirmUser()
+        {
+            if (loggedUserId == instID || admin == 1)
+            {
+                // do nothing! allws well...:)
+                return 0;
+            }
+            //alert("User that is requested is NOT currently logged in thus cannot be viewed!");
+            return -1;
+        }
+async function getUserDetails()
+{    
+    try {
+    await $.get("/userName", "", function(json)
+    {
+        user = JSON.parse(json);
+        loggedUserId = user.id;
+        userName = user.name;
+        admin = user.admin;
+        instName(instID);
+        //affirmUser();
+
+        //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
+        //document.getElementById("selector").innerHTML = userName;
+        //if (admin == 1) loadRakazim();
+        //else getMembersToClient(userId);
+        //alert("user is "+userName);
+    });
+} catch ({error}) {
+        alert(error);
+    }
+
+};
+
+    
 
     function getMembers(inst)
+    {
+        $.get("/membersForInstructor?instID="+inst, function (json2)
+        {
+            drawMembers(json2);
+        });
+    }
+
+        function selectAll()
+        {
+            var boxes = $('*[id^="ID-"]');
+            for (i = 0; i < boxes.length; i++)
             {
-                $.get("/membersForInstructor?instID="+inst, function (json2)
+                boxes[i].checked = !boxes[i].checked;
+            }
+        }
+
+        function drawMembers(json2)
+        {
+            var membersHtml = "<table><tr><th>אקטיבי?</th><th>שם</tr><form id=\"form1\" action=\"/editMembers\" method=\"get\">";
+
+            try 
+            {
+                var members = JSON.parse(json2);
+
+
+                members.forEach(m => 
                 {
-                    drawMembers(json2);
+                    membersHtml += "<tr><td><input id=\"ID-"+m.memberID+"\" name=\"ID-"+m.memberID+"\" type=\"checkbox\" onclick=\"setChangeVars('ID-"+m.memberID+"')\" checked></td><td>"+m.name+"</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>";
                 });
+                membersHtml += "</table>";
+                document.getElementById("membersTable").innerHTML = membersHtml;
+                //document.getElementById("submitButt").style.visibility = "visible";
             }
-
-            function selectAll()
+            catch(e)
             {
-                var boxes = $('*[id^="ID-"]');
-                for (i = 0; i < boxes.length; i++)
-                {
-                    boxes[i].checked = !boxes[i].checked;
-                }
-            }
-
-            function drawMembers(json2)
-            {
-                var membersHtml = "<table><tr><th>אקטיבי?</th><th>שם</tr><form id=\"form1\" action=\"/editMembers\" method=\"get\">";
-
-                try 
-                {
-                    var members = JSON.parse(json2);
-
-
-                    members.forEach(m => 
-                    {
-                        membersHtml += "<tr><td><input id=\"ID-"+m.memberID+"\" name=\"ID-"+m.memberID+"\" type=\"checkbox\" onclick=\"setChangeVars('ID-"+m.memberID+"')\" checked></td><td>"+m.name+"</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>";
-                    });
-                    membersHtml += "</table>";
-                    document.getElementById("membersTable").innerHTML = membersHtml;
-                    //document.getElementById("submitButt").style.visibility = "visible";
-                }
-                catch(e)
-                {
-                    alert(e);
-                }     
-            }
+                alert(e);
+            }     
+        }
             var changedVars = "";
 
             function setChangeVars(checkId)
@@ -72,18 +115,23 @@
             {
                 var instructor = "";
                 document.getElementById("InstructorID").value = instructorID;
-                $.get("/rakazById?instID="+instructorID, "", function (json)
+                if (admin < 1)
                 {
-                    let instructor = JSON.parse(json);
-                    
-                });
-                alertInst(instructor);
+                    if (instID != loggedUserId)
+                    {
+                        alert("You CANNOT watch other instructor unless you login with his credentials!");
+                        return;
+                    }
+                }
+                alertInst(instructorID);
+                
+                
             }
 
             function alertInst(instructor)
             {
-                document.getElementById("instNameHtml").textContent = instructor;
-                document.getElementById("branch").textContent = instructor;
+                document.getElementById("instNameHtml").textContent = instructor.Name;
+                document.getElementById("branch").textContent = instructor.district;
                 getMembers(instID);
             }
 
@@ -101,7 +149,7 @@
 </script>
 
 </head>
-<body onLoad="instName(instID);">
+<body onLoad="">
 
     <input type="text" style="visibility: hidden" name="InstructorID" id="InstructorID">
 

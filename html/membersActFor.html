@@ -1,0 +1,55 @@
+<html>
+
+<head>
+    
+<meta charset="utf-8">
+<script language="javascript">
+    
+async function loadRakazim() 
+{
+     {
+        $.get("/rakazim", "", function (json) 
+        {
+            try 
+            {
+                var rakazimArray = JSON.parse(json);
+                loadData(rakazimArray);
+            }
+            catch(e)
+            {
+                //alert(e);
+            }
+            loadData(rakazimArray);
+        });
+    }
+}
+
+function loadData(rakazimArray)
+    {
+        //if (admin)
+        {
+            // admin user! show ALL rakazim...
+            var html = "<select id=\"rakazim\" onChange=\"getMembersToClient(this.options[this.selectedIndex].getAttribute('id'))\">";
+    
+            $.each(rakazimArray, function (i, value) 
+            {
+                html += "<option  id=\""+rakazimArray[i].id+"\" value="+rakazimArray[i].Name+"\">"+rakazimArray[i].Name+"</option>";
+            });
+            html += "</select>";
+
+        }
+        else
+        {
+            // normal user
+            instName(userId);
+            //loadData(userId);
+            getMembersToClient(userId);
+            html = "<input type=\"text\" value=\"" + instructor + "\">";
+
+            $("#rakazim").innerHTML = html;
+        }
+
+        document.getElementById("selector").innerHTML = html;
+    }
+
+</script>

@@ -1,0 +1,245 @@
+<html lang='heb' dir='rtl'>
+    <head>
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+
+        <script language="javascript">
+var instID = -1;
+var instructor = "";
+var admin = 0;
+var userName = "";
+var userId = -9;
+var district = "";
+
+async function getUserDetails()
+{    
+    $.get("/userName", "", function(json)
+    {
+        user = JSON.parse(json);
+        userId = user.id;
+        userName = user.name;
+        admin = user.admin;
+        district = user.district;
+
+        //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
+        document.getElementById("instNameHtml").innerHTML = userName;
+        if (admin == 1) loadRakazim();
+        else alert("you are NOT marked as 'admin' user thus cannot view this page...");
+        document.getElementById("branch").innerHTML = district;
+    });
+};
+
+
+            function loadRakazim()
+            {
+                $.get("/rakazim", "", function (json) 
+                {
+                    try 
+                    {
+                        var rakazimArray = JSON.parse(json);
+                        loadData(rakazimArray);
+                    }
+                    catch(e)
+                    {
+                        //alert(e);
+                    }
+                });
+            }
+
+    function getMembersToClient(instID)
+    {
+        
+        var url = "/getParticipation?instID="+instID;
+        var html = "<th class=\"straight\"><div><span></span></div></th>";
+
+        $.get(url, "", function (json2) 
+        {
+            //alert(json2);
+            //alert("got participation for "+instID);
+            
+            $.get("/getInstDates?instID="+instID, "", function (datesJson)
+            {    
+                dates = JSON.parse(datesJson);
+                //alert("got dates for "+instID);
+
+                // first add dates as headers
+                //alert("for each one of the "+dates.length+" dates of that instructor...");
+                for (k = dates.length - 1; k > -1; k--)
+                {
+                    html += "<th class=\"rotate\"><div><span>"+dates[k].date+"</span></div></th>";
+                }
+                html += "<th class=\"rotate\"><div><tbody></tbody>";
+
+                // add totals records BEFORE actual listings
+                html += "<tr><td></td>";
+                for (k = dates.length - 1; k > -1; k--)
+                {
+                    var totalAmount = Number(dates[k].yes) + Number(dates[k].no);
+                    html += "<td style=\"border:2px solid gray;\">כמות חניכים כוללת:"  +totalAmount+ "<br> היו: <font color=\"ForestGreen\">"+dates[k].yes+"</font>\nנעדרו: <font color=\"red\">"+dates[k].no + "</font>";
+                }
+                html += "</tr>";
+
+                //alert("created html:" + html);
+                try 
+                {
+                    part = JSON.parse(json2);
+                    //alert("understood json for /getParticipation")
+
+                    var members = new Array();
+                    var memberInsideAlready = new Array();
+
+                    $('#myMembers tbody tr').remove();
+
+                    //alert("compare to each of the "+part.length+" participants' dates to show participation for each...");
+                    for (p = 0; p < part.length; p++)
+                    {
+                        var currName = part[p].member;
+                        
+                        html += "<tr><th class=\"straight\"><div><span></span></div></th>";
+                    
+                        html += "<tr>";
+                        html += "<th>"+currName+" ("+(p+1)+")</th><td></td>";
+
+                        var columnsCount = 0;
+                        // go over all available dates (table columns)
+                        for (var cols = dates.length - 1; cols > -1; cols--)
+                        {
+                            var currDate = dates[cols];
+                            var dateAvailable = false;
+                            var dateIndex = -1;
+
+                            var datesCount = dates.length;
+
+
+                            // compare them to the dates returned from prticipation table to un\check them...
+                            for (var dateInd = part[p].dates.length - 1; dateInd > -1; dateInd--)
+                            {
+                                var yaniv = 0;
+                                if (part[p].dates[dateInd].date == currDate.date) 
+                                {
+                                    dateIndex = dateInd;
+                                    dateAvailable = true;
+                                }
+                            }
+                            if ( dateAvailable )
+                            {
+                                html += "<td><input type=\"checkbox\"";
+                                html += part[p].dates[dateIndex].participated ? "checked=\"checked\"": "";
+                                html += " disabled></td>"; 
+                                columnsCount++;
+                            } 
+                            else
+                            {
+                                html += "<td>X</td>";
+                                columnsCount++;
+                            }
+                        }
+                        for (var missing = columnsCount; missing < datesCount; missing++)
+                        {
+                            //html += "<td>X</td>";
+                        }
+
+                        html += "</tr>";
+                        //alert("created html for users!");
+                    }
+                    document.getElementById("myMembers").innerHTML = "<table id=\"partTable\">"+html+"</table>";    
+                    document.getElementById("createbutt").style.visibility = "visible";
+
+                    
+
+                }
+                catch (e)
+                {
+                    alert("exception 8:"+e);
+                }
+            });
+            
+
+        });
+
+    }
+    //
+    // Get the HTML that lists all members of a selected rakaz (inst)!
+    //
+    function getMembers(inst)
+    {
+        $.get("/membersForInstructor?instID="+inst, function (json2)
+        {
+            // get the HTML that lists all members and add some button function to it!
+            var reHtml =  drawMembers(json2, inst);
+            var html = "<h3>הסר את הוי מחניכים שברצונך להפוך ללא אקטיביים ולחץ על כפתור 'שמור'...</h3><br><button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">שמור</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button>"+reHtml;
+            //window.parent.document.getElementById("main").srcdoc = "<button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">סמן חניכים והקש כאן כדי להפכם ל'לא אקטיביים'...!</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button>"+reHtml;
+            window.parent.document.getElementById("main").srcdoc =  html;
+            //window.parent.document.getElementById("main").dir = "rtl";
+        });
+    }
+
+    function drawMembers(json2, inst)
+    {
+        var membersHtml = "<html lang=\"heb\" dir=\"rtl\"><head><script src=\"/html/protegeActivity.js\"><script language=\"javascript\">var id = "+inst+"; getMembers(id);</sc"+"ript\"></sc"+"ript><script src=\"https://code.jquery.com/jquery-3.3.1.min.js\"></sc"+"ript></head><body><table><tr><th>אקטיבי?</th><th>שם</tr><form id=\"form1\" action=\"/editMembers\" method=\"get\">";
+
+        try 
+        {
+            var members = JSON.parse(json2);
+
+            members.forEach(m => 
+            {
+                membersHtml += "<tr><td><input id=\"ID-"+m.memberID+"\" name=\"ID-"+m.memberID+"\" type=\"checkbox\" onclick=\"setChangeVars('ID-"+m.memberID+"')\" checked></td><td>"+m.name+"</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>";
+            });
+            membersHtml += "</table>";
+            return membersHtml;
+            //document.getElementById("submitButt").style.visibility = "visible";
+        }
+        catch(e)
+        {
+            alert(e);
+        }     
+    }
+    
+    function doSelect(id)
+    {
+        var html = getMembers(id);
+        //window.parent.document.getElementById("main").srcdoc = html;
+    }
+
+    function loadData(rakazimArray)
+    {
+            //loadRakazim();
+
+            // admin user! show ALL rakazim...
+            var html = "<select id=\"rakazim\" onChange=\"doSelect(this.options[this.selectedIndex].getAttribute('id'))\">";
+    
+            $.each(rakazimArray, function (i, value) 
+            {
+                html += "<option  id=\""+rakazimArray[i].id+"\" value="+rakazimArray[i].Name+"\">"+rakazimArray[i].Name+"</option>";
+            });
+            html += "</select>";
+
+            $("#rakazim").innerHTML = html;
+
+            document.getElementById("selector").innerHTML = html;
+    }
+        </script>
+    </head>
+    <body onload="getUserDetails();">
+        <h3>בחר מדריך כדי לבחון אקטיביות חניכיו.</h3><br>
+        המשתמש שכרגע מחובר הינו: '<span id="instNameHtml"></span> (מסניף '<span id='branch'></span>'):<br>
+            בחר מדריך: <span id="selector">?</span>
+            
+            <table border=0 id="myMembers" >
+                    <tbody>
+                        <tr>
+                            <th></th>
+                        </tr>
+                        <tr>
+                            <td></td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+
+
+        
+                
+    </body>
+</html>
+

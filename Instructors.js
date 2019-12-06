@@ -28,7 +28,7 @@ passport.use(new LocalStrategy(
 
         if (ret.length > 0 && ret[0].password == password) {
             // login success!
-            return doneCallback(null, { name: "\"" + username + "\"", id: "\""+ret[0].id +"\"" });
+            return doneCallback(null, { name: "\"" + username + "\"", id: ret[0].id });
         }
         else {
             // login failure!
@@ -91,13 +91,25 @@ app.use('/', ensureLogin.ensureLoggedIn('/login'), (req, res, next) => next());
 
 app.use('/', (req, res, next) => {
     //log the current user:
-    console.log("THE USER:" + JSON.stringify(req.user));
+    console.log("Logged in user" + JSON.stringify(req.user));
     next();
 });
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/good-login', async (req, res) => {
     var userid = req.user.id;
-    res.write("<html dir='rtl' lang='he'><meta charset=\"utf-8\"><p>הצלחת להיכנס למערכת! :-)</p><br><a href=\"/html/instructorslinks.html?user="+userid+"\">לינקים למדריכים...</a></html>");
+    var userObj = await query("select * from users where id="+req.user.id);
+    if (userObj[0].admin == "1")
+    {
+        // admin user
+        res.redirect("/html/InstructorLinksAdmin.html");
+    }
+    else
+    {
+        // NON admin user
+        res.redirect("/html/instructorsLinks.html");
+    }
+    
+    //res.write("<html dir='rtl' lang='he'><meta charset=\"utf-8\"><p>הצלחת להיכנס למערכת! :-)</p><br><a href=\"/html/instructorslinks.html?user="+userid+"\">לינקים למדריכים...</a></html>");
     res.send();
 });
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -106,8 +118,8 @@ app.get('/good-login', async (req, res) => {
 //
 app.get("/userName", async(req, res) => 
 {
-    name = await query("select Name from rakazim where ID="+req.user.id);
-    res.write("{ \"name\": \""+name[0].Name+"\", \"id\": "+req.user.id);
+    name = await query("select Name, District from rakazim where ID="+req.user.id);
+    res.write("{ \"name\": \""+name[0].Name+"\", \"id\": "+req.user.id + ", \"district\":"+((name[0].District!== 'undefined') ? "\""+name[0].District+"\"": 'unknown'));
 
     admin = await query("select * from users where id="+req.user.id); 
     res.write(", \"admin\":"+admin[0].admin + "}");
@@ -264,9 +276,13 @@ app.get('/htmlForUsers', async (req, res) => {
 app.get('/rakazById', async (req, res) => {
     instructor = req.query.instID;
 
-    let ret = await query("select Name from rakazim where ID = " + instructor);
+    let ret = await query("select Name, District from rakazim where ID = " + instructor);
     res.header("Content-Type", "text/html; charset=utf-8");
-    res.write("\"" + ret[0].Name + "\"");
+    res.write("{\"Name\":\"" + ret[0].Name + "\", \"district\":\"" + ret[0].District + "\"");
+
+    // add 'admin' flag
+    let AD = await query("select * from users where id=" + instructor);
+    res.write(", \"admin\":\""+AD[0].admin+"\"}");
     console.log("get name of instructor " + instructor + ", returned: " + ret[0].Name);
     res.send();
 
@@ -356,10 +372,11 @@ app.get('/editMembers', async (req, res) => {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // get list of in-active users OR re-activate list of users sent...
 app.get('/getInactiveUsers', async (req, res) => {
-    console.log("getting non-active members or re-activating members.");
+    console.log("getting non-active members OR re-activating members.");
 
 
-    if (typeof req.query["activateUsers"] !== 'undefined') {
+    if (typeof req.query["activateUsers"] !== 'undefined') 
+    {
         // activation  change!
         var activateUsers = req.query.activateUsers;
         console.log("Re activating users " + activateUsers);
@@ -394,9 +411,9 @@ app.get('/getInactiveUsers', async (req, res) => {
 
         var retArray = "[";
         try {
-            console.log("found " + rows.length + " deactive users!");
+            console.log("found " + rows.length + " non-active users!");
 
-            for (i = 0; i < rows.length - 1; i++) {
+            for (i = 0; i < rows.length; i++) {
                 if (i > 0) retArray += ", ";
                 retArray += "{";
                 retArray += "\"name\": \"" + rows[i].FullName + "\", ";
@@ -485,6 +502,26 @@ app.get('/addParticipation', async (req, res) => {
     // insert into Participation (InstructorID, Date, ParticipantID, participated) VALUES (6, "27/8/2019", 10, 1), (6, "27/8/2019", 9, 1)
 });
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+app.get('/welcome', async (req, res) => 
+{
+    var user = req.user;
+
+    var userid = user.id;
+
+    var userObj = await query("select * from users where id="+userid);
+    if (userObj[0].admin == "1")
+    {
+        // admin user
+        res.redirect("/html/InstructorLinksAdmin.html");
+    }
+    else
+    {
+        // admin user
+        res.redirect("/html/instructorsLinks.html");
+    }
+
+});
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/deactivateUsers', async (req, res) => {
     var usersDeact = 0;
     for (j = 0; j < 6000; j++) {
@@ -612,7 +649,11 @@ app.get('/replacePassword', async (req, res) =>
     {
         // old password is correct :) change to new...
         var newUser = await query("update users set password = '"+newPass+"' where id="+user);
-        res.write("<html lang='he' dir='rtl'><head><meta charset=\"UTF-8\"></head><body><h1>Your password was changed!</h1><br><h1>סגור חלון זה ועבור חזרה לדף הלינקים...</h1></body></html>");
+        res.write("<html lang='he' dir='rtl'><head><meta charset=\"UTF-8\"></head><body><h1>Your password was changed!</h1><br><h1>סגור חלון זה ועבור חזרה לדף הלינקים...</h1><input type=\"button\" value=\"Close\" onclick=\"window.close()\"></body></html>");
+
+
+
+
     }
     else
     {
@@ -633,7 +674,7 @@ app.get('/changePassword', async (req, res) =>
 
     var users = await query("select Name from rakazim where ID="+user);
 
-    res.write("<html lang='h' dir='rtl'><head><meta charset='utf-8'></head><body><br><br><br>שלום "+users[0].Name+ "!<br><br><form method='get' name='updatePassword' action='/replacePassword'>הסיסמא שיוצרה עבורך בצורה אוטומטית: <input type='password' name='firstPassword'><br>סיסמא חדשה (לפחות 6 תוים!):<input type='password' name='newPassword'><input type='hidden' name='user' value='"+user+"'><input type='submit' value='Submit'>Submit</button></form><br><br></body></html>");
+    res.write("<html lang='h' dir='rtl'><head><meta charset='utf-8'></head><body><br><br><br>שלום "+users[0].Name+ "!<br><br><form method='get' name='updatePassword' action='/replacePassword'>הסיסמא הנוכחית שלך: <input type='password' name='firstPassword'><br>סיסמא חדשה (לפחות 6 תוים!):<input type='password' name='newPassword'><input type='hidden' name='user' value='"+user+"'><br><input type='submit' value='בצע!'></form><br><br></body></html>");
     res.send();
 });
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
