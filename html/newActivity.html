@@ -13,8 +13,8 @@
             {
                 $.get("/rakazById?instID="+instructorID, "", function (json)
                 {
-                    instructor = json;
-                    document.getElementById("instructor").value = instructor;
+                    instructor = JSON.parse(json);
+                    document.getElementById("instructor").value = instructor.Name;
                     getMembersToClient(instID);
                 });
                 document.getElementById("instIDinput").value=instID;

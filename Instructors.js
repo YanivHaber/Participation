@@ -95,6 +95,79 @@ app.use('/', (req, res, next) => {
     next();
 });
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+app.get('/myTeam', async (req, res) => 
+{
+    var totalHtml = "";
+        name = await query("select Name, District from rakazim where ID="+req.user.id);
+    
+    totalHtml += `<html lang="he" dir="rtl"><head><meta charset="utf-8" /></head>`;
+
+    totalHtml += `<section style="direction: rtl; height:120px; border:50px; border-width: 5px; border-style: solid; border-color: "#4a90e2"; background: "#4a90e2"><h1><img src="./html/kremboLogo.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px; position: relative; top: -20px; right: 15;"/>`;
+    totalHtml += `<span style="position: relative; top: -80; right: 150;">כנפים של קרמבו - אפליקציית 'השתתפות' <br>${name[0].Name} מסניף '${name[0].District}'</span></h1><br><div style="position: fixed; right: 150px;"></span></div></section>`;
+    
+    totalHtml += '<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>\n';
+    totalHtml +=  `<script src="./html/protegeActivity.js"></script>\n`;
+        totalHtml += "<script language=\"javascript\">\n";
+
+    layers = await query("select distinct layer from members");
+    var layNum = 1;
+    var layersHtml = `<select id='layers' onChange='alert(this.options[this.selectedIndex].getAttribute('name'))>`;
+    for (var i = 0; i < layers.length; i++)
+    {
+        var lay = layers[i];
+        if (lay.layer == null)  { break; };
+        layersHtml += `<option id='layer${layNum}' value='${lay.layer}'>${lay.layer}</option>`;
+        layNum++;
+    }
+    layersHtml += "</select>";
+    totalHtml += `var layersHtml = "${layersHtml}";`;
+    
+    totalHtml += `document.write("<br>סנן חניכים לפי שכבה: "+layersHtml);`;
+    totalHtml += `\n var user = JSON.parse('{ "name": "${name[0].Name}", "id": "${req.user.id}", "district": "${name[0].District}"`;
+    
+    admin = await query("select * from users where id="+req.user.id); 
+    totalHtml += `, \"admin":"${admin[0].admin}"}');\n`;
+
+    // now get the instructor users
+    console.log("getting members for logged-on instructor:" + req.user.id);
+    
+    let rows = await query("select District from rakazim where ID = " + req.user.id);
+    var dist = rows[0].District;
+
+    var q = "select * from members where סניף='" + dist + "'";
+    //let rows = await query("Select * from members where סניף='"+req.query.snif+"'");
+    var retArray = "[";
+    try 
+    {
+        let rows2 = await query(q);
+        console.log("found " + rows2.length + " rows!");
+
+        for (i = 0; i < rows2.length; i++) 
+        {
+               if (i > 0) retArray += ", ";
+                retArray += `{ "name": "${rows2[i].FullName}", "memberID": "${rows2[i].ID}", "active": "${rows2[i].Active}"}`;
+        }
+        retArray += "]";
+    }
+    catch (e)
+    {
+        console.log("exception: "+e);
+    }
+
+    totalHtml += `var json2 =  '${retArray}';\n`;
+
+    totalHtml += "\n var memHtml = drawMembers(json2, "+req.user.id+"); \n ";
+    
+    totalHtml += "</script>";
+    totalHtml += "\n <span id=\"teamMembers\"></span>";
+    totalHtml += "<script language='javascript'>\n";
+    totalHtml += "document.getElementById('teamMembers').innerHTML = memHtml";
+    totalHtml += "</script></body></html>";
+    res.write(totalHtml);
+    res.send();
+});
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/good-login', async (req, res) => {
     var userid = req.user.id;
     var userObj = await query("select * from users where id="+req.user.id);
@@ -122,7 +195,7 @@ app.get("/userName", async(req, res) =>
     res.write("{ \"name\": \""+name[0].Name+"\", \"id\": "+req.user.id + ", \"district\":"+((name[0].District!== 'undefined') ? "\""+name[0].District+"\"": 'unknown'));
 
     admin = await query("select * from users where id="+req.user.id); 
-    res.write(", \"admin\":"+admin[0].admin + "}");
+    res.write(", \"admin\":"+admin[0].admin + ", \"loggedUser\":\""+req.user.id+"\"}");
     res.send();
 });
 
@@ -531,7 +604,11 @@ app.get('/deactivateUsers', async (req, res) => {
             usersDeact++;
         }
     }
-    res.write(usersDeact + " Users were updated!");
+        usersDeact++;
+        res.header("Content-Type", "application/json; charset=utf-8");
+    if (usersDeact > 1) verb = " was";
+    else verb = "s were";
+    res.write("<h1>" + usersDeact + " User"+verb+" updated!")
     res.send();
 
 
@@ -672,9 +749,12 @@ app.get('/changePassword', async (req, res) =>
         }
     });
 
-    var users = await query("select Name from rakazim where ID="+user);
+    var users = await query("select Name, District from rakazim where ID="+user);
 
-    res.write("<html lang='h' dir='rtl'><head><meta charset='utf-8'></head><body><br><br><br>שלום "+users[0].Name+ "!<br><br><form method='get' name='updatePassword' action='/replacePassword'>הסיסמא הנוכחית שלך: <input type='password' name='firstPassword'><br>סיסמא חדשה (לפחות 6 תוים!):<input type='password' name='newPassword'><input type='hidden' name='user' value='"+user+"'><br><input type='submit' value='בצע!'></form><br><br></body></html>");
+    res.write(`<html lang='he' dir='rtl'><head><meta charset='utf-8'></head><body>:`);
+    res.write(`<section style="direction: rtl; height:150px; border:50px; border-width: 5px; border-style: solid; border-color: "#4a90e2" background: "#4a90e2"><h1><img src="./html/style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px; position: fixed; top: 32px; right: 15;"/>`);
+    res.write(`<span style="position: relative; top: -80; right: 150;">כנפים של קרמבו - אפליקציית 'השתתפות'</span></h1><br><div style="position: fixed; right: 150px;"><h3><span id="instNameHtml">${users[0].Name}</span> מסניף '<span id="branch">${users[0].District}</span>'</span></h3></div></section>`);
+    res.write(`<span style="right:150px;"><br><br><br>שלום ${users[0].Name}"!<br><br></span><span style="position: static;"><form method='get' name='updatePassword' action='/replacePassword'>הסיסמא הנוכחית שלך: <input type='password' name='firstPassword'><br>סיסמא חדשה (לפחות 6 תוים!):<input type='password' name='newPassword'><input type='hidden' name='user' value='"+user+"'><br><input type='submit' value='בצע!'></form></span><br><br></body></html>`);
     res.send();
 });
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////

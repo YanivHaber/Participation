@@ -3,8 +3,8 @@
 
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script language="javascript">
-        getUserDetails();
-        var urlParams = new URLSearchParams(location.search);
+
+var urlParams = new URLSearchParams(location.search);
         var instID = urlParams.get("instID");
         var loggedUserId = -2;
         var instructor = "";
@@ -12,43 +12,41 @@
         var userName = "";
         var userId = -9;
 
-
-
-        function affirmUser()
-        {
-            if (loggedUserId == instID || admin == 1)
-            {
-                // do nothing! allws well...:)
-                return 0;
-            }
-            //alert("User that is requested is NOT currently logged in thus cannot be viewed!");
-            return -1;
-        }
-async function getUserDetails()
+        async function getUserDetails()
 {    
-    try {
-    await $.get("/userName", "", function(json)
+    $.get("/userName", "", function(json)
     {
         user = JSON.parse(json);
-        loggedUserId = user.id;
+        userId = user.id;
+        loggedUserId = user.loggedUser;
         userName = user.name;
         admin = user.admin;
-        instName(instID);
-        //affirmUser();
+        district = user.district;
 
         //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
-        //document.getElementById("selector").innerHTML = userName;
+        document.getElementById("instNameHtml").innerHTML = userName;
         //if (admin == 1) loadRakazim();
-        //else getMembersToClient(userId);
-        //alert("user is "+userName);
+        //else alert("you are NOT marked as 'admin' user thus cannot view this page...");
+        document.getElementById("branch").innerHTML = district;
     });
-} catch ({error}) {
-        alert(error);
-    }
-
 };
 
-    
+function loadRakazim()
+            {
+                $.get("/rakazim", "", function (json) 
+                {
+                    try 
+                    {
+                        var rakazimArray = JSON.parse(json);
+                        loadData(rakazimArray);
+                    }
+                    catch(e)
+                    {
+                        //alert(e);
+                    }
+                });
+            }
+
 
     function getMembers(inst)
     {
@@ -80,7 +78,8 @@ async function getUserDetails()
                 {
                     membersHtml += "<tr><td><input id=\"ID-"+m.memberID+"\" name=\"ID-"+m.memberID+"\" type=\"checkbox\" onclick=\"setChangeVars('ID-"+m.memberID+"')\" checked></td><td>"+m.name+"</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>";
                 });
-                membersHtml += "</table>";
+                membersHtml += "</table><br>";
+                document.getElementById("membersTable").innerHTML = "";
                 document.getElementById("membersTable").innerHTML = membersHtml;
                 //document.getElementById("submitButt").style.visibility = "visible";
             }
@@ -107,16 +106,18 @@ async function getUserDetails()
                 }
 
             }
-            function memberName(memID)
+ 
+            function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+            async function instName(instructorID)
             {
-                
-            }
-            function instName(instructorID)
-            {
-                var instructor = "";
+                await sleep(3000);
                 document.getElementById("InstructorID").value = instructorID;
                 if (admin < 1)
                 {
+                    if (loggedUserId == -2) await getUserDetails();
                     if (instID != loggedUserId)
                     {
                         alert("You CANNOT watch other instructor unless you login with his credentials!");
@@ -128,10 +129,14 @@ async function getUserDetails()
                 
             }
 
+
+
+
+
             function alertInst(instructor)
             {
-                document.getElementById("instNameHtml").textContent = instructor.Name;
-                document.getElementById("branch").textContent = instructor.district;
+                document.getElementById("instNameHtml").textContent = userName;
+                document.getElementById("branch").textContent = district;
                 getMembers(instID);
             }
 
@@ -139,8 +144,9 @@ async function getUserDetails()
             {
                 var url = "/deactivateUsers?" + changedVars;
                 var res = "";
-                $.get(url, function (json2)
+                msg = $.get(url, function (json2) 
                 {
+                    debugger;
                     alert(json2);
                 });
                 location.reload();
@@ -149,13 +155,13 @@ async function getUserDetails()
 </script>
 
 </head>
-<body onLoad="">
+<body onLoad="getUserDetails(); instName(instID);">
 
     <input type="text" style="visibility: hidden" name="InstructorID" id="InstructorID">
 
         החניכים של המדריך: '<span id="instNameHtml"></span> (מסניף '<span id='branch'></span>'):<br>
 <button id="selAll" type="button" onclick="selectAll()" value="">הפוך את הבחירה בכווווווולם!</button>
-    <div id="membersTable"></div>
+    <div id="membersTable"><img src='/html/tenor.gif'></div>
     <br><br></br></br><hr>
     <button id='deactivateMembers' type="button" onclick="deactivateMembers()" value="">הפוך חניכים ל'לא אקטיביים'!</button>
 

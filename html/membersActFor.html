@@ -26,7 +26,7 @@ async function loadRakazim()
 
 function loadData(rakazimArray)
     {
-        //if (admin)
+        if (admin)
         {
             // admin user! show ALL rakazim...
             var html = "<select id=\"rakazim\" onChange=\"getMembersToClient(this.options[this.selectedIndex].getAttribute('id'))\">";
@@ -42,7 +42,6 @@ function loadData(rakazimArray)
         {
             // normal user
             instName(userId);
-            //loadData(userId);
             getMembersToClient(userId);
             html = "<input type=\"text\" value=\"" + instructor + "\">";
 

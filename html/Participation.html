@@ -1,4 +1,4 @@
-<html>
+<html lang='h' dir='rtl'>
 
 <head>
         <style>
@@ -26,11 +26,7 @@
                 }
                 </style>
                 
-    <meta charset="utf-8">
-    <script language="javascript">
-
-    //const basicAuth = require('./helpers/basic-auth');
-    </script>
+    
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
@@ -40,7 +36,9 @@ var instID = -1;
 var instructor = "";
 var admin = 0;
 var userName = "";
+var district = "";
 var userId = -9;
+getUserDetails();
 
 async function getUserDetails()
 {    
@@ -50,21 +48,19 @@ async function getUserDetails()
         userId = user.id;
         userName = user.name;
         admin = user.admin;
+        district = user.district;
 
         //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
-        document.getElementById("selector").innerHTML = userName;
+        //document.getElementById("selector").innerHTML = userName;
+        document.getElementById("branch").innerHTML = district;
+        //document.getElementById("instNameHtml").innerHTML = userName;
         if (admin == 1) loadRakazim();
         else getMembersToClient(userId);
     });
 };
     
     async function loadRakazim() 
-    {
-        if (userName == "")
-        {
-            await getUserDetails(); 
-        }
-    
+    {    
         //if (instID.length < 1)
 
         if (userId != -9)
@@ -97,16 +93,14 @@ async function getUserDetails()
     
     function loadData(rakazimArray)
     {
-        if (admin)
+        if (admin == "1")
         {
-            //loadRakazim();
-
             // admin user! show ALL rakazim...
             var html = "<select id=\"rakazim\" onChange=\"getMembersToClient(this.options[this.selectedIndex].getAttribute('id'))\">";
     
             $.each(rakazimArray, function (i, value) 
             {
-                html += "<option  id=\""+rakazimArray[i].id+"\" value="+rakazimArray[i].Name+"\">"+rakazimArray[i].Name+"</option>";
+                html += `<option id="${rakazimArray[i].id}" value="${rakazimArray[i].Name}">${rakazimArray[i].Name}</option>`;
             });
             html += "</select>";
 
@@ -123,6 +117,12 @@ async function getUserDetails()
         }
 
         document.getElementById("selector").innerHTML = html;
+
+        if (admin != 1)
+        {
+            var elem = document.getElementById("chooseInst");
+            elem.parentNode.removeChild(elem);
+        }
     }
 
 var datesArr = {};
@@ -205,7 +205,6 @@ function getMembersToClient(instID)
                         // compare them to the dates returned from prticipation table to un\check them...
                         for (var dateInd = part[p].dates.length - 1; dateInd > -1; dateInd--)
                         {
-                            var yaniv = 0;
                             if (part[p].dates[dateInd].date == currDate.date) 
                             {
                                 dateIndex = dateInd;
@@ -271,29 +270,47 @@ function ObjInArray(obj, arr)
 
 function createNew()
 {
+    var selecteduser = "";
+
     if (document.getElementById("myMembers").rows.length <= 2) return;
     var sel = document.getElementById("rakazim");
-    var selecteduser = sel.options[sel.selectedIndex].id;
+    if (sel == null)
+    {
+        selecteduser = userId;
+    }
+    else
+    {
+        var selecteduser = sel.options[sel.selectedIndex].id;
+    }
     window.location = "./newActivity.html?instid="+selecteduser;
 }
 </script>
 </head>
 <body onload="loadRakazim()" dir="rtl">
 
-    <h2>רישום השתתפות של חניכים של <span id="instName"></span></h2>
+    <div style="direction: rtl; height:170px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;"><h1><img src="./style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px;"/>כנפים של קרמבו - אפליקציית 'השתתפות'
+    </h1><br><div style="position: fixed; right: 150px;"><h3><img></div></span></h3></div>`
+            
+    <h2>רישום השתתפות של חניכים של <span id="instName"></span>  מסניף '<span id="branch"></span>'</h2>
     <br>
     <script language="javascript">
-        
-    if (admin)
+
+    if (admin == "1")
     {
-        document.write("<h3>'<span id=\"Rakazim\">?</span>' בחר רכז:");
+        document.write("<h3>'<span id=\"Rakazim\">(hit reload)</span>' בחר רכז:");
     }
     else
     {
 
     }
+
+    /*if (admin == "1")
+    {
+        document.write("<div id=\"chooseInst\">רכז: <span id=\"selector\">?</span></div>");
+    }*/
     </script>
-    משתמש: <span id="selector">?</span>
+    
+    <div id="chooseInst">רכז: <span id="selector">?</span></div>
      
          <!-- used to be:'selector-->
         <hr>

@@ -1,4 +1,9 @@
+alert("here!");
 
+function selectLayer(lay)
+{
+    alert("selected layer '"+lay+"'");
+}
 function sleep(ms) 
 {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -18,22 +23,6 @@ function selectAll()
 
 var changedVars = "";
 
-
-function deactivateMembers(inst)
-{
-    var url = "/deactivateUsers?" + changedVars;
-    var res = "";
-    $.get(url, function (json2)
-    {
-        alert(json2);
-    });
-    $.get("/membersForInstructor?instID="+inst, function (json2)
-    {
-        var reHtml =  drawMembers(json2, inst);
-        window.parent.document.getElementById("main").srcdoc = "<button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers()\">הפוך חניכים ל'לא אקטיביים'!</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button>"+reHtml;
-    });
-}
-
 function setChangeVars(checkId)
 {
     var chk = document.getElementById(checkId);
@@ -51,21 +40,86 @@ function setChangeVars(checkId)
 
 }
 
+function getMembers(inst)
+{
+    $.get("/membersForInstructor?instID="+inst, function (json2)
+    {
+        drawMembers(json2);
+    });
+}
+
+
+var userId = -1;
+var instructor = "";
+var admin = 0;
+var userName = "";
+
+var district = "";
+
+async function getUserDetails()
+{    
+    /*
+    $.get("/userName", "", function(json)
+    {
+        user = JSON.parse(json);
+        userId = user.id;
+        userName = user.name;
+        admin = user.admin;
+        district = user.district;
+
+        //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
+        //document.getElementById("instNameHtml").innerHTML = userName;
+        
+        //document.getElementById("branch").innerHTML = district;
+        //document.getElementById("link1").href = "http://127.0.0.1:1000/html/membersForRakaz.html?instID="+userId;
+        //document.getElementById("link2").href = "http://127.0.0.1:1000/html/re-activateUsers.html";
+        
+    });*/
+};
+
 function drawMembers(json2, inst)
 {
-    var membersHtml = "<html lang=\"heb\" dir=\"rtl\"><head><script src=\"/html/protegeActivity.js\"><script language=\"javascript\">var id = "+inst+"; getMembers(id);</sc"+"ript\"></sc"+"ript><script src=\"https://code.jquery.com/jquery-3.3.1.min.js\"></sc"+"ript></head><body><table><tr><th>אקטיבי?</th><th>שם</tr><form id=\"form1\" action=\"/editMembers\" method=\"get\">";
+    
+    getUserDetails();
+    
+    var membersHtml = `<table><br><tr><th>חניך</th></tr><br> סה"כ חניכים אקטיביים: <span id="activeMembers"></span><br>חניכים שהפסיקו השתתפותם: <span id="nonActive"></span><br>`;
 
     try 
     {
         var members = JSON.parse(json2);
+        var activeMembers = 0;
+        var nonActive = 0;
 
+        // draw active members
         members.forEach(m => 
         {
-            membersHtml += "<tr><td><input id=\"ID-"+m.memberID+"\" name=\"ID-"+m.memberID+"\" type=\"checkbox\" onclick=\"setChangeVars('ID-"+m.memberID+"')\" checked></td><td>"+m.name+"</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>";
+            if (m.active== "1")
+            {
+                activeMembers++;
+                membersHtml += "<tr><td>"+m.name+"</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>";
+            }
+            else
+            {
+                nonActive++;
+            }
         });
+        // draw NON active members
+        members.forEach(m => 
+        {
+            if (!m.active)
+            {                
+                membersHtml += "<tr><td>"+m.name+"</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>";
+            }
+        });
+
         membersHtml += "</table>";
+        var innerPoint = membersHtml.indexOf(`"activeMembers">`) + `"activeMembers">`.length;
+        membersHtml = membersHtml.substring(0, innerPoint) + activeMembers + membersHtml.substring(innerPoint);
+        innerPoint = membersHtml.indexOf(`"nonActive">`) + `"nonActive">`.length;
+        membersHtml = membersHtml.substring(0, innerPoint) + nonActive + membersHtml.substring(innerPoint);
+
+        
         return membersHtml;
-        //document.getElementById("submitButt").style.visibility = "visible";
     }
     catch(e)
     {
