@@ -102,7 +102,7 @@ app.get('/myTeam', async (req, res) =>
     
     totalHtml += `<html lang="he" dir="rtl"><head><meta charset="utf-8" /></head>`;
 
-    totalHtml += `<section style="direction: rtl; height:120px; border:50px; border-width: 5px; border-style: solid; border-color: "#4a90e2"; background: "#4a90e2"><h1><img src="./html/kremboLogo.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px; position: relative; top: -20px; right: 15;"/>`;
+    totalHtml += `<section style="direction: rtl; height:120px; border:50px; border-width: 5px; border-style: solid; border-color: '#4a90e2'; background: '#4a90e2'><h1><img src='./html/kremboLogo.jpg' alt='כנפים של קרמבו' style='width:120px; height:120px; position: relative; top: -20px; right: 15;'>`;
     totalHtml += `<span style="position: relative; top: -80; right: 150;">כנפים של קרמבו - אפליקציית 'השתתפות' <br>${name[0].Name} מסניף '${name[0].District}'</span></h1><br><div style="position: fixed; right: 150px;"></span></div></section>`;
     
     totalHtml += '<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>\n';
@@ -111,7 +111,7 @@ app.get('/myTeam', async (req, res) =>
 
     layers = await query("select distinct layer from members");
     var layNum = 1;
-    var layersHtml = `<select id='layers' onChange='alert(this.options[this.selectedIndex].getAttribute('name'))>`;
+    var layersHtml = `<select id='layers' onChange='selectLayer(this.options[this.selectedIndex].value)'>`;
     for (var i = 0; i < layers.length; i++)
     {
         var lay = layers[i];
@@ -120,13 +120,13 @@ app.get('/myTeam', async (req, res) =>
         layNum++;
     }
     layersHtml += "</select>";
-    totalHtml += `var layersHtml = "${layersHtml}";`;
+    totalHtml += "var layersHtml = \""+layersHtml + "\";";
     
-    totalHtml += `document.write("<br>סנן חניכים לפי שכבה: "+layersHtml);`;
+    totalHtml += `\ndocument.writeln("<br>סנן חניכים לפי שכבה: "+layersHtml);`;
     totalHtml += `\n var user = JSON.parse('{ "name": "${name[0].Name}", "id": "${req.user.id}", "district": "${name[0].District}"`;
     
     admin = await query("select * from users where id="+req.user.id); 
-    totalHtml += `, \"admin":"${admin[0].admin}"}');\n`;
+    totalHtml += `, "admin":"${admin[0].admin}"}');\n`;
 
     // now get the instructor users
     console.log("getting members for logged-on instructor:" + req.user.id);
@@ -155,14 +155,13 @@ app.get('/myTeam', async (req, res) =>
     }
 
     totalHtml += `var json2 =  '${retArray}';\n`;
-
-    totalHtml += "\n var memHtml = drawMembers(json2, "+req.user.id+"); \n ";
     
+    totalHtml += "\n var memHtml = drawMembers(json2, "+req.user.id+"); \n ";
+totalHtml += "setTimeout(function () {alert(8); document.getElementById('teamMembers').innerHTML = memHtml;});", 500;
     totalHtml += "</script>";
-    totalHtml += "\n <span id=\"teamMembers\"></span>";
-    totalHtml += "<script language='javascript'>\n";
-    totalHtml += "document.getElementById('teamMembers').innerHTML = memHtml";
-    totalHtml += "</script></body></html>";
+    totalHtml += `\n <span id="teamMembers"></span>`;
+    totalHtml += "\n</body></html>";
+    
     res.write(totalHtml);
     res.send();
 });
@@ -751,7 +750,7 @@ app.get('/changePassword', async (req, res) =>
 
     var users = await query("select Name, District from rakazim where ID="+user);
 
-    res.write(`<html lang='he' dir='rtl'><head><meta charset='utf-8'></head><body>:`);
+    res.write(`<html lang="he" dir="rtl"><head><meta charset="utf-8"></head><body>:`);
     res.write(`<section style="direction: rtl; height:150px; border:50px; border-width: 5px; border-style: solid; border-color: "#4a90e2" background: "#4a90e2"><h1><img src="./html/style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px; position: fixed; top: 32px; right: 15;"/>`);
     res.write(`<span style="position: relative; top: -80; right: 150;">כנפים של קרמבו - אפליקציית 'השתתפות'</span></h1><br><div style="position: fixed; right: 150px;"><h3><span id="instNameHtml">${users[0].Name}</span> מסניף '<span id="branch">${users[0].District}</span>'</span></h3></div></section>`);
     res.write(`<span style="right:150px;"><br><br><br>שלום ${users[0].Name}"!<br><br></span><span style="position: static;"><form method='get' name='updatePassword' action='/replacePassword'>הסיסמא הנוכחית שלך: <input type='password' name='firstPassword'><br>סיסמא חדשה (לפחות 6 תוים!):<input type='password' name='newPassword'><input type='hidden' name='user' value='"+user+"'><br><input type='submit' value='בצע!'></form></span><br><br></body></html>`);

@@ -1,4 +1,3 @@
-alert("here!");
 
 function selectLayer(lay)
 {
