@@ -1,7 +1,7 @@
 
 function selectLayer(lay)
 {
-    alert("selected layer '"+lay+"'");
+    document.getElementById("myTeamForm").submit();
 }
 function sleep(ms) 
 {
