@@ -20,7 +20,7 @@ passport.use(new LocalStrategy(
     },
     // added async and query
     async (username, password, doneCallback) => {
-        //TODO: check if the user and the password are OK
+        //TODO: /getActivity if the user and the password are OK
         //For now only support Yaniv/king
 
         // check user\pw against db:
@@ -128,7 +128,7 @@ app.get('/myTeam', async (req, res) =>
     layersHtml += "</select></form>";
     totalHtml += "var layersHtml = \""+layersHtml + "\";";
     
-    totalHtml += `\ndocument.writeln("<br>סנן חניכים לפי שכבה: "+layersHtml);`;
+    totalHtml += `\ndocument.writeln("<br>סנן חניכים לפי שכבת גיל: "+layersHtml);`;
     totalHtml += `\n var user = JSON.parse('{ "name": "${name[0].Name}", "id": "${req.user.id}", "district": "${name[0].District}"`;
     
     admin = await query("select * from users where id="+req.user.id); 
@@ -381,6 +381,7 @@ app.get('/getInstDates', async (req, res) => {
     var op = "[";
     for (i = 0; i < rows.length; i++) 
     {
+        if (rows[i].Date == "") continue;
         var msg = await getParticipationSummary(instID, rows[i].Date);
         var datesSummary = JSON.parse(msg);
         if (i > 0) op += ", ";
@@ -518,7 +519,7 @@ app.get('/membersForInstructor', async (req, res) => {
     let rows = await query("select District from rakazim where ID = " + req.query.instID);
     var dist = rows[0].District;
 
-    var q = "select ID, FullName from members where Active = 1 AND סניף='" + dist + "'";
+    var q = "select ID, FullName, Active from members where סניף='" + dist + "'";
     //let rows = await query("Select * from members where סניף='"+req.query.snif+"'");
     var retArray = "[";
     try {
@@ -529,7 +530,8 @@ app.get('/membersForInstructor', async (req, res) => {
             if (i > 0) retArray += ", ";
             retArray += "{";
             retArray += "\"name\":\"" + rows2[i].FullName + "\", ";
-            retArray += "\"memberID\":" + rows2[i].ID;
+            retArray += "\"memberID\":\"" + rows2[i].ID + "\", ";
+            retArray += "\"Active\":\"" + rows2[i].Active + "\"";
             retArray += "}";
         }
         retArray += "]";
@@ -551,14 +553,31 @@ app.get('/addParticipation', async (req, res) => {
 
     var instID = req.query.instID;
     var date = req.query.actDate;
+    var paramCount = 0;
     for (i = 1; i < 6000; i++) {
-        if (req.query["ID-" + i] != undefined) {
+        if (req.query["ID-" + i] != undefined) 
+        {
             queryParams[i] = req.query["ID-" + i];
+            paramCount++;
         }
-    }
-    console.log("found " + queryParams.length + " query params!");
 
-    addSql = "insert into Participation (InstructorID, Date, ParticipantID, participated) VALUES ";
+    }
+            var actName = req.query["ActivityName"];
+        var actType = req.query["ActivityType"];
+        var actSubtype = req.query["subtype"];
+
+        // first create such an activity...
+        var actSql = "insert into Activity (Name, Type, subtype, InstructorID, Date) VALUES "
+        actSql += `("${actName}", "${actType}", "${actSubtype}", "${instID}", "${date}")`;
+        let rows0 = await query(actSql);
+
+        // now find actID...
+        let rows2 = await query("select max(ActivityID) as maximum from Activity");
+        let ActID = rows2[0].maximum;
+
+    console.log("found " + paramCount + " participating members!");
+
+    addSql = "insert into Participation (InstructorID, Date, ParticipantID, participated, Activity) VALUES ";
     var firstVal = true;
     for (i = 1; i < 6000; i++) {
         if (queryParams[i] != "on") continue;
@@ -567,8 +586,8 @@ app.get('/addParticipation', async (req, res) => {
         addSql += ", ";
         addSql += "\"" + date + "\", ";
         addSql += i + ", ";
-
-        addSql += "1)";
+        addSql += "1, ";
+        addSql += ActID + ")";
         firstVal = false;
     }
     console.log("Add SQL: " + addSql);
@@ -603,20 +622,21 @@ app.get('/welcome', async (req, res) =>
 
 });
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-app.get('/deactivateUsers', async (req, res) => {
+app.get('/deactivateUsers', async (req, res) => 
+{
     var usersDeact = 0;
     for (j = 0; j < 6000; j++) {
-        if (req.query["ID-" + j] == "false") {
+        if (req.query["ID-" + j] == "false") 
+        {   
             var sql = "UPDATE members SET Active = 0 WHERE ID=" + j;
             rows = await query(sql);
             usersDeact++;
         }
     }
-        usersDeact++;
         res.header("Content-Type", "application/json; charset=utf-8");
-    if (usersDeact > 1) verb = " was";
+    if (usersDeact == 1) verb = " was";
     else verb = "s were";
-    res.write("<h1>" + usersDeact + " User"+verb+" updated!")
+    res.write(usersDeact + " User"+verb+" updated!")
     res.send();
 
 
@@ -624,12 +644,37 @@ app.get('/deactivateUsers', async (req, res) => {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Global variables:
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+app.get('/getActivity', async (req, res) => 
+{
+    var instructor = req.query.instID;
+    var date = req.query.date;
+
+    var sql = "select * from Activity where InstructorID = '" + instructor+"' AND Date = '"+date+"'";
+
+    rows = await query(sql);
+
+    if (rows.length == 0)
+    {
+        retJson = `{"Name":"לא תועד!", "type":"לא תועד!", "subtype":"לא תועד!"}`;   
+    }
+    else
+    {
+        retJson = `{"Name":"${rows[0].Name}", "type":"${rows[0].Type}", "subtype":"${rows[0].subtype}"}`;
+    }
+    console.log("JSON: "+retJson);
+
+    res.write(retJson);
+    res.send(); 
+});
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/getParticipation', async (req, res) => {
     var partSof = new Array();
     var psnum = 0;
     var members = new Array();
-    var instructor = req.query.instID || req.query.InstID;
+    var instructor = req.query.instID;
     console.log("getting participation for instructor:" + instructor);
     res.header("Content-Type", "text/html; charset=utf-8");
 
