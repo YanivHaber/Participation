@@ -70,8 +70,9 @@ async function getUserDetails()
         //document.getElementById("instNameHtml").innerHTML = userName;
         
         //document.getElementById("branch").innerHTML = district;
-        //document.getElementById("link1").href = "http://127.0.0.1:1000/html/membersForRakaz.html?instID="+userId;
-        //document.getElementById("link2").href = "http://127.0.0.1:1000/html/re-activateUsers.html";
+        var link2 =`http://${window.location.hostname}:1000/html/re-activateUsers.html`;
+        //document.getElementById("link1").href = `http://${window.location.hostname}:1000/html/membersForRakaz.html?instID=`+userId;
+        //document.getElementById("link2").href = `http://${window.location.hostname}:1000/html/re-activateUsers.html`;
         
     });*/
 };
@@ -81,7 +82,7 @@ function drawMembers(json2, inst)
     
     getUserDetails();
     
-    var membersHtml = `<table><br><tr><th>חניך</th></tr><br> סה"כ חניכים אקטיביים: <span id="activeMembers"></span><br>חניכים שהפסיקו השתתפותם: <span id="nonActive"></span><br>`;
+    var membersHtml = `<table><br><tr><th>חניך</th><th>אקטיבי?</th></tr><br> סה"כ חניכים אקטיביים: <span id="activeMembers"></span><br>חניכים שהפסיקו השתתפותם: <span id="nonActive"></span><br>`;
 
     try 
     {
@@ -92,10 +93,12 @@ function drawMembers(json2, inst)
         // draw active members
         members.forEach(m => 
         {
-            if (m.active== "1")
+            if (true || m.active== "1")
             {
                 activeMembers++;
-                membersHtml += "<tr><td>"+m.name+"</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>";
+                membersHtml += "<tr><td>"+m.name+"</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>";
+                var chkbox = `<input id=\"ID-"${m.memberID}" name=\"ID-"'+m.memberID+'" type="checkbox" onclick=""`+((m.active== "1")? " checked": "")+`>`;
+                membersHtml += "<td>"+chkbox+"</td></tr>";
             }
             else
             {

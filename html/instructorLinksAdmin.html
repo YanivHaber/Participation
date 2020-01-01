@@ -41,11 +41,12 @@ function getUserDetails()
  
           if (admin == 1)
           {
-              var extraHTML = `<p><b><a ID="link3" target="_blank" href="http://127.0.0.1:1000/changePassword\">החלפת סיסמא!</a></b></p>`; 
-              extraHTML += `<p><b><a ID="link4" target="_blank" href="http://127.0.0.1:1000/html/Participation.html">צפיה בהשתתפות החניכים של מדריך כלשהוא!</a></b></p>`;
+
+              var extraHTML = `<p><b><a ID="link3" target="_blank" href="http://${window.location.hostname}:1000/changePassword\">החלפת סיסמא!</a></b></p>`; 
+              extraHTML += `<p><b><a ID="link4" target="_blank" href="http://${window.location.hostname}:1000/html/Participation.html">צפיה בהשתתפות החניכים של מדריך כלשהוא!</a></b></p>`;
               extraHTML += `<p><b>יצירת פעולה עבור מדריך (פעולה זו אפשר לבצע לאחר בחירת מדריך לצפיה בהשתתפות חניכיו!)</a></b></p>`;
-              extraHTML += `<p><b><a id="link5" target="_blank" href=\"http://127.0.0.1:1000/html/activiyut.html">ערוך אקטיביות חניכים של מדריך לבחירתך!</a></b></p>`;
-              extraHTML += `<p><b><a id="link6" target="_blank" href="http://127.0.0.1:1000/html/re-activateUsers.html">החזר אקטיביות של חניכים (אותו מדריך ספציפי)</a></b></p>`;
+              extraHTML += `<p><b><a id="link5" target="_blank" href=\"http://${window.location.hostname}:1000/html/activiyut.html">ערוך אקטיביות חניכים של מדריך לבחירתך!</a></b></p>`;
+              extraHTML += `<p><b><a id="link6" target="_blank" href="http://${window.location.hostname}:1000/html/re-activateUsers.html">החזר אקטיביות של חניכים (אותו מדריך ספציפי)</a></b></p>`;
 
               document.write(`<html lang='h' dir='rtl'>`);
               document.write(`<span><section style="direction: rtl; height:120px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2;; background: #4a90e2;"><img style="width:70px; height:70px;" src="./style/סמל_קרמבו_חדש_עברית.jpg"><h2>  כנפים של קרמבו. שלום '<span id="userName"></span>' ... <img></h2></span></section><br><span id=links"></span>`);

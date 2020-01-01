@@ -114,6 +114,20 @@
                 <form id="addForm" action="/addParticipation" method="get">
                 תאריך הפעולה: <input type="date" name="actDate"></input>
                 <br><br></br></br>
+                <b>שם הפעולה:</b>
+                <input type="text" name="ActivityName">
+                <br>
+                <b>סוג הפעולה:</b>
+                
+                <select name="ActivityType">
+                    <option value="שכבה">שכבה</option>
+                    <option value="חונכויות">חונכויות</option>
+                    <option value="חוץ">חוץ</option>
+                  </select>
+                  <br>
+                  <b>או בכמה מילים:</b><input type="text" name="subtype" />
+                <br>
+                <br>
                 <b>החניכים של מדריך זה:</b>
 
                 <div id="membersTable"></div>

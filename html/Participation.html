@@ -43,11 +43,11 @@ getUserDetails();
 
 async function getUserDetails()
 {    
-    $.get("/userName", "", function(json)
+    $.get("/userName", "", async function(json)
     {
         user = JSON.parse(json);
         userId = user.id;
-        instID = user.id;
+        instID = Instructor = user.id;
         userName = user.name;
         admin = user.admin;
         district = user.district;
@@ -56,12 +56,12 @@ async function getUserDetails()
         {
             loadRakazim();
             document.getElementById("rakazSelector").innerHTML = "<div id=\"chooseInst\">רכז: <span id=\"selector\">?</span></div>";
-            document.getElementById("RakazSelector").innerHTML = "<h3>'<span id=\"Rakazim\">(hit reload)</span>' בחר רכז:";
+            document.getElementById("rakazSelector").innerHTML = "<h3>'<span id=\"Rakazim\">(hit reload)</span>' בחר רכז:";
             document.getElementById("chooseInstructor").innerHTML = `<div id="chooseInst">רכז: <span id="selector"></span></div>`;
         }
         else
         {
-            getMembersToClient(userId);
+            await getMembersToClient(userId);
         }
         //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
         //document.getElementById("selector").innerHTML = userName;
@@ -79,7 +79,7 @@ async function getUserDetails()
         {
             instName(userId);
             //loadData(instID);
-            getMembersToClient(userId);
+            await getMembersToClient(userId);
             html = instructor;
 
             $("#currentUser").replaceWith(html);
@@ -103,12 +103,12 @@ async function getUserDetails()
         }
     }
     
-    function loadData(rakazimArray)
+    async function loadData(rakazimArray)
     {
         if (admin == "1")
         {
             // admin user! show ALL rakazim...
-            var html = "<select id=\"rakazim\" onChange=\"getMembersToClient(this.options[this.selectedIndex].getAttribute('id'))\">";
+            var html = `<select id="rakazim" onChange="await getMembersToClient(this.options[this.selectedIndex].getAttribute('id'))">`;
     
             $.each(rakazimArray, function (i, value) 
             {
@@ -122,22 +122,21 @@ async function getUserDetails()
             // normal user
             instName(userId);
             //loadData(userId);
-            getMembersToClient(userId);
+            await getMembersToClient(userId);
             html = "<input type=\"text\" value=\"" + instructor + "\">";
 
             $("#rakazim").innerHTML = html;
         }
 
-        document.getElementById("selector").innerHTML = html;
+        //document.getElementById("selector").innerHTML = html;
 
         if (admin != 1)
         {
             var elem = document.getElementById("chooseInst");
-            elem.parentNode.removeChild(elem);
+            //elem.parentNode.removeChild(elem);
         }
     }
 
-var datesArr = {};
 var part;
 var partByMembers = new Array();
 
@@ -152,44 +151,68 @@ var dates;
 //
 // הצג את החניכים של מדריך זה בטבלת השתתפות!
 //
-function getMembersToClient(instID)
+async function getMembersToClient(instID)
 {
-    alert("getting members");
     var url = "/getParticipation?instID="+instID;
     var html = "<th class=\"straight\"><div><span></span></div></th>";
 
-    $.get(url, "", function (json2) 
+    $.get(url, "", async function (json2) 
     {
         //alert(json2);
         //alert("got participation for "+instID);
         
-        $.get("/getInstDates?instID="+instID, "", function (datesJson)
+        $.get("/getInstDates?instID="+instID, "", async function (datesJson)
         {    
             dates = JSON.parse(datesJson);
-            datesArr = dates;
-            drawActivityDetails();
-            //alert("got dates for "+instID);
+            
+        });
 
-            //drawActivityDetails();
+            //let activities = await getActivityDetails(dates);
+            //if (activities === undefined) activities = ["אין!"];
             
             // first add dates as headers
             //alert("for each one of the "+dates.length+" dates of that instructor...");
-            for (k = dates.length - 1; k > -1; k--)
+            if (typeof(dates) != "undefined" && dates.length > 0)
             {
-                html += "<th class=\"rotate\"><div><span>"+dates[k].date+"</span></div></th>";
-            }
-            html += "<th class=\"rotate\"><div><tbody></tbody>";
+                for (p = dates.length - 1; p > -1; p--)
+                {
+                    html += "<th class=\"rotate\"><div><span>"+dates[p].date+"</span></div></th>";
+                }
+                html += "<th class=\"rotate\"><div><tbody></tbody>";
 
-            // add totals records BEFORE actual listings
-            html += "<tr><td></td>";
-            for (k = dates.length - 1; k > -1; k--)
-            {
-                var totalAmount = Number(dates[k].yes) + Number(dates[k].no);
+                // add totals records BEFORE actual listings
+                html += "<tr><td></td>";
+                for (var o = dates.length - 1; o > -1; o--)
+                {
+                    var activityHtml = "<span dir='rtl' id='act"+o+"Description'>?"+o+"</span>";
+                    var orgPointer = activityHtml;
+                    $.get("/getActivity?instID=" + instID + "&date=" + dates[o].date + "&point=" + o, "", (actJson) => 
+                    {
+                        activity = JSON.parse(actJson);
+                        if (activity.point == "8") debugger;
+                        activityHtml = "<b>נושא הפעולה:</b><br>" + activity.Name + 
+                                            "<br> <b>סוג:</b> <br><font color=\"ForestGreen\">" + 
+                                            activity.type + "</font><br><b>הערות:</b> <br><font color=\"ForestGreen\">" + 
+                                            activity.subtype + "</font>";
 
-                html += "<td style=\"border:2px solid gray;\">כמות חניכים כוללת:" + totalAmount + "<br> היו: <font color=\"ForestGreen\">" + dates[k].yes + "</font>\nנעדרו: <font color=\"red\">" + dates[k].no + "<br></font><span id='Activity'+k>Activity  "+k+" details:<span>";
+                        //var pointerIndex = html.indexOf("?"+activity.point);
+                        //var secondPart = html.substr(pointerIndex + 2);
+                        //var firstPart = html.substr(0, pointerIndex);
+                        //html = firstPart + activityHtml + secondPart;
+
+                        var descrLoc = document.getElementById("act"+activity.point+"Description");
+                        descrLoc.innerHTML = activityHtml;
+                    });
+                    var totalAmount = Number(dates[o].yes) + Number(dates[o].no);
+
+                    // get activity details:
+                    var yes = dates[o].yes;
+                    html += "<td style=\"border:2px solid gray;\">כמות חניכים כוללת:" + totalAmount + "<br> היו: <font color=\"ForestGreen\">" + yes + "</font><br>נעדרו: <font color=\"red\">" + dates[o].no + "<br></font><span dir='ltr' id='Activity'+k><br>"+activityHtml+"<span>";
+                }
             }
             html += "</tr>";
 
+            //document.write(html);
             //alert("created html:" + html);
             try 
             {
@@ -209,13 +232,17 @@ function getMembersToClient(instID)
                     html += "<tr><th class=\"straight\"><div><span></span></div></th>";
                 
                     html += "<tr>";
-                    html += "<th>"+currName+" ("+(p+1)+")</th>";
+                    html += "<th>"+(p+1)+". "+currName+"</th>";
 
                     var columnsCount = 0;
-                    // go over all available dates (table columns)
-                    for (var cols = dates.length - 1; cols > -1; cols--)
+                    // go over all available dates (table columns) if they exist
+                    if (typeof(dates) == "undefined")
+                    cols = -1;
+                    else
+                    cols = dates.length - 1;
+                    for (i= cols ; i > -1; i--)
                     {
-                        var currDate = dates[cols];
+                        var currDate = dates[i];
                         var dateAvailable = false;
                         var dateIndex = -1;
 
@@ -259,7 +286,7 @@ function getMembersToClient(instID)
             {
                 alert("exception 8:"+e);
             }
-         });
+         
          
 
     });
@@ -267,24 +294,6 @@ function getMembersToClient(instID)
 
 var ActivityHTMLs = new Array();
 
-async function drawActivityDetails()
-{
-    //don't loop!: getMembersToClient(userId);
-    
-    var k = 0;
-    for (k = 0; k < datesArr.length; k++)
-    {
-        var dateObj = datesArr[k];
-        $.get("/getActivity?instID="+instID+"&date=" + dateObj.date, "", function (actJson)
-        {    
-            activity = JSON.parse(actJson);
-            activityHtml = "נושא הפעולה:"  +activity.Name+ "<br> סוג: <font color=\"ForestGreen\">"+activity.type+"</font><br>הערות: <font color=\"ForestGreen\">"+ activity.subtype + "</font>";
-            ActivityHTMLs[ActivityHTMLs.length] = activityHtml;
-            
-            k++;
-        });    
-    }
-}
 
 function ObjNum(obj, arr)
 {
@@ -296,13 +305,6 @@ function ObjNum(obj, arr)
     return -1;
 }
 
-function addActDescription()
-{
-    alert(0);
-    for (i = 0; i < datesArr.length; i++)
-{
-    document.getElementById("Activity"+i).innerHTML = ActivityHTMLs[i];
-}}
 
 function ObjInArray(obj, arr)
 {
@@ -331,13 +333,19 @@ function createNew()
     window.location = "./newActivity.html?instid="+selecteduser;
 }
 
+async function initOnLoad()
+{
+    await getUserDetails(); 
+    await loadRakazim(); 
+    await getMembersToClient(instID); 
+}
 function sleep(ms) {
                 return new Promise(resolve => setTimeout(resolve, ms));
             }
 
 </script>
 </head>
-<body onload="sleep(1000); getUserDetails(); loadRakazim(); getMembersToClient(instID); window.setTimeout('addActDescription()', 1000);" dir="rtl">
+<body onload="initOnLoad();" dir="rtl">
 
     <div style="direction: rtl; height:170px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;"><h1><img src="./style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px;"/>כנפים של קרמבו - אפליקציית 'השתתפות'
     </h1><br><div style="position: fixed; right: 150px;"><h3><img></div></span></h3></div>`

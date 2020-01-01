@@ -649,6 +649,7 @@ app.get('/getActivity', async (req, res) =>
 {
     var instructor = req.query.instID;
     var date = req.query.date;
+    var point = req.query.point;
 
     var sql = "select * from Activity where InstructorID = '" + instructor+"' AND Date = '"+date+"'";
 
@@ -656,11 +657,11 @@ app.get('/getActivity', async (req, res) =>
 
     if (rows.length == 0)
     {
-        retJson = `{"Name":"לא תועד!", "type":"לא תועד!", "subtype":"לא תועד!"}`;   
+        retJson = `{"Name":"<font color='red'><b>לא תועד!</b></font>", "type":"<font color='red'><b>לא תועד!</b></font>", "subtype":"<font color='red'><b>לא תועד!</b></font>", "point":"${point}"}`;   
     }
     else
     {
-        retJson = `{"Name":"${rows[0].Name}", "type":"${rows[0].Type}", "subtype":"${rows[0].subtype}"}`;
+        retJson = `{"Name":"${rows[0].Name}", "type":"${rows[0].Type}", "subtype":"${rows[0].subtype}", "point":"${point}"}`;
     }
     console.log("JSON: "+retJson);
 

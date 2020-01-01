@@ -11,7 +11,7 @@ import { Script } from "vm";
         function loadRakazim()
         {
             var http = new XMLHttpRequest();
-            var url = "127.0.0.1/instructors.js/selectRakazim";
+            var url = `http://${window.location.hostname}:${port}/instructors.js/selectRakazim`;
             http.open("GET", url);
             http.send();
 

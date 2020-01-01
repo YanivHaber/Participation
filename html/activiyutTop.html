@@ -175,8 +175,7 @@ async function getUserDetails()
 
     function drawMembers(json2, inst)
     {
-        var membersHtml = "<html lang=\"heb\" dir=\"rtl\"><head><script src=\"httpL//localhost:1000/html/protegeActivity.js\"><script language=\"javascript\">var id = "+inst+"; getMembers(id);</sc"+"ript\"></sc"+"ript><script src=\"https://code.jquery.com/jquery-3.3.1.min.js\"></sc"+"ript></head><body><table><tr><th>אקטיבי?</th><th>שם</tr><form id=\"form1\" action=\"/editMembers\" method=\"get\">";
-
+        var membersHtml = `<html lang=\"heb\" dir=\"rtl\"><head><script src=\"http://${${window.location.hostname}:1000/html/protegeActivity.js\"><script language=\"javascript\">var id = "+inst+"; getMembers(id);</sc"+"ript\"></sc"+"ript><script src=\"https://code.jquery.com/jquery-3.3.1.min.js\"></sc"+"ript></head><body><table><tr><th>אקטיבי?</th><th>שם</tr><form id=\"form1\" action=\"/editMembers\" method=\"get\">`;
         try 
         {
             var members = JSON.parse(json2);

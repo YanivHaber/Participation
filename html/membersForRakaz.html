@@ -14,7 +14,7 @@ var urlParams = new URLSearchParams(location.search);
 
         async function getUserDetails()
 {    
-    $.get("/userName", "", function(json)
+    $.get("/userName", function(json)
     {
         user = JSON.parse(json);
         userId = user.id;
@@ -71,12 +71,13 @@ function loadRakazim()
 
             try 
             {
+                sleep(1000);
                 var members = JSON.parse(json2);
 
 
                 members.forEach(m => 
                 {
-                    membersHtml += "<tr><td><input id=\"ID-"+m.memberID+"\" name=\"ID-"+m.memberID+"\" type=\"checkbox\" onclick=\"setChangeVars('ID-"+m.memberID+"')\" checked></td><td>"+m.name+"</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>";
+                    membersHtml += `<tr><td><input id="ID-`+m.memberID + `"" name="ID-`+m.memberID+`" type="checkbox" onclick="setChangeVars(this.id)" `+(m.Active == "1"? "checked": "")+`></td><td>`+(m.Active == "1"?"": "<font color='red'>")+m.name+(m.Active == "1"?"":"</font>")+`</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>`;
                 });
                 membersHtml += "</table><br>";
                 document.getElementById("membersTable").innerHTML = "";
@@ -93,6 +94,12 @@ function loadRakazim()
             function setChangeVars(checkId)
             {
                 var chk = document.getElementById(checkId);
+                if (chk.checked) 
+                {
+                    alert("לא ניתן להשתמש בדף זה כדי לסמן חניך חזרה כאקטיבי! בצע refresh כדי לחזור לראות מצב אקטיביות נוכחי, או בקש מאדמיניסטרטור של המערכת להפוך חניכים חזרה לאקטיביים, אם יש בכך צורך.");
+                    chk.checked = false;
+                    return;
+                }
                 var loc = changedVars.indexOf(chk.id);
                 if (loc > 0)
                 {
@@ -104,12 +111,15 @@ function loadRakazim()
                     if (changedVars.length > 0) changedVars += "&";
                     changedVars += chk.id + "=" + chk.checked;
                 }
-
+            
+                // now set color to match...(black\red)
+                var rightColor = (chk.checked ? "black": "red");
+                chk.parentNode.nextSibling.style.color = rightColor;
             }
  
             function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
 
             async function instName(instructorID)
             {
@@ -140,16 +150,30 @@ function loadRakazim()
                 getMembers(instID);
             }
 
-            function deactivateMembers()
+            async function deactivateMembers()
+            {
+                await deactivateOnServer();
+                alert("בחירתך נשמרה...");
+            }
+
+            async function deactivateOnServer()
             {
                 var url = "/deactivateUsers?" + changedVars;
                 var res = "";
-                msg = $.get(url, function (json2) 
+                try
                 {
-                    debugger;
-                    alert(json2);
-                });
-                location.reload();
+                    $.get(url, function (retSon) 
+                    {
+                        alert("done: "+retSon); 
+                        alert('reloading...'); 
+                    });
+                    
+                    
+                }
+                catch (e) 
+                {
+                    alert(e);
+                }                
                 
             }
 </script>
@@ -161,9 +185,9 @@ function loadRakazim()
 
         החניכים של המדריך: '<span id="instNameHtml"></span> (מסניף '<span id='branch'></span>'):<br>
 <button id="selAll" type="button" onclick="selectAll()" value="">הפוך את הבחירה בכווווווולם!</button>
-    <div id="membersTable"><img src='/html/tenor.gif'></div>
+    <div id="membersTable"><img src='/html/wait.gif'></div>
     <br><br></br></br><hr>
-    <button id='deactivateMembers' type="button" onclick="deactivateMembers()" value="">הפוך חניכים ל'לא אקטיביים'!</button>
+    <button id='await' type="button" onclick="deactivateMembers();">שמור בחירה!</button>
 
      
 </body>
