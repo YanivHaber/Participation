@@ -27,190 +27,59 @@
                 </style>
                 
     
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-
+                <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+                <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+                            
 <script language="javascript">
 var instID = -1;
+var loggedUser = "";
 var instructor = "";
 var admin = 0;
 var userName = "";
 var district = "";
 var userId = -9;
 
-async function getUserDetails()
+
+async function getUserDetails(ID)
 {
-    
-    $.get("/userName", "", async function(json)
+    $.get("/userDetails?ID="+ID, "", function(json)
+    {
+        user = JSON.parse(json);
+        loggedUser = user.loggedUser;
+        userName = user.name;
+        document.getElementById("instName").innerHTML = userName;
+        document.getElementById("branch").innerHTML = user.district;
+        if (user.loggedUser != user.id)
+        {
+            alert("You CANNOT watch other instructor unless you login with his credentials!");
+            return;   
+        }
+        
+
+        return userName;
+    });
+
+}
+var html = "";
+
+async function getMyUserDetails()
+{    
+    var myMembers = document.getElementById("myMembers");
+    $.get("/userName", "", function(json)
     {
         user = JSON.parse(json);
         userId = user.id;
-        instID = Instructor = user.id;
+        instID = user.id;
         userName = user.name;
         admin = user.admin;
         district = user.district;
-        if (admin != "1")
-        {
-            await getMembersToClient(userId);
-        }
-        //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
-        //document.getElementById("selector").innerHTML = userName;
+
         document.getElementById("branch").innerHTML = district;
         document.getElementById("instName").innerHTML = userName;
-    });
-    var sel;
-        sel = document.getElementById("selector");
-        if (sel == null || sel.tagName != "select") return; // first load of page! no selection yet...
-        var selecteduser = sel.options[sel.selectedIndex].id;
-
-    $.get("/membersForInstructor?instID="+selecteduser, "", function(members)
-        {
-            var mems = JSON.parse(members);
-            if (mems.length == 0)
-            {
-                alert("This user does NOT have any members in the DB currently!");
-                return false;
-            }
-        });
-
-    return true;
-};
-    
-    async function loadRakazim() 
-    {    
-        //if (instID.length < 1)
-        if (userId != -9)
-        {
-            loadData(instID);
-            //await getMembersToClient(userId);
-        }
-        else
-        {
-            $.get("/rakazim", "", function (json) 
-            {
-                try 
-                {
-                    var rakazimArray = JSON.parse(json);
-                    loadData(rakazimArray);
-                }
-                catch(e)
-                {
-                    //alert(e);
-                }
-                // delete:
-                //loadData(rakazimArray);
-            });
-        }
-    }
-    
-    async function loadData()
-    {
-        debugger;
-        if (admin == "1")
-        {
-            // admin user! show ALL rakazim...
-            var html = `<select id="rakazim" onChange="getMembersToClient(this.options[this.selectedIndex].getAttribute('id'))">`;
-    
-                $.get("/rakazim", "", function (json) 
-            {
-                try 
-                {
-                    var rakazimArray = JSON.parse(json);
-                    var options = "";
-                    for (var i = 0; i < rakazimArray.length; i++)
-            {
-                    var element = rakazimArray[i];
-                    var elemName = element.Name;
-                    if (elemName.indexOf('"') != -1) 
-                        elemName = elemName.split('"').join('\\"');
-                    options += `<option id="${element.id}" value="${elemName}">${elemName}</option>`;
-            }
-                    html += options + "</select>";
-            
-                    document.getElementById("selector").innerHTML = html;
-
-                }
-                catch(e)
-                {
-                    //alert(e);
-                }
-
-            });
-
-        }
-    }
-
-
-
-function instName(ID)
-{
-    document.getElementById("instName").innerHTML = userName;
-    //$("#rakazim").innerHTML = userName;
-}
-var dates;
-
-
-function selectedInstructor()
-{
-    var sel;
-        sel = document.getElementById("selector");
-        if (sel == null || sel.tagName != "select") return; // first load of page! no selection yet...
-        var selecteduser = sel.options[sel.selectedIndex].id;
-
-    $.get("/membersForInstructor?instID="+selecteduser, "", function(members)
-        {
-            var mems = JSON.parse(members);
-            if (mems.length == 0)
-            {
-                alert("This user does NOT have any members in the DB currently!");
-                return false;
-            }
-        });
-
-}
-//
-// הצג את החניכים של מדריך זה בטבלת השתתפות!
-//
-async function getMembersToClient(instID)
-{
-        // firstcheck that this inst has members...
-
-    if (instID < 0) return;
-    /*
-    $.get("/userDetails?ID="+instID, "", function (userjson)
-    {
-        var user = JSON.parse(userjson);
-        document.getElementById("instName").innerHTML = user.name;
-        document.getElementById("branch").innerHTML = user.district;
-    });
-    
-        var sel;
-        sel = document.getElementById("selector").children[0];
-        if (sel == null || sel.tagName != "select") return; // first load of page! no selection yet...
-        var selecteduser = sel.options[sel.selectedIndex].id;
-*/
-    $.get("/membersForInstructor?instID="+instID, "", function(members)
-        {
-            var mems = JSON.parse(members);
-            if (mems.length == 0)
-            {
-                alert("This user does NOT have any members in the DB currently!");
-                return false;
-            }
-        });
-
-    var url = "/getParticipation?instID="+instID;
-    var html = "<th class=\"straight\"><div><span></span></div></th>";
-    $.get(url, "", async function (json2) 
-    {
+        
         $.get("/getInstDates?instID="+instID, "", function (datesJson)
         {    
             dates = JSON.parse(datesJson);
-        
-            //let activities = await getActivityDetails(dates);
-            //if (activities === undefined) activities = ["אין!"];
-            
             // first add dates as headers
             //alert("for each one of the "+dates.length+" dates of that instructor...");
             if (typeof(dates) != "undefined" && dates.length > 0)
@@ -220,28 +89,31 @@ async function getMembersToClient(instID)
                     html += "<th class=\"rotate\"><div><span>"+dates[p].date+"</span></div></th>";
                 }
                 html += "<th class=\"rotate\"><div><tbody></tbody>";
+
                 // add totals records BEFORE actual listings
                 html += "<tr><td></td>";
                 for (var o = dates.length - 1; o > -1; o--)
                 {
                     var activityHtml = "<span dir='rtl' id='act"+o+"Description'>?"+o+"</span>";
-                    var orgPointer = activityHtml;
+                    
                     $.get("/getActivity?instID=" + instID + "&date=" + dates[o].date + "&point=" + o, "", (actJson) => 
                     {
                         activity = JSON.parse(actJson);
-                        if (activity.point == "8") debugger;
+
                         activityHtml = "<b>נושא הפעולה:</b><br>" + activity.Name + 
                                             "<br> <b>סוג:</b> <br><font color=\"ForestGreen\">" + 
                                             activity.type + "</font><br><b>הערות:</b> <br><font color=\"ForestGreen\">" + 
                                             activity.subtype + "</font>";
+
                         //var pointerIndex = html.indexOf("?"+activity.point);
                         //var secondPart = html.substr(pointerIndex + 2);
                         //var firstPart = html.substr(0, pointerIndex);
                         //html = firstPart + activityHtml + secondPart;
-                        var descrLoc = document.getElementById("act"+activity.point+"Description");
-                        descrLoc.innerHTML = activityHtml;
+
+                        window.setTimeout(`writeActDescription(${activity.point}, encodeURI(\`${activityHtml}\`))`, 1000);
                     });
                     var totalAmount = Number(dates[o].yes) + Number(dates[o].no);
+
                     // get activity details:
                     var yes = dates[o].yes;
                     html += "<td style=\"border:2px solid gray;\">כמות חניכים כוללת:" + totalAmount + "<br> היו: <font color=\"ForestGreen\">" + yes + "</font><br>נעדרו: <font color=\"red\">" + dates[o].no + "<br></font><span dir='ltr' id='Activity'+k><br>"+activityHtml+"<span>";
@@ -249,16 +121,24 @@ async function getMembersToClient(instID)
             }
             html += "</tr>";
 
-            document.getElementById("myMembers").innerHTML = html;
-            //document.write(html);
-            //alert("created html:" + html);
+            //ndocument.write(html);            
+        });
+
+        var url = "/getParticipation?instID="+instID;
+        html = "<th class=\"straight\"><div><span></span></div></th>";
+
+        $.get(url, "", function (json2) 
+        {
             try 
             {
                 part = JSON.parse(json2);
                 //alert("understood json for /getParticipation")
+
                 var members = new Array();
                 var memberInsideAlready = new Array();
-                $('#myMembers tbody tr').remove();
+
+                //$('#myMembers tbody tr').remove();
+
                 //alert("compare to each of the "+part.length+" participants' dates to show participation for each...");
                 for (p = 0; p < part.length; p++)
                 {
@@ -268,6 +148,7 @@ async function getMembersToClient(instID)
                 
                     html += "<tr>";
                     html += "<th>"+(p+1)+". "+currName+"</th>";
+
                     var columnsCount = 0;
                     // go over all available dates (table columns) if they exist
                     if (typeof(dates) == "undefined")
@@ -279,7 +160,10 @@ async function getMembersToClient(instID)
                         var currDate = dates[i];
                         var dateAvailable = false;
                         var dateIndex = -1;
+
                         var datesCount = dates.length;
+
+
                         // compare them to the dates returned from prticipation table to un\check them...
                         for (var dateInd = part[p].dates.length - 1; dateInd > -1; dateInd--)
                         {
@@ -306,20 +190,58 @@ async function getMembersToClient(instID)
                     {
                         //html += "<td>X</td>";
                     }
+
                     html += "</tr>";
                     //alert("created html for users!");
                 }
-                document.getElementById("myMembers").innerHTML = "<table id=\"partTable\">"+html+"</table>";    
-                document.getElementById("createbutt").style.visibility = "visible";
+                myMembers.innerHTML = "<table id=\"partTable\">"+html+"</table>";    
+                //myMembers.innerHTML = html;
+                //document.getElementById("createbutt").style.visibility = "visible";
             }
             catch (e)
             {
                 alert("exception 8:"+e);
-            }
-        });         
+            }        
+        });
     });
+}    
+    
+    async function loadData(rakazimArray)
+    {
+ 
+        // normal user
+        await getMembersToClient(userId);
+     
+        var elem = document.getElementById("chooseInst");
+    }
+
+var part;
+var partByMembers = new Array();
+
+
+var dates;
+
+//
+// הצג את החניכים של מדריך זה בטבלת השתתפות!
+//
+async function getMembersToClient(instID)
+{
+    if (instID == -9) sleep2(2000);
+            
+
+    //alert("created html:" + html);
+
+}
+
+function writeActDescription(descrNum, descr)
+{
+    var descrLoc = document.getElementById("act"+descrNum+"Description");
+    descrLoc.innerHTML = decodeURI(descr);
+
 }
 var ActivityHTMLs = new Array();
+
+
 function ObjNum(obj, arr)
 {
     for (i = 0; i < arr.length; i++)
@@ -329,6 +251,8 @@ function ObjNum(obj, arr)
     }
     return -1;
 }
+
+
 function ObjInArray(obj, arr)
 {
     for (i = 0; i < arr.length; i++)
@@ -338,90 +262,69 @@ function ObjInArray(obj, arr)
     }
     return false;
 }
+
 function createNew()
 {
     var selecteduser = "";
-    if (document.getElementById("myMembers").rows.length <= 2) return;
-    
-    sel = document.getElementById("rakazim");
-    if (sel != null)
-         selecteduser = sel.options[sel.selectedIndex].id;
-    
 
+    if (document.getElementById("myMembers").rows.length <= 2) return;
+    var sel = document.getElementById("rakazim");
+    if (sel == null)
+    {
+        selecteduser = userId;
+    }
+    else
+    {
+        var selecteduser = sel.options[sel.selectedIndex].id;
+    }
     window.location = "./newActivity.html?instid="+selecteduser;
 }
 
-function initOnLoad()
+async function initOnLoad()
 {
-    $.get("/userName", "", async function(json)
-    {
-        user = JSON.parse(json);
-        userId = user.id;
-        instID = Instructor = user.id;
-        userName = user.name;
-        admin = user.admin;
-        district = user.district;
-        if (admin != "1")
-        {
-            await getMembersToClient(userId);
-        }
-        //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
-        //document.getElementById("selector").innerHTML = userName;
-        document.getElementById("branch").innerHTML = district;
-        document.getElementById("instName").innerHTML = userName;
-
-        await loadRakazim();
-    });
+    instID = new URLSearchParams(window.location.search).get("instID");
+    //await getUserDetails(instID);
+    await getMyUserDetails(); 
+    await loadData("[]");
 }
-
-async function old_initOnLoad()
+function sleep2(ms)
 {
-    await loadRakazim(); 
-    
-    var ret = await getUserDetails(); 
-    if (ret)
-    {
-        
-        //await getMembersToClient(instID); 
-    }
+    var start = new Date().getTime(); 
+    while( ms > ( new Date().getTime() - start ) ){} 
 }
 function sleep(ms) {
                 return new Promise(resolve => setTimeout(resolve, ms));
             }
+
 </script>
 </head>
-<body onload="initOnLoad()" dir="rtl">
+<body onload="initOnLoad();" dir="rtl">
 
     <div style="direction: rtl; height:170px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;"><h1><img src="./style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px;"/>כנפים של קרמבו - אפליקציית 'השתתפות'
     </h1><br><div style="position: fixed; right: 150px;"><h3><img></div></span></h3></div>`
             
     <h2>רישום השתתפות של חניכים של <span id="instName"></span>  מסניף '<span id="branch"></span>'</h2>
     <br>
-
-    <h3>בחר רכז: <span id="selector"></span></h3>
+    <script language="javascript">
+    document.write("<span id='rakazSelector'></span>");
+    document.write("<span id='chooseInstructor'></span>");
+    </script>
+    
     
      
          <!-- used to be:'selector-->
         <hr>
-        <table border=0 id="myMembers" >
-                <tbody>
+        <table border=0 id="myMembers">
                     <tr>
                         <th></th>
                     </tr>
                     <tr>
                         <td></td>
                     </tr>
-
+        </table><br>
                     <hr>
                     
-                </tbody>
-            </table>
-
-            <button ID="createbutt" type="button" onclick="createNew()" STYLE="visibility: hidden">צור פעולה חדשה</button>
-
-                    
-
-    
+                    <input type="button" id="createbutt" onClick="createNew()" style="visibility: visible">צור פעולה חדשה</input>
 
     <script lang="=javascript">
        </script>

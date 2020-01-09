@@ -202,9 +202,29 @@ app.get("/userName", async(req, res) =>
     res.write("{ \"name\": \""+name[0].Name+"\", \"id\": "+req.user.id + ", \"district\":"+((name[0].District!== 'undefined') ? "\""+name[0].District+"\"": 'unknown'));
 
     admin = await query("select * from users where id="+req.user.id); 
-    res.write(", \"admin\":"+admin[0].admin + ", \"loggedUser\":\""+req.user.id+"\"}");
+    res.write(", \"admin\":"+admin[0].admin+"}");
     res.send();
 });
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// get a description of a user with a certain id {}name: , id: , district: ,admin: ?}
+app.get("/userDetails", async(req, res) => 
+{
+    var id = req.query.ID;
+    var retJSON = "";
+    name = await query("select Name, District from rakazim where ID="+id);
+    if (name.length > 0)
+    {
+        retJSON = "{ \"name\": \""+name[0].Name+"\", \"id\": "+id + ", \"district\":"+((name[0].District!== 'undefined') ? "\""+name[0].District+"\"": 'unknown');
+
+        logInUser = await query("select * from users where id="+id); 
+        retJSON += ", \"admin\":"+((logInUser.length > 0)? logInUser[0].admin: "Not defined as user that can log-on! yet.") + ", \"loggedUser\":\""+req.user.id+"\"}";
+        res.write(retJSON);
+    }
+    res.send();
+
+    console.log("returned:\n"+retJson);
+});
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get("/isAdmin", async(req, res) => {
@@ -396,11 +416,13 @@ app.get('/rakazim', async (req, res) => {
 
     res.header("Content-Type", "text/html; charset=utf-8");
 
-    let rows = await query("select ID, Name from rakazim");
+    let rows = await query("select ID, Name, District from rakazim");
 
     var op = "[";
     for (let i = 0; i < rows.length - 1; i++) {
         op += "{\"id\":\"" + rows[i].ID + "\"";
+        op += ", ";
+        op += `"snif":"${rows[i].District}"`;
         op += ", ";
         op += "\"Name\":\"" + rows[i].Name + "\"}";
         if (i != rows.length - 2) op += ", ";
@@ -519,8 +541,10 @@ app.get('/membersForInstructor', async (req, res) => {
     let rows = await query("select District from rakazim where ID = " + req.query.instID);
     var dist = rows[0].District;
 
-    var q = "select ID, FullName, Active from members where סניף='" + dist + "'";
-    //let rows = await query("Select * from members where סניף='"+req.query.snif+"'");
+    var q = `select ID, FullName, Active from members where`;
+    q += " סניף=";
+    q += `"`+dist+`"`;
+
     var retArray = "[";
     try {
         let rows2 = await query(q);
@@ -661,7 +685,8 @@ app.get('/getActivity', async (req, res) =>
     }
     else
     {
-        retJson = `{"Name":"${rows[0].Name}", "type":"${rows[0].Type}", "subtype":"${rows[0].subtype}", "point":"${point}"}`;
+        var name = translateApostrophes(rows[0].Name);
+        retJson = `{"Name":"${name}", "type":"${rows[0].Type}", "subtype":"${rows[0].subtype}", "point":"${point}"}`;
     }
     console.log("JSON: "+retJson);
 
@@ -669,7 +694,11 @@ app.get('/getActivity', async (req, res) =>
     res.send(); 
 });
 
-
+function translateApostrophes(msg)
+{
+    var translated = msg.replace(`"`, `\\"`);
+    return translated;
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/getParticipation', async (req, res) => {
     var partSof = new Array();
@@ -788,8 +817,7 @@ app.get('/replacePassword', async (req, res) =>
     }
     else
     {
-        res.write("Password does NOT match that user! :( Password will NOT be changed!");
-    }
+        res.write(`<html><body><h1>Old password is NOT your pasword...sorry... <br><font color="red">Your password will NOT be changed!</font></h1></body></html>`);    }
     res.send();
 });
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -808,7 +836,7 @@ app.get('/changePassword', async (req, res) =>
     res.write(`<html lang="he" dir="rtl"><head><meta charset="utf-8"></head><body>:`);
     res.write(`<section style="direction: rtl; height:150px; border:50px; border-width: 5px; border-style: solid; border-color: "#4a90e2" background: "#4a90e2"><h1><img src="./html/style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px; position: fixed; top: 32px; right: 15;"/>`);
     res.write(`<span style="position: absolute; top: 30; right: 150;">כנפים של קרמבו - אפליקציית 'השתתפות'</span></h1><br><div style="position: fixed; right: 150px;"><h3><span id="instNameHtml">${users[0].Name}</span> מסניף '<span id="branch">${users[0].District}</span>'</span></h3></div></section>`);
-    res.write(`<span style="right:150px;"><br><br><br>שלום ${users[0].Name}"!<br><br></span><span style="position: static;"><form method='get' name='updatePassword' action='/replacePassword'>הסיסמא הנוכחית שלך: <input type='password' name='firstPassword'><br>סיסמא חדשה (לפחות 6 תוים!):<input type='password' name='newPassword'><input type='hidden' name='user' value='"+user+"'><br><input type='submit' value='בצע!'></form></span><br><br></body></html>`);
+    res.write(`<span style="right:150px;"><br><br><br>שלום ${users[0].Name}"!<br><br></span><span style="position: static;"><form method='get' name='updatePassword' action='/replacePassword'>הסיסמא הנוכחית שלך: <input type='password' name='firstPassword'><br>סיסמא חדשה (לפחות 6 תוים!):<input type='password' name='newPassword'><input type='hidden' name='user' value="${user}"><br><input type='submit' value='בצע!'></form></span><br><br></body></html>`);
     res.send();
 });
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////

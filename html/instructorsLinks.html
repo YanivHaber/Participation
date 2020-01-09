@@ -83,10 +83,10 @@ function arrangeLinks()
 
     
         
-    document.write(`<p>YANIV!</p><p>מכוון ל: ${window.location.hostname}</p><p><p><b><a href=\"http://${window.location.hostname}:1000/changePassword\" target=\"_blank\">החלפת סיסמא!</a></b></p>`); 
+    document.write(`<p><b><a href=\"http://${window.location.hostname}:1000/changePassword\" target=\"_blank\">החלפת סיסמא!</a></b></p>`); 
 
 if (admin != "1") document.write(`<span id="myMembersLink"><p><b><a href="http://${window.location.hostname}:1000/myTeam" target="_blank">רשימת החניכים בסניף שלי</a></b></p></span>`);
-    document.write(`<p><b><a id=\"link8\" href=\"http://${window.location.hostname}:1000/html/Participation.html?target=\">צפיה ברשימות ההשתתפות של החניכים שלי!</a></b></p>`);
+    document.write(`<p><b><a id=\"link8\" href=\"http://${window.location.hostname}:1000/html/zz.html?instID="`+window.jQuery.get("instID")+`"\">צפיה ברשימות ההשתתפות של החניכים שלי!</a></b></p>`);
     document.getElementById("link8").target = "_blank";
 
   </script>

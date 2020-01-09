@@ -93,17 +93,12 @@ function drawMembers(json2, inst)
         // draw active members
         members.forEach(m => 
         {
-            if (true || m.active== "1")
-            {
-                activeMembers++;
-                membersHtml += "<tr><td>"+m.name+"</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>";
-                var chkbox = `<input id=\"ID-"${m.memberID}" name=\"ID-"'+m.memberID+'" type="checkbox" onclick=""`+((m.active== "1")? " checked": "")+`>`;
-                membersHtml += "<td>"+chkbox+"</td></tr>";
-            }
-            else
-            {
-                nonActive++;
-            }
+            if (m.active != "1") nonActive++;
+
+            activeMembers++;
+            membersHtml += "<tr><td>"+m.name+"</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>";
+            var chkbox = `<input id=\"ID-${m.memberID}" name=\"ID-${m.memberID}" type="checkbox" onclick="" `+((m.active== "1")? "checked": "")+` disabled>`;
+            membersHtml += "<td>"+chkbox+"</td></tr>";
         });
         // draw NON active members
         members.forEach(m => 

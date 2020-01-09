@@ -18,15 +18,12 @@ var urlParams = new URLSearchParams(location.search);
     {
         user = JSON.parse(json);
         userId = user.id;
-        loggedUserId = user.loggedUser;
         userName = user.name;
         admin = user.admin;
         district = user.district;
 
         //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
         document.getElementById("instNameHtml").innerHTML = userName;
-        //if (admin == 1) loadRakazim();
-        //else alert("you are NOT marked as 'admin' user thus cannot view this page...");
         document.getElementById("branch").innerHTML = district;
     });
 };
@@ -121,13 +118,13 @@ function loadRakazim()
                 return new Promise(resolve => setTimeout(resolve, ms));
             }
 
-            async function instName(instructorID)
+            async function instName()
             {
-                await sleep(3000);
-                document.getElementById("InstructorID").value = instructorID;
+                var url = new URL(url_string);
+                userID = url.searchParams.get("instID");
+                await getUserDetails();
                 if (admin < 1)
                 {
-                    if (loggedUserId == -2) await getUserDetails();
                     if (instID != loggedUserId)
                     {
                         alert("You CANNOT watch other instructor unless you login with his credentials!");
@@ -179,7 +176,7 @@ function loadRakazim()
 </script>
 
 </head>
-<body onLoad="getUserDetails(); instName(instID);">
+<body onLoad="instName();">
 
     <input type="text" style="visibility: hidden" name="InstructorID" id="InstructorID">
 

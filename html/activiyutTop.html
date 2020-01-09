@@ -166,16 +166,20 @@ async function getUserDetails()
         {
             // get the HTML that lists all members and add some button function to it!
             var reHtml =  drawMembers(json2, inst);
-            var html = "<h3>הסר את הוי מחניכים שברצונך להפוך ללא אקטיביים ולחץ על כפתור 'שמור'...</h3><br><button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">שמור</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button>"+reHtml;
+            var html = "<h3>הסר את ה-V מחניכים שברצונך להפוך ללא אקטיביים ולחץ על כפתור 'שמור'...</h3><br><button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">שמור</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button>"+reHtml;
             //window.parent.document.getElementById("main").srcdoc = "<button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">סמן חניכים והקש כאן כדי להפכם ל'לא אקטיביים'...!</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button>"+reHtml;
             window.parent.document.getElementById("main").srcdoc =  html;
             //window.parent.document.getElementById("main").dir = "rtl";
         });
     }
 
+
+
     function drawMembers(json2, inst)
     {
-        var membersHtml = `<html lang=\"heb\" dir=\"rtl\"><head><script src=\"http://${${window.location.hostname}:1000/html/protegeActivity.js\"><script language=\"javascript\">var id = "+inst+"; getMembers(id);</sc"+"ript\"></sc"+"ript><script src=\"https://code.jquery.com/jquery-3.3.1.min.js\"></sc"+"ript></head><body><table><tr><th>אקטיבי?</th><th>שם</tr><form id=\"form1\" action=\"/editMembers\" method=\"get\">`;
+        alert(`inst=${inst}`); 
+
+        var membersHtml = `<html lang="heb" dir="rtl"><head><script src="http://${window.location.hostname}:1000/html/protegeActivity.js"><script language="javascript">var id = ${inst}; getMembers(id);</script><script src="https://code.jquery.com/jquery-3.3.1.min.js"></script></head><body><table><tr><th>אקטיבי?</th><th>שם</tr><form id="form1" action="/editMembers" method="get">`;
         try 
         {
             var members = JSON.parse(json2);
