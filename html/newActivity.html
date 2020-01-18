@@ -93,17 +93,39 @@
             var urlParams = new URLSearchParams(location.search);
             instID = urlParams.get("instid");
             
+            function selectType(index)
+            {
+                var visible = "hidden";
+                if (index == 2 || index == 3)
+                {
+                        visible = "visible";
+                }
+                document.getElementById("location").style.visibility = visible;
+            }
 
+            var allMarked = false;
             function selectAll()
             {
+                var mark = true;
                 var inputs = document.getElementsByTagName("input");
+                if (allMarked)
+                {
+                    mark = false;
+                    document.getElementById("markAllButton").value = "סמן את כווווולם!!";
+                }
+                else
+                {
+                    document.getElementById("markAllButton").value = "בטל סימון כווווולם!";
+                    mark = true;
+                }
                 for (x = 0 ; x < inputs.length ; x++)
                 {
                     myname = inputs[x].id;
                     if(myname.substring(0, 3) == "ID-")
                     {
-                        inputs[x].checked = true;
+                        inputs[x].checked = mark;
                     }
+                    allMarked = mark;
                 }
             }
             </script>
@@ -119,25 +141,27 @@
                 <br>
                 <b>סוג הפעולה:</b>
                 
-                <select name="ActivityType">
+                <select name="ActivityType" onchange="selectType(this.selectedIndex)">
                     <option value="שכבה">שכבה</option>
                     <option value="חונכויות">חונכויות</option>
-                    <option value="חוץ">חוץ</option>
+                    <option value="אירוע חוץ">אירוע חוץ</option>
+                    <option value="חוץ">אחר</option>
                   </select>
                   <br>
-                  <b>או בכמה מילים:</b><input type="text" name="subtype" />
+                  <div id="location" style="visibility: hidden">
+                  <b>מיקום \ מהות:</b><input type="text" name="subtype" /></div>
                 <br>
                 <br>
                 <b>החניכים של מדריך זה:</b>
 
                 <div id="membersTable"></div>
-                <br><br></br></br>
                 
-                        מספר מדריך: <input id="instIDinput" name="instID" value="99"><br>
-                    <input type="button" onclick="selectAll()" value="סמן את כווווולם!">
+                
+                    <input id="instIDinput" name="instID" value="99" style="visibility: hidden"></input><br>
+                    <input type="button" id="markAllButton" onclick="selectAll()" value="סמן את כווווולם!"></input>
                     <span id="membersTable">
                     </span>
-                    <input id="submitButt" type="submit" style="visibility: hidden" value="עדכן!">
+                    <input id="submitButt" type="submit" style="visibility: hidden" value="עדכן!"></input>
                 </form>
                 
             </body>

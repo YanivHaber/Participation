@@ -1,11 +1,11 @@
    function drawMembers(json2, inst)
     {
-        var membersHtml = "<html lang="heb" dir="rtl"><head><script src="/html/protegeActivity.js">
+        var membersHtml = "<html lang="heb" dir="rtl"><head><script src=\"/html/protegeActivity.js\">"
 <script language="javascript">
 var id = "+inst+";
  getMembers(id);
 </script>
-<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script></head><body><table><tr><th>ачийбй?</th><th>щн</tr><form id="form1" action="/editMembers" method="get">";
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script></head><body><table><tr><th>пїЅпїЅпїЅпїЅпїЅпїЅ?</th><th>пїЅпїЅ</tr><form id="form1" action="/editMembers" method="get">";
 
         try 
         {

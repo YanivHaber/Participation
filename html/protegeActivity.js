@@ -36,14 +36,39 @@ function setChangeVars(checkId)
         if (changedVars.length > 0) changedVars += "&";
         changedVars += chk.id + "=" + chk.checked;
     }
-
 }
+
+async function deactivateMembers()
+{
+    await deactivateOnServer();
+    alert("בחירתך נשמרה...");
+}
+
+async function deactivateOnServer()
+{
+    var url = "/deactivateUsers?" + changedVars;
+    var res = "";
+    try
+    {
+        $.get(url, function (retSon) 
+        {
+            alert("done: "+retSon); 
+            alert('reloading...'); 
+        });
+    }
+    catch (e) 
+    {
+        alert(e);
+    }                
+}
+
 
 function getMembers(inst)
 {
+    if (inst < 0) return;
     $.get("/membersForInstructor?instID="+inst, function (json2)
     {
-        drawMembers(json2);
+        drawMembers(json2, inst);
     });
 }
 
@@ -115,7 +140,6 @@ function drawMembers(json2, inst)
         innerPoint = membersHtml.indexOf(`"nonActive">`) + `"nonActive">`.length;
         membersHtml = membersHtml.substring(0, innerPoint) + nonActive + membersHtml.substring(innerPoint);
 
-        
         return membersHtml;
     }
     catch(e)

@@ -63,6 +63,10 @@ function arrangeLinks()
         {
           var membersLink = document.getElementById("myMembersLink");
           if (membersLink) membersLink.parentNode.removeChild(membersLink);
+
+          var link2 = document.getElementById("link2");
+          if (link2) link2.parentNode.removeChild(link2);
+
         }
         else
         {
@@ -86,7 +90,7 @@ function arrangeLinks()
     document.write(`<p><b><a href=\"http://${window.location.hostname}:1000/changePassword\" target=\"_blank\">החלפת סיסמא!</a></b></p>`); 
 
 if (admin != "1") document.write(`<span id="myMembersLink"><p><b><a href="http://${window.location.hostname}:1000/myTeam" target="_blank">רשימת החניכים בסניף שלי</a></b></p></span>`);
-    document.write(`<p><b><a id=\"link8\" href=\"http://${window.location.hostname}:1000/html/zz.html?instID="`+window.jQuery.get("instID")+`"\">צפיה ברשימות ההשתתפות של החניכים שלי!</a></b></p>`);
+    document.write(`<p><b><a id=\"link8\" href=\"http://${window.location.hostname}:1000/html/viewActivity.html?instID="`+window.jQuery.get("instID")+`"\">צפיה ברשימות ההשתתפות של החניכים שלי!</a></b></p>`);
     document.getElementById("link8").target = "_blank";
 
   </script>
@@ -100,7 +104,7 @@ getUserDetails();
   document.write("<p><b><a id=\"link1\" href=\"wow.com\">ערוך אקטיביות החניכים שלי!</a></b></p>");
   document.getElementById("link1").target = "_blank";
 
-document.write("<p><b><a id=\"link2\" href=\"amazing.com\" target=\"_blank\">החזר אקטיביות של חניכים</a></b></p>");
+document.write("<p><b><a id=\"link2\" href=\"amazing.com\" target=\"_blank\">החזר אקטיביות של חניכים (לינק שצריך לעוף מפה!)</a></b></p>");
 document.getElementById("link2").target = "_blank";
 
 document.write(`<span id="myMembers"><p><b><a id="link3" href="../myTeam" target="_blank">רשימת החניכים שלי</a></b></p></span>`);

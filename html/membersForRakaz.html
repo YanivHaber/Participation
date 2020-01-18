@@ -7,26 +7,26 @@
 var urlParams = new URLSearchParams(location.search);
         var instID = urlParams.get("instID");
         var loggedUserId = -2;
-        var instructor = "";
         var admin = 0;
         var userName = "";
         var userId = -9;
 
         async function getUserDetails()
-{    
-    $.get("/userName", function(json)
-    {
-        user = JSON.parse(json);
-        userId = user.id;
-        userName = user.name;
-        admin = user.admin;
-        district = user.district;
+        {    
+            $.get("/userName", function(json)
+            {
+                user = JSON.parse(json);
+                userId = user.id;
+                loggedUserId = user.id;
+                userName = user.name;
+                admin = user.admin;
+                district = user.district;
 
-        //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
-        document.getElementById("instNameHtml").innerHTML = userName;
-        document.getElementById("branch").innerHTML = district;
-    });
-};
+                //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
+                document.getElementById("instNameHtml").innerHTML = userName;
+                document.getElementById("branch").innerHTML = district;
+            });
+        };
 
 function loadRakazim()
             {
@@ -91,12 +91,12 @@ function loadRakazim()
             function setChangeVars(checkId)
             {
                 var chk = document.getElementById(checkId);
-                if (chk.checked) 
+                /*if (chk.checked) 
                 {
                     alert("לא ניתן להשתמש בדף זה כדי לסמן חניך חזרה כאקטיבי! בצע refresh כדי לחזור לראות מצב אקטיביות נוכחי, או בקש מאדמיניסטרטור של המערכת להפוך חניכים חזרה לאקטיביים, אם יש בכך צורך.");
                     chk.checked = false;
                     return;
-                }
+                }*/
                 var loc = changedVars.indexOf(chk.id);
                 if (loc > 0)
                 {
@@ -114,24 +114,26 @@ function loadRakazim()
                 chk.parentNode.nextSibling.style.color = rightColor;
             }
  
-            function sleep(ms) {
+            async function sleep(ms) {
                 return new Promise(resolve => setTimeout(resolve, ms));
             }
 
             async function instName()
             {
-                var url = new URL(url_string);
-                userID = url.searchParams.get("instID");
                 await getUserDetails();
+                await sleep(1000);
                 if (admin < 1)
                 {
                     if (instID != loggedUserId)
                     {
-                        alert("You CANNOT watch other instructor unless you login with his credentials!");
+                        document.getElementById("wait").remove();
+                        document.write(`<img class="irc_mi" src="https://icon2.cleanpng.com/20180619/klp/kisspng-confined-space-warning-sign-hazard-sticker-no-entrance-5b29cebf79ccf9.8924609915294665594989.jpg" width="260" height="260">`)
+                        await sleep(1000);
+                        alert("אינך יכול/ה לצפות בנתוני מדריך אחר מבלי לעשות מחדש לוגין בעזרת שם המשתמש שלו (או שלה)! :-)");
                         return;
                     }
                 }
-                alertInst(instructorID);
+                alertInst(userId);
                 
                 
             }
@@ -140,7 +142,7 @@ function loadRakazim()
 
 
 
-            function alertInst(instructor)
+            function alertInst()
             {
                 document.getElementById("instNameHtml").textContent = userName;
                 document.getElementById("branch").textContent = district;
@@ -178,11 +180,10 @@ function loadRakazim()
 </head>
 <body onLoad="instName();">
 
-    <input type="text" style="visibility: hidden" name="InstructorID" id="InstructorID">
-
-        החניכים של המדריך: '<span id="instNameHtml"></span> (מסניף '<span id='branch'></span>'):<br>
-<button id="selAll" type="button" onclick="selectAll()" value="">הפוך את הבחירה בכווווווולם!</button>
-    <div id="membersTable"><img src='/html/wait.gif'></div>
+    <input type="text" style="visibility: hidden" name="InstructorID" id="InstructorID"><h3>
+    החניכים של המדריך '<span id="instNameHtml"></span> (מסניף '<span id='branch'></span>'):</h3><br>
+<button id="selAll" type="button" onclick="selectAll()" value=""> הפוך את הבחירה בכווווווולם! (כפתור שיעוף מפה)</button>
+    <div id="membersTable"><img id="wait" src='/html/wait.gif'></div>
     <br><br></br></br><hr>
     <button id='await' type="button" onclick="deactivateMembers();">שמור בחירה!</button>
 

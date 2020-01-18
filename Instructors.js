@@ -539,36 +539,44 @@ app.get('/membersForInstructor', async (req, res) => {
     if (req.index !== undefined) var lay = req.index.layer;
     res.header("Content-Type", "text/html; charset=utf-8");
     let rows = await query("select District from rakazim where ID = " + req.query.instID);
-    var dist = rows[0].District;
+    if (rows.length == 0)
+    {
+        res.write("none!");
+        res.send();
+    }
+    else
+    {
+        var dist = rows[0].District;
 
-    var q = `select ID, FullName, Active from members where`;
-    q += " סניף=";
-    q += `"`+dist+`"`;
+        var q = `select ID, FullName, Active from members where`;
+        q += " סניף=";
+        q += `"`+dist+`"`;
 
-    var retArray = "[";
-    try {
-        let rows2 = await query(q);
-        console.log("found " + rows2.length + " rows!");
+        var retArray = "[";
+        try {
+            let rows2 = await query(q);
+            console.log("found " + rows2.length + " rows!");
 
-        for (i = 0; i < rows2.length; i++) {
-            if (i > 0) retArray += ", ";
-            retArray += "{";
-            retArray += "\"name\":\"" + rows2[i].FullName + "\", ";
-            retArray += "\"memberID\":\"" + rows2[i].ID + "\", ";
-            retArray += "\"Active\":\"" + rows2[i].Active + "\"";
-            retArray += "}";
+            for (i = 0; i < rows2.length; i++) {
+                if (i > 0) retArray += ", ";
+                retArray += "{";
+                retArray += "\"name\":\"" + rows2[i].FullName + "\", ";
+                retArray += "\"memberID\":\"" + rows2[i].ID + "\", ";
+                retArray += "\"Active\":\"" + rows2[i].Active + "\"";
+                retArray += "}";
+            }
+            retArray += "]";
+
+
         }
-        retArray += "]";
+        catch (e) {
+            console.log(e);
+        }
 
 
+        res.write(retArray);
+        res.send();
     }
-    catch (e) {
-        console.log(e);
-    }
-
-
-    res.write(retArray);
-    res.send();
 });
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/addParticipation', async (req, res) => {
@@ -618,8 +626,8 @@ app.get('/addParticipation', async (req, res) => {
 
     let rows = await query(addSql);
 
-    res.write("<html dir='rtl' lang='heb'>");
-    res.write("Data was added successfully...:-)");
+    res.write(`<html lang='heb' dir='rtl'><head><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head>`);
+    res.write("<h1>הפעולה נקלטה בהצלחה!...:-)</h1></html>");
     res.send();
 
     //insert sql:
@@ -657,6 +665,15 @@ app.get('/deactivateUsers', async (req, res) =>
             usersDeact++;
         }
     }
+        for (j = 0; j < 6000; j++) {
+        if (req.query["ID-" + j] == "true") 
+        {   
+            var sql = "UPDATE members SET Active = 1 WHERE ID=" + j;
+            rows = await query(sql);
+            usersDeact++;
+        }
+    }
+
         res.header("Content-Type", "application/json; charset=utf-8");
     if (usersDeact == 1) verb = " was";
     else verb = "s were";

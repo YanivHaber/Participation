@@ -21,6 +21,7 @@ a:active {
 }
 </style>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+
 </head>
 <body  onLoad="getUserDetails();">
   
@@ -56,8 +57,8 @@ function getUserDetails()
           }
           else
           {
-            alert("You are NOT marked as 'admin' user thus cannot view this page...");
             document.write(`<img class="irc_mi" src="https://icon2.cleanpng.com/20180619/klp/kisspng-confined-space-warning-sign-hazard-sticker-no-entrance-5b29cebf79ccf9.8924609915294665594989.jpg" alt="Image result for no entrance sign" width="260" height="260" style="">`)
+            alert("אינך מוגדר אדמיניסטרטור ולכן אינך יכול לגשת לדף זה...");
           }
         });
 };

@@ -4,40 +4,67 @@
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script language="javascript">
 
-    //var urlParams = new URLSearchParams(location.search);
-    //instID = urlParams.get("instid");
+        var loggedUserId = -2;
+        var admin = 0;
+        var userName = "";
+        var userId = -9;
 
-    function getMembers()
+        async function getUserDetails()
+        {    
+            $.get("/userName", function(json)
             {
-                $.get("/getInactiveUsers", function (json)
+                user = JSON.parse(json);
+                userId = user.id;
+                loggedUserId = user.id;
+                userName = user.name;
+                this.admin = user.admin;
+                district = user.district;
+
+                //alert("user is "+(this.admin =="1"? "":"NOT")+" an admin!");
+                if (this.admin != "1")
                 {
-                    drawMembers(json);
-                });
-            }
-
-            function drawMembers(json)
-            {
-                var membersHtml = "<table><tr><th>שם</th><th>הפוך אקטיבי!</th></tr>";
-
-                try 
-                {
-                    var members = JSON.parse(json);
-
-                    var userNumber = 1;
-                    members.forEach(m => 
-                    {
-                        membersHtml += "<tr><td>"+userNumber+". "+m.name+"</td><td><input id=\"ID-"+m.memberID+"\" name=\"ID-"+m.memberID+"\" type=\"checkbox\" onclick=\"setUsersInput('ID-"+m.memberID+"')\"></td></tr>";
-                        userNumber++;
-                    });
-                    membersHtml += "</table>";
-                    document.getElementById("membersTable").innerHTML = membersHtml;
-                    //document.getElementById("submitButt").style.visibility = "visible";
+                  document.write(`<img class="irc_mi" src="https://icon2.cleanpng.com/20180619/klp/kisspng-confined-space-warning-sign-hazard-sticker-no-entrance-5b29cebf79ccf9.8924609915294665594989.jpg" alt="Image result for no entrance sign" width="260" height="260" style="">`)
+                  alert("You are NOT marked as 'admin' user thus cannot view this page...");
+                  return false;
                 }
-                catch(e)
-                {
-                    alert(e);
-                }     
-            }
+                  return true;
+            });
+        }
+async function getMembers()
+{
+  var goodLogin = await getUserDetails();
+  //if (!goodLogin) return;
+    $.get("/getInactiveUsers", function (json)
+    {
+        drawMembers(json);
+    });
+  
+}
+
+function drawMembers(json)
+{
+    var membersHtml = "<table><tr><th>שם</th><th>הפוך אקטיבי!</th></tr>";
+
+    try 
+    {
+        var members = JSON.parse(json);
+
+        var userNumber = 1;
+        members.forEach(m => 
+        {
+            membersHtml += "<tr><td>"+userNumber+". "+m.name+"</td><td><input id=\"ID-"+m.memberID+"\" name=\"ID-"+m.memberID+"\" type=\"checkbox\" onclick=\"setUsersInput('ID-"+m.memberID+"')\"></td></tr>";
+            userNumber++;
+        });
+        membersHtml += "</table>";
+        memHtml = document.getElementById("membersTable");
+        if (memHtml) memHtml.innerHTML = membersHtml;
+        //document.getElementById("submitButt").style.visibility = "visible";
+    }
+    catch(e)
+    {
+        alert(e);
+    }     
+}
             var changedVars = "";
 
             function setUsersInput(usr)

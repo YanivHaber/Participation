@@ -100,10 +100,12 @@ async function getMyUserDetails()
                     {
                         activity = JSON.parse(actJson);
 
+                        subtype = activity.subtype;
+                        if (subtype == "") subtype = "אין";
                         activityHtml = "<b>נושא הפעולה:</b><br>" + activity.Name + 
                                             "<br> <b>סוג:</b> <br><font color=\"ForestGreen\">" + 
                                             activity.type + "</font><br><b>הערות:</b> <br><font color=\"ForestGreen\">" + 
-                                            activity.subtype + "</font>";
+                                                subtype + "</font>";
 
                         //var pointerIndex = html.indexOf("?"+activity.point);
                         //var secondPart = html.substr(pointerIndex + 2);
@@ -324,7 +326,7 @@ function sleep(ms) {
         </table><br>
                     <hr>
                     
-                    <input type="button" id="createbutt" onClick="createNew()" style="visibility: visible">צור פעולה חדשה</input>
+                    <input type="button" id="createbutt" onClick="createNew()" style="visibility: visible" value="צור פעולה חדשה"></input>
 
     <script lang="=javascript">
        </script>
