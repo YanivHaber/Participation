@@ -106,9 +106,9 @@ async function getUserDetails()
     
     async function loadData()
     {
-        debugger;
         if (admin == "1")
         {
+
             // admin user! show ALL rakazim...
             var html = `<select id="rakazim" onChange="getMembersToClient(this.options[this.selectedIndex].getAttribute('id'))">`;
     
@@ -229,7 +229,7 @@ async function getMembersToClient(instID)
                     $.get("/getActivity?instID=" + instID + "&date=" + dates[o].date + "&point=" + o, "", (actJson) => 
                     {
                         activity = JSON.parse(actJson);
-                        if (activity.point == "8") debugger;
+
                         activityHtml = "<b>נושא הפעולה:</b><br>" + activity.Name + 
                                             "<br> <b>סוג:</b> <br><font color=\"ForestGreen\">" + 
                                             activity.type + "</font><br><b>הערות:</b> <br><font color=\"ForestGreen\">" + 
@@ -382,7 +382,7 @@ async function old_initOnLoad()
     if (ret)
     {
         
-        //await getMembersToClient(instID); 
+        //await getMembersToClient(instID);
     }
 }
 function sleep(ms) {
@@ -395,7 +395,7 @@ function sleep(ms) {
     <div style="direction: rtl; height:170px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;"><h1><img src="./style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px;"/>כנפים של קרמבו - אפליקציית 'השתתפות'
     </h1><br><div style="position: fixed; right: 150px;"><h3><img></div></span></h3></div>`
             
-    <h2>רישום השתתפות של חניכים של <span id="instName"></span>  מסניף '<span id="branch"></span>'</h2>
+    <h2><span id=topSubject"> רישום השתתפות של חניכים של</span> <span id="instName"></span>  מסניף '<span id="branch"></span>'</h2>
     <br>
 
     <h3>בחר רכז: <span id="selector"></span></h3>

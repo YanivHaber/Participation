@@ -39,6 +39,12 @@ var userName = "";
 var district = "";
 var userId = -9;
 
+function urlVar(name)
+{
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);    
+}
+var loginGood = false;
 
 async function getUserDetails(ID)
 {
@@ -46,12 +52,21 @@ async function getUserDetails(ID)
     {
         user = JSON.parse(json);
         loggedUser = user.loggedUser;
+        instID = user.id;
         userName = user.name;
         document.getElementById("instName").innerHTML = userName;
         document.getElementById("branch").innerHTML = user.district;
-        if (user.loggedUser != user.id)
+
+        if (user.loggedUser == user.id)
         {
+            loginGood = true;
+            window.setTimeout(`drawAfterValidation()`, 500);
+        }
+        else
+        {
+            loginGood = false;
             alert("You CANNOT watch other instructor unless you login with his credentials!");
+            document.getElementById("htmlAll").innerHTML = `<img class="irc_mi" src="https://icon2.cleanpng.com/20180619/klp/kisspng-confined-space-warning-sign-hazard-sticker-no-entrance-5b29cebf79ccf9.8924609915294665594989.jpg" alt="Image result for no entrance sign" width="260" height="260" style="">`;
             return;   
         }
         
@@ -65,148 +80,136 @@ var html = "";
 async function getMyUserDetails()
 {    
     var myMembers = document.getElementById("myMembers");
-    $.get("/userName", "", function(json)
-    {
-        user = JSON.parse(json);
-        userId = user.id;
-        instID = user.id;
-        userName = user.name;
-        admin = user.admin;
-        district = user.district;
-
-        document.getElementById("branch").innerHTML = district;
-        document.getElementById("instName").innerHTML = userName;
-        
-        $.get("/getInstDates?instID="+instID, "", function (datesJson)
-        {    
-            dates = JSON.parse(datesJson);
-            // first add dates as headers
-            //alert("for each one of the "+dates.length+" dates of that instructor...");
-            if (typeof(dates) != "undefined" && dates.length > 0)
-            {
-                for (p = dates.length - 1; p > -1; p--)
-                {
-                    html += "<th class=\"rotate\"><div><span>"+dates[p].date+"</span></div></th>";
-                }
-                html += "<th class=\"rotate\"><div><tbody></tbody>";
-
-                // add totals records BEFORE actual listings
-                html += "<tr><td></td>";
-                for (var o = dates.length - 1; o > -1; o--)
-                {
-                    var activityHtml = "<span dir='rtl' id='act"+o+"Description'>?"+o+"</span>";
-                    
-                    $.get("/getActivity?instID=" + instID + "&date=" + dates[o].date + "&point=" + o, "", (actJson) => 
-                    {
-                        activity = JSON.parse(actJson);
-
-                        subtype = activity.subtype;
-                        if (subtype == "") subtype = "אין";
-                        activityHtml = "<b>נושא הפעולה:</b><br>" + activity.Name + 
-                                            "<br> <b>סוג:</b> <br><font color=\"ForestGreen\">" + 
-                                            activity.type + "</font><br><b>הערות:</b> <br><font color=\"ForestGreen\">" + 
-                                                subtype + "</font>";
-
-                        //var pointerIndex = html.indexOf("?"+activity.point);
-                        //var secondPart = html.substr(pointerIndex + 2);
-                        //var firstPart = html.substr(0, pointerIndex);
-                        //html = firstPart + activityHtml + secondPart;
-
-                        window.setTimeout(`writeActDescription(${activity.point}, encodeURI(\`${activityHtml}\`))`, 1000);
-                    });
-                    var totalAmount = Number(dates[o].yes) + Number(dates[o].no);
-
-                    // get activity details:
-                    var yes = dates[o].yes;
-                    html += "<td style=\"border:2px solid gray;\">כמות חניכים כוללת:" + totalAmount + "<br> היו: <font color=\"ForestGreen\">" + yes + "</font><br>נעדרו: <font color=\"red\">" + dates[o].no + "<br></font><span dir='ltr' id='Activity'+k><br>"+activityHtml+"<span>";
-                }
-            }
-            html += "</tr>";
-
-            //ndocument.write(html);            
-        });
-
-        var url = "/getParticipation?instID="+instID;
-        html = "<th class=\"straight\"><div><span></span></div></th>";
-
-        $.get(url, "", function (json2) 
+    $.get("/getInstDates?instID="+instID, "", function (datesJson)
+    {    
+        dates = JSON.parse(datesJson);
+        // first add dates as headers
+        //alert("for each one of the "+dates.length+" dates of that instructor...");
+        if (typeof(dates) != "undefined" && dates.length > 0)
         {
-            try 
+            for (p = dates.length - 1; p > -1; p--)
             {
-                part = JSON.parse(json2);
-                //alert("understood json for /getParticipation")
-
-                var members = new Array();
-                var memberInsideAlready = new Array();
-
-                //$('#myMembers tbody tr').remove();
-
-                //alert("compare to each of the "+part.length+" participants' dates to show participation for each...");
-                for (p = 0; p < part.length; p++)
-                {
-                    var currName = part[p].member;
-                    
-                    html += "<tr><th class=\"straight\"><div><span></span></div></th>";
-                
-                    html += "<tr>";
-                    html += "<th>"+(p+1)+". "+currName+"</th>";
-
-                    var columnsCount = 0;
-                    // go over all available dates (table columns) if they exist
-                    if (typeof(dates) == "undefined")
-                    cols = -1;
-                    else
-                    cols = dates.length - 1;
-                    for (i= cols ; i > -1; i--)
-                    {
-                        var currDate = dates[i];
-                        var dateAvailable = false;
-                        var dateIndex = -1;
-
-                        var datesCount = dates.length;
-
-
-                        // compare them to the dates returned from prticipation table to un\check them...
-                        for (var dateInd = part[p].dates.length - 1; dateInd > -1; dateInd--)
-                        {
-                            if (part[p].dates[dateInd].date == currDate.date) 
-                            {
-                                dateIndex = dateInd;
-                                dateAvailable = true;
-                            }
-                        }
-                        if ( dateAvailable )
-                        {
-                            html += "<td><center><input type=\"checkbox\"";
-                            html += part[p].dates[dateIndex].participated ? "checked=\"checked\"": "";
-                            html += " disabled></center></td>"; 
-                            columnsCount++;
-                        } 
-                        else
-                        {
-                            html += "<td><center>X</center></td>";
-                            columnsCount++;
-                        }
-                    }
-                    for (var missing = columnsCount; missing < datesCount; missing++)
-                    {
-                        //html += "<td>X</td>";
-                    }
-
-                    html += "</tr>";
-                    //alert("created html for users!");
-                }
-                myMembers.innerHTML = "<table id=\"partTable\">"+html+"</table>";    
-                //myMembers.innerHTML = html;
-                //document.getElementById("createbutt").style.visibility = "visible";
+                html += "<th class=\"rotate\"><div><span>"+dates[p].date+"</span></div></th>";
             }
-            catch (e)
+            html += "<th class=\"rotate\"><div><tbody></tbody>";
+
+            // add totals records BEFORE actual listings
+            html += "<tr><td></td>";
+            for (var o = dates.length - 1; o > -1; o--)
             {
-                alert("exception 8:"+e);
-            }        
-        });
+                var activityHtml = "<span dir='rtl' id='act"+o+"Description'>?"+o+"</span>";
+                
+                $.get("/getActivity?instID=" + instID + "&date=" + dates[o].date + "&point=" + o, "", (actJson) => 
+                {
+                    activity = JSON.parse(actJson);
+
+                    subtype = activity.subtype;
+                    if (subtype == "") subtype = "אין";
+                    activityHtml = "<b>נושא הפעולה:</b><br>" + activity.Name + 
+                                        "<br> <b>סוג:</b> <br><font color=\"ForestGreen\">" + 
+                                        activity.type + "</font><br><b>הערות:</b> <br><font color=\"ForestGreen\">" + 
+                                            subtype + "</font>";
+
+                    //var pointerIndex = html.indexOf("?"+activity.point);
+                    //var secondPart = html.substr(pointerIndex + 2);
+                    //var firstPart = html.substr(0, pointerIndex);
+                    //html = firstPart + activityHtml + secondPart;
+
+                    window.setTimeout(`writeActDescription(${activity.point}, encodeURI(\`${activityHtml}\`))`, 1000);
+                });
+                var totalAmount = Number(dates[o].yes) + Number(dates[o].no);
+
+                // get activity details:
+                var yes = dates[o].yes;
+                html += "<td style=\"border:2px solid gray;\">כמות חניכים כוללת:" + totalAmount + "<br> היו: <font color=\"ForestGreen\">" + yes + "</font><br>נעדרו: <font color=\"red\">" + dates[o].no + "<br></font><span dir='ltr' id='Activity'+k><br>"+activityHtml+"<span>";
+            }
+        }
+        html += "</tr>";
+
+        //ndocument.write(html);            
     });
-}    
+
+    var url = "/getParticipation?instID="+instID;
+    html = "<th class=\"straight\"><div><span></span></div></th>";
+
+    $.get(url, "", function (json2) 
+    {
+        try 
+        {
+            part = JSON.parse(json2);
+            //alert("understood json for /getParticipation")
+
+            var members = new Array();
+            var memberInsideAlready = new Array();
+
+            //$('#myMembers tbody tr').remove();
+
+            //alert("compare to each of the "+part.length+" participants' dates to show participation for each...");
+            for (p = 0; p < part.length; p++)
+            {
+                var currName = part[p].member;
+                
+                html += "<tr><th class=\"straight\"><div><span></span></div></th>";
+            
+                html += "<tr>";
+                html += "<th>"+(p+1)+". "+currName+"</th>";
+
+                var columnsCount = 0;
+                // go over all available dates (table columns) if they exist
+                if (typeof(dates) == "undefined")
+                cols = -1;
+                else
+                cols = dates.length - 1;
+                for (i= cols ; i > -1; i--)
+                {
+                    var currDate = dates[i];
+                    var dateAvailable = false;
+                    var dateIndex = -1;
+
+                    var datesCount = dates.length;
+
+
+                    // compare them to the dates returned from prticipation table to un\check them...
+                    for (var dateInd = part[p].dates.length - 1; dateInd > -1; dateInd--)
+                    {
+                        if (part[p].dates[dateInd].date == currDate.date) 
+                        {
+                            dateIndex = dateInd;
+                            dateAvailable = true;
+                        }
+                    }
+                    if ( dateAvailable )
+                    {
+                        html += "<td><center><input type=\"checkbox\"";
+                        html += part[p].dates[dateIndex].participated ? "checked=\"checked\"": "";
+                        html += " disabled></center></td>"; 
+                        columnsCount++;
+                    } 
+                    else
+                    {
+                        html += "<td><center>X</center></td>";
+                        columnsCount++;
+                    }
+                }
+                for (var missing = columnsCount; missing < datesCount; missing++)
+                {
+                    //html += "<td>X</td>";
+                }
+
+                html += "</tr>";
+                //alert("created html for users!");
+            }
+            myMembers.innerHTML = "<table id=\"partTable\">"+html+"</table>";    
+            //myMembers.innerHTML = html;
+            //document.getElementById("createbutt").style.visibility = "visible";
+        }
+        catch (e)
+        {
+            alert("exception 8:"+e);
+        }        
+    });
+};
+   
     
     async function loadData(rakazimArray)
     {
@@ -228,7 +231,7 @@ var dates;
 //
 async function getMembersToClient(instID)
 {
-    if (instID == -9) sleep2(2000);
+    
             
 
     //alert("created html:" + html);
@@ -285,10 +288,18 @@ function createNew()
 async function initOnLoad()
 {
     instID = new URLSearchParams(window.location.search).get("instID");
-    //await getUserDetails(instID);
-    await getMyUserDetails(); 
-    await loadData("[]");
+    await getUserDetails(instID);
+    {
+    }
 }
+async function drawAfterValidation()
+{
+    await getMyUserDetails();
+    while (instID == -9) sleep(3000); 
+    await loadData("[]");
+
+}
+
 function sleep2(ms)
 {
     var start = new Date().getTime(); 
@@ -300,8 +311,9 @@ function sleep(ms) {
 
 </script>
 </head>
-<body onload="initOnLoad();" dir="rtl">
+<body onload="getUserDetails(); initOnLoad();" dir="rtl">
 
+    <div id=htmlAll">
     <div style="direction: rtl; height:170px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;"><h1><img src="./style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px;"/>כנפים של קרמבו - אפליקציית 'השתתפות'
     </h1><br><div style="position: fixed; right: 150px;"><h3><img></div></span></h3></div>`
             
@@ -330,6 +342,8 @@ function sleep(ms) {
 
     <script lang="=javascript">
        </script>
+
+</div>
 </body>
 
 </html>

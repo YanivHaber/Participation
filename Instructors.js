@@ -217,7 +217,7 @@ app.get("/userDetails", async(req, res) =>
         retJSON = "{ \"name\": \""+name[0].Name+"\", \"id\": "+id + ", \"district\":"+((name[0].District!== 'undefined') ? "\""+name[0].District+"\"": 'unknown');
 
         logInUser = await query("select * from users where id="+id); 
-        retJSON += ", \"admin\":"+((logInUser.length > 0)? logInUser[0].admin: "Not defined as user that can log-on! yet.") + ", \"loggedUser\":\""+req.user.id+"\"}";
+        retJSON += ", \"admin\":"+((logInUser.length > 0)? logInUser[0].admin: "0") + `, "loggedUser":"${req.user.id}"}`;
         res.write(retJSON);
     }
     res.send();
