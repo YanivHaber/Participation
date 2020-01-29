@@ -89,7 +89,7 @@ async function getMyUserDetails()
         {
             for (p = dates.length - 1; p > -1; p--)
             {
-                html += "<th class=\"rotate\"><div><span>"+dates[p].date+"</span></div></th>";
+                html += "<th class=\"rotate\"><div><span><a id='date"+p+"' href='./editActivity.html'>"+dates[p].date+"</a></span></div></th>";//yaniv
             }
             html += "<th class=\"rotate\"><div><tbody></tbody>";
 
@@ -97,12 +97,14 @@ async function getMyUserDetails()
             html += "<tr><td></td>";
             for (var o = dates.length - 1; o > -1; o--)
             {
+                //var activityHtml = "<span dir='rtl' id='act"+o+"Description'>"+o+"</span>";
                 var activityHtml = "<span dir='rtl' id='act"+o+"Description'>?"+o+"</span>";
                 
                 $.get("/getActivity?instID=" + instID + "&date=" + dates[o].date + "&point=" + o, "", (actJson) => 
                 {
                     activity = JSON.parse(actJson);
 
+                    window.setTimeout(`.getElementById("date${activity.point}").setAttribute('href', "./editActivity.html?act=${activity.id}"`, 1000);
                     subtype = activity.subtype;
                     if (subtype == "") subtype = "אין";
                     activityHtml = "<b>נושא הפעולה:</b><br>" + activity.Name + 
@@ -242,7 +244,6 @@ function writeActDescription(descrNum, descr)
 {
     var descrLoc = document.getElementById("act"+descrNum+"Description");
     descrLoc.innerHTML = decodeURI(descr);
-
 }
 var ActivityHTMLs = new Array();
 
@@ -328,6 +329,7 @@ function sleep(ms) {
      
          <!-- used to be:'selector-->
         <hr>
+        
         <table border=0 id="myMembers">
                     <tr>
                         <th></th>

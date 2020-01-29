@@ -74,7 +74,7 @@ app.get('/login', (req, res) => {
 </form>
 `)
 */
-res.sendFile(__dirname+"/html/Login.html");
+res.sendFile(__dirname+"\\html\\Login.html");
 });
 
 app.post('/login', passport.authenticate('local', {
@@ -94,6 +94,55 @@ app.use('/', (req, res, next) => {
     console.log("Logged in user" + JSON.stringify(req.user));
     next();
 });
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+function sendMail(userName, msgHtml, subject, mailaddress)
+{
+    console.log("Sending mail!\n");
+
+    var nodemailer = require('nodemailer');
+
+    var transporter = nodemailer.createTransport(
+    {
+        service: 'gmail',
+        auth: 
+        {
+/*            user: 'yaniv.haber@gmail.com',
+            pass: 'Y2a7niv!8' 
+            user: 'krembo@krembo.org.il',
+            pass: 'Wings2020' */
+            user: 'yaniv@krembo.org.il',
+            pass: 'Omeryoav15'
+
+        }
+    });
+
+    var mailOptions = 
+    {
+        from: 'yaniv@krembo.org.il',
+        to: mailaddress,
+        subject: subject,
+        html: msgHtml    
+    };
+
+    //mailOptions.html += "<br><br> שם משתמש וסיסמא ראשונית נוצרו לכם כך:<br>";
+    //mailOptions.html += "<br><b>username</b>="+userName + ", <b>password</b>='"+password+`"'" <br><br> כדי להחליף סיסמא לחץ על לינק זה: http://yanivh-lapton:${sitePort}/changePassword?user=`+id;
+    
+    transporter.sendMail(mailOptions, function(error, info)
+    {
+        if (error) 
+        {
+            console.log(error);
+
+        }
+        else 
+        {
+            console.log("Sent to '"+userName+"'!");
+            //console.log('Email sent: ' + info.response);
+        }
+    });
+   
+};
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/myTeam', async (req, res) => 
 {
@@ -464,13 +513,9 @@ app.get('/selectInst', async (req, res) => {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/yaniv', async (req, res) => {
-    res.write("klum");
+    res.write("klum3");
+    sendMail("yaniv", "This is N email! :-0", "testing email", "yaniv@krembo.org.il");
     res.send();
-});
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-app.get('/editMembers', async (req, res) => {
-    var members = req.query;
 });
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // get list of in-active users OR re-activate list of users sent...
@@ -599,8 +644,10 @@ app.get('/addParticipation', async (req, res) => {
         var actSubtype = req.query["subtype"];
 
         // first create such an activity...
-        var actSql = "insert into Activity (Name, Type, subtype, InstructorID, Date) VALUES "
-        actSql += `("${actName}", "${actType}", "${actSubtype}", "${instID}", "${date}")`;
+        var actSql = "INSERT into Activity (Name, Type, subtype, InstructorID, Date) VALUES ("
+        actSql += `'`+escapeSingleApos(`${actName}`)+`', '`+escapeSingleApos(`${actType}`)+`', '`+escapeSingleApos(`${actSubtype}`)+`', "${instID}", "${date}")`;
+        //actSql += `'`+escapeSingleApos(`'`+${actName}+`')+', '`+escapeSingleApos(`${actType})+`', '`+`escapeSingleApos(`${actSubtype}`)+`', "${instID}", "${date}")`;
+        
         let rows0 = await query(actSql);
 
         // now find actID...
@@ -609,8 +656,11 @@ app.get('/addParticipation', async (req, res) => {
 
     console.log("found " + paramCount + " participating members!");
 
+    // create the full DB insert command:
     addSql = "insert into Participation (InstructorID, Date, ParticipantID, participated, Activity) VALUES ";
     var firstVal = true;
+
+    // add all members thatr attended this activity:
     for (i = 1; i < 6000; i++) {
         if (queryParams[i] != "on") continue;
         firstVal ? console.log("starting to build add sql!") : addSql += ", ";
@@ -628,6 +678,11 @@ app.get('/addParticipation', async (req, res) => {
 
     res.write(`<html lang='heb' dir='rtl'><head><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head>`);
     res.write("<h1>הפעולה נקלטה בהצלחה!...:-)</h1></html>");
+
+    var name = await query("select Name from rakazim where ID="+req.query.instID);
+
+    // TODO: find the branch email to send it to!
+    sendMail("user ID:"+name[0].Name, name[0].Name+` הוסיף בהצלחה את הפעולה '${actName}'`,  `הפעולה '${actName}' נוספה בהצלחה`, "yaniv@krembo.org.il");
     res.send();
 
     //insert sql:
@@ -656,6 +711,7 @@ app.get('/welcome', async (req, res) =>
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/deactivateUsers', async (req, res) => 
 {
+    var userReact = 0;
     var usersDeact = 0;
     for (j = 0; j < 6000; j++) {
         if (req.query["ID-" + j] == "false") 
@@ -665,19 +721,27 @@ app.get('/deactivateUsers', async (req, res) =>
             usersDeact++;
         }
     }
-        for (j = 0; j < 6000; j++) {
+    
+    for (j = 0; j < 6000; j++) 
+    {
         if (req.query["ID-" + j] == "true") 
         {   
-            var sql = "UPDATE members SET Active = 1 WHERE ID=" + j;
-            rows = await query(sql);
-            usersDeact++;
+                var sql = "UPDATE members SET Active = 1 WHERE ID=" + j;
+                rows = await query(sql);
+                userReact++;
         }
     }
 
-        res.header("Content-Type", "application/json; charset=utf-8");
+    res.header("Content-Type", "application/json; charset=utf-8");
     if (usersDeact == 1) verb = " was";
     else verb = "s were";
-    res.write(usersDeact + " User"+verb+" updated!")
+    res.write(usersDeact + " User"+verb+" updated!");
+
+    // find out user name
+    var name = await query("select Name, District from rakazim where ID="+req.user.id);
+
+    sendMail("user ID:"+req.query.instID, "שים לב:<br><b>That user just <font color='red'>deactivated</font> "+usersDeact+" users! and <font color='green'>REactivated</font> "+userReact+" users.</b>", "De\Re-activation summary. (done by user:'"+ name[0].Name+"')", "yaniv@krembo.org.il");
+    sendMail("user ID:"+req.query.instID, "שים לב:<br><b>That user just <font color='red'>deactivated</font> "+usersDeact+" users! and <font color='green'>REactivated</font> "+userReact+" users.</b>", "De\Re-activation summary. (done by user:'"+ name[0].Name+"')", "david@krembo.org.il");
     res.send();
 
 
@@ -698,20 +762,31 @@ app.get('/getActivity', async (req, res) =>
 
     if (rows.length == 0)
     {
+        //retJson = `{"Name": ${rows[0].Name}, "type":${rows[0].Type}, "subtype":${rows[0].subtype}, "ActID":"${rows[0].ActivityID}", "point":"${point}"}`;
         retJson = `{"Name":"<font color='red'><b>לא תועד!</b></font>", "type":"<font color='red'><b>לא תועד!</b></font>", "subtype":"<font color='red'><b>לא תועד!</b></font>", "point":"${point}"}`;   
     }
     else
     {
-        var name = translateApostrophes(rows[0].Name);
-        retJson = `{"Name":"${name}", "type":"${rows[0].Type}", "subtype":"${rows[0].subtype}", "point":"${point}"}`;
+        var name = escapeApostrophes(rows[0].Name);
+        retJson = `{"Name":"${name}", "type":"${rows[0].Type}", "subtype":"`+escapeApostrophes(rows[0].subtype)+`", "id":"${rows[0].ActivityID}", "point":"${point}"`;
+        if (point ==="undefined") retJson += `", point":"${point}"}`;
+        else retJson += `}`;
     }
     console.log("JSON: "+retJson);
 
     res.write(retJson);
     res.send(); 
 });
+////////////////////////////
+function escapeSingleApos(msg)
+{
+        var translated = msg.replace("'", "''");
+        translated = translated.replace(`"`, `\\"`);
+    return translated;
 
-function translateApostrophes(msg)
+}
+////////////////////////////////
+function escapeApostrophes(msg)
 {
     var translated = msg.replace(`"`, `\\"`);
     return translated;
@@ -850,10 +925,10 @@ app.get('/changePassword', async (req, res) =>
 
     var users = await query("select Name, District from rakazim where ID="+user);
 
-    res.write(`<html lang="he" dir="rtl"><head><meta charset="utf-8"></head><body>:`);
+    res.write(`<html lang="he" dir="rtl"><head><meta charset="utf-8"><meta content='width=device-width, initial-scale=1' name='viewport'/></head><body>:`);
     res.write(`<section style="direction: rtl; height:150px; border:50px; border-width: 5px; border-style: solid; border-color: "#4a90e2" background: "#4a90e2"><h1><img src="./html/style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px; position: fixed; top: 32px; right: 15;"/>`);
     res.write(`<span style="position: absolute; top: 30; right: 150;">כנפים של קרמבו - אפליקציית 'השתתפות'</span></h1><br><div style="position: fixed; right: 150px;"><h3><span id="instNameHtml">${users[0].Name}</span> מסניף '<span id="branch">${users[0].District}</span>'</span></h3></div></section>`);
-    res.write(`<span style="right:150px;"><br><br><br>שלום ${users[0].Name}"!<br><br></span><span style="position: static;"><form method='get' name='updatePassword' action='/replacePassword'>הסיסמא הנוכחית שלך: <input type='password' name='firstPassword'><br>סיסמא חדשה (לפחות 6 תוים!):<input type='password' name='newPassword'><input type='hidden' name='user' value="${user}"><br><input type='submit' value='בצע!'></form></span><br><br></body></html>`);
+    res.write(`<span style="right:150px;"><br><br><br>שלום ${users[0].Name}!<br><br></span><span style="position: static;"><form method='get' name='updatePassword' action='/replacePassword'>הסיסמא הנוכחית שלך: <input type='password' name='firstPassword'><br>סיסמא חדשה (לפחות 6 תוים!):<input type='password' name='newPassword'><input type='hidden' name='user' value="${user}"><br><input type='submit' value='בצע!'></form></span><br><br></body></html>`);
     res.send();
 });
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
