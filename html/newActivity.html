@@ -5,7 +5,8 @@
      <script language="javascript">
     
         var varStr = window.location.search.toString();
-		var instID = this.varStr.substring(varStr.indexOf("=")+1);
+		var instID = this.varStr.substring(8);
+        //alert("id="+instID);
 
             var instructor = "none";
 
@@ -144,16 +145,53 @@
                 }
             }
 
+            function createNewActivity()
+            {
+                debugger;
+                var allSet = false;
+                date = document.getElementById("actDate");
+                actName = document.getElementById("ActivityName");
+
+                // check that at least one pupil was checked!
+                var checkedMembers = false;
+                var membersCheckboxes = $('[id^="ID-"]');
+
+                foreach(chkbox in membersCheckboxes)
+                {
+                    if (chkbox != null && chkbox.checked) 
+                    {
+                        checkedMembers = true;
+                        break;
+                    }
+                }
+
+                if (date.value != "" && actName.value != "" && checkedMembers) allSet = true;
+                
+                if (allSet)
+                    document.getElementById("addForm").submit();
+                    else
+                    {
+                        if (!checkedMembers)
+                        {
+                            alert("לא סימנת אף חניך שהשתתף בפעולה . סמן חניכים שהשתתפו ורק אז לחץ על 'עדכן'...");
+                        }
+                        else
+                        {
+                            alert("אנא מלא\\י את כל הטופס לפני ניסיון עדכון הפרטים!");
+                        }
+                        return false;
+                    }
+            }
             </script>
             </head>
             <body onLoad="loadRakazim();">
                 צור פעולה חדשה עבור המדריך:<span id="selector"></span>
                 <br><br></br></br>
                 <form id="addForm" action="/addParticipation" method="get">
-                תאריך הפעולה: <input type="date" name="actDate"></input>
+                תאריך הפעולה: <input type="date" id="actDate" name="actDate"></input>
                 <br><br></br></br>
                 <b>שם הפעולה:</b>
-                <input type="text" name="ActivityName" onkeypress="keyPress(event)">
+                <input type="text" name="ActivityName" id="ActivityName" onkeypress="keyPress(event)">
                 <br>
                 <b>סוג הפעולה:</b>
                 
@@ -177,7 +215,7 @@
                     <input type="button" id="markAllButton" onclick="selectAll()" value="סמן את כווווולם!"></input>
                     <span id="membersTable">
                     </span>
-                    <input id="submitButt" type="submit" style="visibility: hidden" value="עדכן!"></input>
+                    <input id="submitButt" type="submit" onclick="return createNewActivity();" style="visibility: hidden" value="עדכן!"></input>
                 </form>
                 
             </body>

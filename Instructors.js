@@ -56,7 +56,21 @@ app.use(expressSession({
 app.use(passport.initialize());
 app.use(passport.session());
 
+
 app.get('/login', (req, res) => {
+if (typeof(loginAmount) === "undefined") loginAmount = 0;
+if (typeof(loginDivider) === "undefined") loginDivider = 100;
+
+loginAmount++;
+
+// send alert mail for amount of logins! (10, 20, 40, 80 and every 100...)
+if (loginAmount % loginDivider == 0) 
+{
+    if (loginDivider < 100) loginDivider = loginDivider * 2;
+    if (loginDivider > 100) loginDivider = 100;
+    sendMail("unknown", "There were <b>"+loginAmount+"</b> logins untill now...:)", "Login amount", "yaniv@krembo.org.il");
+    
+}
 /*    
     res.send(`
 <form action="/login" method="post">
@@ -92,6 +106,7 @@ app.use('/', ensureLogin.ensureLoggedIn('/login'), (req, res, next) => next());
 app.use('/', (req, res, next) => {
     //log the current user:
     console.log("Logged in user" + JSON.stringify(req.user));
+    
     next();
 });
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -142,6 +157,24 @@ function sendMail(userName, msgHtml, subject, mailaddress)
     });
    
 };
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+app.get('/addRakaz', async (req, res) => 
+{
+    var i = 0;
+    var fullName = req.query.name;
+    var role = req.query.role;
+    var phone = req.query.phone;
+    var email = req.query.email;
+    var branch = req.query.branch;
+
+    // now add this new rakaz to DB...
+    var addSql = `INSERT INTO rakazim (Name, Tel, Role, email, Branch) VALUES ('${fullName}', '${phone}', '${role}', '${email}', '${branch}')`;
+    await query(addSql);
+
+    res.write(`<html lang="he" dir="rtl"><head><meta charset="utf-8" /></head>`);
+    res.write(`<h3>הרכז '${fullName}' נוסף לבסיס הנתונים!</h3></body></html>`);
+    res.send();
+});
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/myTeam', async (req, res) => 
@@ -149,18 +182,18 @@ app.get('/myTeam', async (req, res) =>
     var layerFilter = null;
     layerFilter = req.query["filterLayer"];
     var totalHtml = "";
-        name = await query("select Name, District from rakazim where ID="+req.user.id);
+        name = await query("select Name, Branch from rakazim where ID="+req.user.id);
     
     totalHtml += `<html lang="he" dir="rtl"><head><meta charset="utf-8" /></head>`;
 
     totalHtml += `<section style="direction: rtl;  border:50px; border-width: 5px; border-style: solid; border-color: navy; background-color: "#4a90e2"><img src="http://`+req.get("host")+`\/html\/לוגו_כנפיים_של_קרמבו.jpg" alt='כנפים של קרמבו' style="height: 150px; width: 150px;"></img>`;
-    totalHtml += `<span style="position: absolute; top: 30; right: 150;">כנפים של קרמבו - אפליקציית 'השתתפות' <br>${name[0].Name} מסניף '${name[0].District}'</span></h1><br><div style="position: fixed; right: 150px;"></span></div></section>`;
+    totalHtml += `<span style="position: absolute; top: 30; right: 150;">כנפים של קרמבו - אפליקציית 'השתתפות' <br>${name[0].Name} מסניף '${name[0].Branch}'</span></h1><br><div style="position: fixed; right: 150px;"></span></div></section>`;
     
     totalHtml += '<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>\n';
     totalHtml +=  `<script src="./html/protegeActivity.js"></script>\n`;
         totalHtml += "<script language=\"javascript\">\n";
 
-    layers = await query("select distinct layer from members");
+    layers = await query(`select distinct layer from members  where סניף = '${name[0].Branch}' ;`);
     var layNum = 1;
     var layersHtml = `<form id='myTeamForm' action='./myTeam' method='get'><select name='filterLayer' id='layers' onChange='selectLayer(this.options[this.selectedIndex].value)'>`;
     
@@ -168,6 +201,8 @@ app.get('/myTeam', async (req, res) =>
     for (var i = 0; i < layers.length; i++)
     {
         var lay = layers[i];
+        if (lay.layer == null && i ==0) break;        
+    
         var filterBy = false;
         if (lay.layer == layerFilter) filterBy = true;
         if (lay.layer == null)  { break; };
@@ -178,7 +213,7 @@ app.get('/myTeam', async (req, res) =>
     totalHtml += "var layersHtml = \""+layersHtml + "\";";
     
     totalHtml += `\ndocument.writeln("<br>סנן חניכים לפי שכבת גיל: "+layersHtml);`;
-    totalHtml += `\n var user = JSON.parse('{ "name": "${name[0].Name}", "id": "${req.user.id}", "district": "${name[0].District}"`;
+    totalHtml += `\n var user = JSON.parse('{ "yaniv":"haber", "name": "${name[0].Name}", "id": "${req.user.id}", "branch": "${name[0].Branch}"`;
     
     admin = await query("select * from users where id="+req.user.id); 
     totalHtml += `, "admin":"${admin[0].admin}"}');\n`;
@@ -186,8 +221,8 @@ app.get('/myTeam', async (req, res) =>
     // now get the instructor users
     console.log("getting members for logged-on instructor:" + req.user.id);
     
-    let rows = await query("select District from rakazim where ID = " + req.user.id);
-    var dist = rows[0].District;
+    let rows = await query("select Branch from rakazim where ID = " + req.user.id);
+    var dist = rows[0].Branch;
 
 
     var q = "select * from members where סניף='" + dist + "'";
@@ -211,10 +246,10 @@ app.get('/myTeam', async (req, res) =>
         console.log("exception: "+e);
     }
 
-    totalHtml += `var json2 =  '${retArray}';\n`;
+    totalHtml += "var json2 = `"+retArray+"`;\n";
     
     totalHtml += "\n var memHtml = drawMembers(json2, "+req.user.id+"); \n ";
-totalHtml += "setTimeout(function () {document.getElementById('teamMembers').innerHTML = memHtml;});", 500;
+totalHtml += "setTimeout(function () {document.getElementById('teamMembers').innerHTML = memHtml;}, 500);";
     totalHtml += "</script>";
     totalHtml += `\n <span id="teamMembers"></span>`;
     totalHtml += "\n</body></html>";
@@ -247,31 +282,34 @@ app.get('/good-login', async (req, res) => {
 //
 app.get("/userName", async(req, res) => 
 {
-    name = await query("select Name, District from rakazim where ID="+req.user.id);
-    res.write("{ \"name\": \""+name[0].Name+"\", \"id\": "+req.user.id + ", \"district\":"+((name[0].District!== 'undefined') ? "\""+name[0].District+"\"": 'unknown'));
+    name = await query("select Name, Branch from rakazim where ID="+req.user.id);
+    res.write("{ \"name\": \""+name[0].Name+"\", \"id\": "+req.user.id + ", \"branch\":"+((name[0].Branch!== 'undefined') ? "\""+name[0].Branch+"\"": 'unknown'));
 
     admin = await query("select * from users where id="+req.user.id); 
     res.write(", \"admin\":"+admin[0].admin+"}");
     res.send();
 });
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-// get a description of a user with a certain id {}name: , id: , district: ,admin: ?}
+// get a description of a user with a certain id {}name: , id: , branch: ,admin: ?}
 app.get("/userDetails", async(req, res) => 
 {
     var id = req.query.ID;
     var retJSON = "";
-    name = await query("select Name, District from rakazim where ID="+id);
+    name = await query("select Name, Branch from rakazim where ID="+id);
     if (name.length > 0)
     {
-        retJSON = "{ \"name\": \""+name[0].Name+"\", \"id\": "+id + ", \"district\":"+((name[0].District!== 'undefined') ? "\""+name[0].District+"\"": 'unknown');
+        retJSON = "{ \"name\": \""+name[0].Name+"\", \"id\": "+id + ", \"branch\":"+((name[0].Branch!== 'undefined') ? "\""+name[0].Branch+"\"": 'unknown');
 
         logInUser = await query("select * from users where id="+id); 
         retJSON += ", \"admin\":"+((logInUser.length > 0)? logInUser[0].admin: "0") + `, "loggedUser":"${req.user.id}"}`;
         res.write(retJSON);
-    }
-    res.send();
+        res.send();
 
-    console.log("returned:\n"+retJson);
+        console.log("returned:\n"+retJson);
+    }
+    
+
+    
 });
 
 
@@ -425,9 +463,9 @@ app.get('/htmlForUsers', async (req, res) => {
 app.get('/rakazById', async (req, res) => {
     instructor = req.query.instID;
 
-    let ret = await query("select Name, District from rakazim where ID = " + instructor);
+    let ret = await query("select Name, Branch from rakazim where ID = " + instructor);
     res.header("Content-Type", "text/html; charset=utf-8");
-    res.write("{\"Name\":\"" + ret[0].Name + "\", \"district\":\"" + ret[0].District + "\"");
+    res.write("{\"Name\":\"" + ret[0].Name + "\", \"branch\":\"" + ret[0].Branch + "\"");
 
     // add 'admin' flag
     let AD = await query("select * from users where id=" + instructor);
@@ -461,17 +499,32 @@ app.get('/getInstDates', async (req, res) => {
     res.send();
 });
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+app.get('/branches', async (req, res) => {
+
+    res.header("Content-Type", "text/html; charset=utf-8");
+
+    let rows = await query("select Name from Branches");
+
+    var op = "[";
+    for (let i = 0; i < rows.length - 1; i++) {
+        op += "{\"Name\":\"" + rows[i].Name + "\"}";
+        if (i != rows.length - 2) op += ", ";
+    }
+    op += "]";
+    res.write(op);
+    res.send();
+});//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/rakazim', async (req, res) => {
 
     res.header("Content-Type", "text/html; charset=utf-8");
 
-    let rows = await query("select ID, Name, District from rakazim");
+    let rows = await query("select ID, Name, Branch from rakazim");
 
     var op = "[";
     for (let i = 0; i < rows.length - 1; i++) {
         op += "{\"id\":\"" + rows[i].ID + "\"";
         op += ", ";
-        op += `"snif":"${rows[i].District}"`;
+        op += `"snif":"${rows[i].Branch}"`;
         op += ", ";
         op += "\"Name\":\"" + rows[i].Name + "\"}";
         if (i != rows.length - 2) op += ", ";
@@ -488,13 +541,13 @@ app.get('/selectInst', async (req, res) => {
     //res.write(" dir=\"rtl\">");
 
     try {
-        let rows = await query("select distinct district from rakazim");
-        console.log("got districts!");
+        let rows = await query("select Branch from rakazim");
+        console.log("got branches!");
 
         //res.writeHead(200, {"Content-Type": "text/html; charset=utf-8"});
         var retStr = "[";
         for (let i = 0; i < rows.length - 1; i++) {
-            var currDist = rows[i].District;
+            var currDist = rows[i].Branch;
             if (currDist.length == 0) continue;
             if (!currDist.replace(/\s/g, '').length) {
                 continue;
@@ -507,7 +560,7 @@ app.get('/selectInst', async (req, res) => {
         res.send(retStr);
     }
     catch (e) {
-        console.log("failed to retrieve list of districts: " + e);
+        console.log("failed to retrieve list of branches: " + e);
     }
 });
 
@@ -565,6 +618,7 @@ app.get('/getInactiveUsers', async (req, res) => {
                 if (i > 0) retArray += ", ";
                 retArray += "{";
                 retArray += "\"name\": \"" + rows[i].FullName + "\", ";
+                retArray += "\"branch\": \"" + rows[i].סניף + "\", ";
                 retArray += "\"memberID\": \"" + rows[i].ID + "\"";
                 retArray += "}";
             }
@@ -583,7 +637,7 @@ app.get('/membersForInstructor', async (req, res) => {
     console.log("getting members for instructor:" + req.query.instID);
     if (req.index !== undefined) var lay = req.index.layer;
     res.header("Content-Type", "text/html; charset=utf-8");
-    let rows = await query("select District from rakazim where ID = " + req.query.instID);
+    let rows = await query("select Branch from rakazim where ID = " + req.query.instID);
     if (rows.length == 0)
     {
         res.write("none!");
@@ -591,7 +645,7 @@ app.get('/membersForInstructor', async (req, res) => {
     }
     else
     {
-        var dist = rows[0].District;
+        var dist = rows[0].Branch;
 
         var q = `select ID, FullName, Active from members where`;
         q += " סניף=";
@@ -624,7 +678,20 @@ app.get('/membersForInstructor', async (req, res) => {
     }
 });
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-app.get('/addParticipation', async (req, res) => {
+app.get('/sendMessage', async (req, res) => {
+    var msg = req.query["sendMsg"];
+    instID = req.query.instID;
+
+       name = await query("select Name, Branch from rakazim where ID="+instID);
+    var name = name[0].Name;
+
+    sendMail(name, `<html lang='he' dir='rtl'>המשתמש '${name}' שלח מסר מאפליקציית 'השתתפות' בלשון זו:<br><b>"${msg}"</b></html>`, `Message from ${name}`, "yaniv@krembo.org.il; david@krembo.org.il");
+
+    res.write("Message sent!\nGood day...");
+    res.send();
+});
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+app.get('/', async (req, res) => { 
     var params = querystring.parse();
     var queryParams = new Array();
 
@@ -643,6 +710,15 @@ app.get('/addParticipation', async (req, res) => {
         var actType = req.query["ActivityType"];
         var actSubtype = req.query["subtype"];
 
+        var noDouble = await query(`select * from Activity where Date='${date}' and InstructorID = '${instID}'`);
+        if (noDouble.length > 0)
+        {
+            // כבר יש פעולה של מדריך זה בתאריך זה! אל תיצור כפילות! צא
+            res.write(`<html lang='heb' dir='rtl'><head><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head>`);
+        res.write("<h1>כבר יש פעולה של מדריך זה בתאריך זה! אל תיצור כפילות!</h1></html>");
+        res.send();
+        return;
+        }
         // first create such an activity...
         var actSql = "INSERT into Activity (Name, Type, subtype, InstructorID, Date) VALUES ("
         actSql += `'`+escapeSingleApos(`${actName}`)+`', '`+escapeSingleApos(`${actType}`)+`', '`+escapeSingleApos(`${actSubtype}`)+`', "${instID}", "${date}")`;
@@ -660,7 +736,16 @@ app.get('/addParticipation', async (req, res) => {
     addSql = "insert into Participation (InstructorID, Date, ParticipantID, participated, Activity) VALUES ";
     var firstVal = true;
 
-    // add all members thatr attended this activity:
+    if (queryParams.length == 0)
+    {
+        res.write(`<html lang='heb' dir='rtl'><head><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head>`);
+        res.write("<h1>לא ניתן לייצר פעולה עם <b>אפס</b> משתתפים!</h1></html>");
+        res.send();
+        return;
+
+    }
+
+    // add all members that attended this activity:
     for (i = 1; i < 6000; i++) {
         if (queryParams[i] != "on") continue;
         firstVal ? console.log("starting to build add sql!") : addSql += ", ";
@@ -679,10 +764,14 @@ app.get('/addParticipation', async (req, res) => {
     res.write(`<html lang='heb' dir='rtl'><head><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head>`);
     res.write("<h1>הפעולה נקלטה בהצלחה!...:-)</h1></html>");
 
-    var name = await query("select Name from rakazim where ID="+req.query.instID);
+    var name = await query("select Name, Branch from rakazim where ID="+req.query.instID);
 
     // TODO: find the branch email to send it to!
-    sendMail("user ID:"+name[0].Name, name[0].Name+` הוסיף בהצלחה את הפעולה '${actName}'`,  `הפעולה '${actName}' נוספה בהצלחה`, "yaniv@krembo.org.il");
+    let distMail = await query(`select email from Branches where Name="${name[0].Branch}"`);
+    // send mail to yaniv! to be changed with line after!
+    sendMail("user ID:"+name[0].Name, name[0].Name+` הוסיף בהצלחה את הפעולה '${actName}'<br>יישלח בעתיד ל-${distMail[0].email}`,  `הפעולה '${actName}' נוספה בהצלחה`, "yaniv@krembo.org.il");
+    // send mail to district
+    //sendMail("user ID:"+name[0].Name, name[0].Name+` הוסיף בהצלחה את הפעולה '${actName}'`,  `הפעולה '${actName}' נוספה בהצלחה`, distMail[0].email);
     res.send();
 
     //insert sql:
@@ -738,7 +827,7 @@ app.get('/deactivateUsers', async (req, res) =>
     res.write(usersDeact + " User"+verb+" updated!");
 
     // find out user name
-    var name = await query("select Name, District from rakazim where ID="+req.user.id);
+    var name = await query("select Name, Branch from rakazim where ID="+req.user.id);
 
     sendMail("user ID:"+req.query.instID, "שים לב:<br><b>That user just <font color='red'>deactivated</font> "+usersDeact+" users! and <font color='green'>REactivated</font> "+userReact+" users.</b>", "De\Re-activation summary. (done by user:'"+ name[0].Name+"')", "yaniv@krembo.org.il");
     sendMail("user ID:"+req.query.instID, "שים לב:<br><b>That user just <font color='red'>deactivated</font> "+usersDeact+" users! and <font color='green'>REactivated</font> "+userReact+" users.</b>", "De\Re-activation summary. (done by user:'"+ name[0].Name+"')", "david@krembo.org.il");
@@ -768,7 +857,13 @@ app.get('/getActivity', async (req, res) =>
     else
     {
         var name = escapeApostrophes(rows[0].Name);
-        retJson = `{"Name":"${name}", "type":"${rows[0].Type}", "subtype":"`+escapeApostrophes(rows[0].subtype)+`", "id":"${rows[0].ActivityID}", "point":"${point}"`;
+        if (name == "") 
+        {
+            name = `<font color='red'><b>לא תועד!</b></font>`;
+        }
+        actType = rows[0].Type;
+        if (actType == "") actType = "אין תיעוד!";
+        retJson = `{"Name":"${name}", "type":"${actType}", "subtype":"`+escapeApostrophes(rows[0].subtype)+`", "id":"${rows[0].ActivityID}", "point":"${point}"`;
         if (point ==="undefined") retJson += `", point":"${point}"}`;
         else retJson += `}`;
     }
@@ -923,11 +1018,11 @@ app.get('/changePassword', async (req, res) =>
         }
     });
 
-    var users = await query("select Name, District from rakazim where ID="+user);
+    var users = await query("select Name, Branch from rakazim where ID="+user);
 
     res.write(`<html lang="he" dir="rtl"><head><meta charset="utf-8"><meta content='width=device-width, initial-scale=1' name='viewport'/></head><body>:`);
     res.write(`<section style="direction: rtl; height:150px; border:50px; border-width: 5px; border-style: solid; border-color: "#4a90e2" background: "#4a90e2"><h1><img src="./html/style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px; position: fixed; top: 32px; right: 15;"/>`);
-    res.write(`<span style="position: absolute; top: 30; right: 150;">כנפים של קרמבו - אפליקציית 'השתתפות'</span></h1><br><div style="position: fixed; right: 150px;"><h3><span id="instNameHtml">${users[0].Name}</span> מסניף '<span id="branch">${users[0].District}</span>'</span></h3></div></section>`);
+    res.write(`<span style="position: absolute; top: 30; right: 150;">כנפים של קרמבו - אפליקציית 'השתתפות'</span></h1><br><div style="position: fixed; right: 150px;"><h3><span id="instNameHtml">${users[0].Name}</span> מסניף '<span id="branch">${users[0].Branch}</span>'</span></h3></div></section>`);
     res.write(`<span style="right:150px;"><br><br><br>שלום ${users[0].Name}!<br><br></span><span style="position: static;"><form method='get' name='updatePassword' action='/replacePassword'>הסיסמא הנוכחית שלך: <input type='password' name='firstPassword'><br>סיסמא חדשה (לפחות 6 תוים!):<input type='password' name='newPassword'><input type='hidden' name='user' value="${user}"><br><input type='submit' value='בצע!'></form></span><br><br></body></html>`);
     res.send();
 });

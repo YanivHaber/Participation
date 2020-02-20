@@ -1,0 +1,98 @@
+<input lang='he' dir='rtl'>
+
+<head>
+    <title>הוספת רכז!</title>
+  <meta content='width=device-width, initial-scale=1' name='viewport'/>
+  
+  
+<style>
+a:link {
+  text-decoration: none;
+}
+
+a:visited {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+a:active {
+  text-decoration: underline;
+}
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+
+</head>
+<body  style="direction: rtl;" onLoad="getUserDetails();">
+  
+  
+
+  <script language="javascript">
+      function checkVars()
+      {
+          name = document.getElementById("rakazName").value;
+          role = document.getElementById("instRole").value;
+          phone = document.getElementById("instPhone").value;
+          mail = document.getElementById("instMail").value;
+      }
+function getUserDetails()
+{
+    $.get("/userName", "", function(json)
+    {
+        user = JSON.parse(json);
+        userId = user.id;
+        userName = user.name;
+        admin = user.admin;
+        branch = user.Branch;
+
+        
+          if (admin == 1)
+          {
+
+              var extraHTML = `<form id="form1" onsubmit="checkVars()" action="/addRakaz" method="get">הוסף רכז:<br>`;
+              extraHTML += `<br>שם הרכז: <input type="text" name="name" id="rakazName"></input><br>`;
+              extraHTML += `<br>תפקיד: <input type="text" name="role" id="instRole"></input><br>`;
+              extraHTML += `<br>טלפון: <input type="text" name="phone" id="instPhone"></input><br>`;
+              extraHTML += `<br>כתובת מייל: <input type="text" name="email" id="instMail"></input><br>`;
+              
+              var snifimHtml = `<select name="branch">`;
+
+              $.get("/branches", "", function (json) 
+              {
+                  snifim = JSON.parse(json);
+                    snifim.forEach (snif => 
+                    {
+                      snifimHtml += `<option>${snif.Name}</option>`;
+                    });
+                    
+                    snifimHtml += "</select>";
+                    extraHTML += `<br>סניף: ` + snifimHtml + "<br>";
+                    extraHTML += `<input type="submit" value="הכנס"></form>`;
+
+                    document.write(`<html lang='he' dir='rtl'><head><title>הוספת רכז!</title></head><body style="direction: rtl;">`);
+                    document.write(`<span><section style="direction: rtl; height:120px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2;; background: #4a90e2;"><img style="width:70px; height:70px;" src="./style/סמל_קרמבו_חדש_עברית.jpg"><h2>  כנפים של קרמבו. שלום '<span id="userName"></span>' ... <img></h2></span></section><br><span id=links"></span></body>`);
+                    document.write(extraHTML);
+
+              });
+
+              //document.getElementById("userName").innerHTML = userName;
+          }
+          else
+          {
+            document.write(`<img class="irc_mi" src="https://icon2.cleanpng.com/20180619/klp/kisspng-confined-space-warning-sign-hazard-sticker-no-entrance-5b29cebf79ccf9.8924609915294665594989.jpg" alt="Image result for no entrance sign" width="260" height="260" style="">`)
+            alert("אינך מוגדר אדמיניסטרטור ולכן אינך יכול לגשת לדף זה...");
+          }
+        });
+};
+
+
+
+</script>
+</body>
+
+    
+</body>
+</html>
+ 

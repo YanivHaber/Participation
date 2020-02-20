@@ -20,11 +20,11 @@ var urlParams = new URLSearchParams(location.search);
                 loggedUserId = user.id;
                 userName = user.name;
                 admin = user.admin;
-                district = user.district;
+                branch = user.Branch;
 
                 //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
                 document.getElementById("instNameHtml").innerHTML = userName;
-                document.getElementById("branch").innerHTML = district;
+                document.getElementById("branch").innerHTML = branch;
             });
         };
 
@@ -145,7 +145,7 @@ function loadRakazim()
             function alertInst()
             {
                 document.getElementById("instNameHtml").textContent = userName;
-                document.getElementById("branch").textContent = district;
+                document.getElementById("branch").textContent = branch;
                 getMembers(instID);
             }
 

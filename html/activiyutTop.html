@@ -8,10 +8,10 @@ var instructor = "";
 var admin = 0;
 var userName = "";
 var userId = -9;
-var district = "";
+var branch = "";
 
 
-function getUserDetails()
+function getUserDetails() 
 {    
     $.get("/userName", "", function(json)
     {
@@ -19,14 +19,14 @@ function getUserDetails()
         userId = user.id;
         userName = user.name;
         admin = user.admin;
-        district = user.district;
+        branch = user.Branch;
 
         //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
         document.getElementById("instNameHtml").innerHTML = userName;
         if (admin == 1) loadRakazim();
         //else alert("you are NOT marked as 'admin' user thus cannot view this page...");
         else getMembersToClient(instID);
-        document.getElementById("branch").innerHTML = district;
+        document.getElementById("branch").innerHTML = branch;
     });
 };
 

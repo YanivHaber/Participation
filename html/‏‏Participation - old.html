@@ -42,6 +42,7 @@ var userId = -9;
 
 async function getUserDetails(ID)
 {
+    if (ID=== "undefined") ID = instID;
     $.get("/userDetails?ID="+ID, "", async function(json)
     {
         user = JSON.parse(json);
@@ -58,7 +59,7 @@ async function getMyUserDetails()
         instID = Instructor = user.id;
         userName = user.name;
         admin = user.admin;
-        district = user.district;
+        branch = user.Branch;
 
         if (admin == "1")
         {
@@ -69,7 +70,7 @@ async function getMyUserDetails()
         }
         //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
         document.getElementById("selector").innerHTML = userName;
-        document.getElementById("branch").innerHTML = district;
+        document.getElementById("branch").innerHTML = branch;
         //document.getElementById("instNameHtml").innerHTML = userName;
 
     });

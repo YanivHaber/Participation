@@ -36,7 +36,7 @@ var loggedUser = "";
 var instructor = "";
 var admin = 0;
 var userName = "";
-var district = "";
+var branch = "";
 var userId = -9;
 
 function urlVar(name)
@@ -48,14 +48,16 @@ var loginGood = false;
 
 async function getUserDetails(ID)
 {
+    if (ID === undefined) ID = instID;
+
     $.get("/userDetails?ID="+ID, "", function(json)
     {
-        user = JSON.parse(json);
+        user = JSON.parse(json); 
         loggedUser = user.loggedUser;
         instID = user.id;
         userName = user.name;
         document.getElementById("instName").innerHTML = userName;
-        document.getElementById("branch").innerHTML = user.district;
+        document.getElementById("branch").innerHTML = user.branch;
 
         if (user.loggedUser == user.id)
         {
@@ -77,8 +79,11 @@ async function getUserDetails(ID)
 }
 var html = "";
 
+var doneUserDetails = false;
+
 async function getMyUserDetails()
 {    
+    if (doneUserDetails) return;
     var myMembers = document.getElementById("myMembers");
     $.get("/getInstDates?instID="+instID, "", function (datesJson)
     {    
@@ -89,9 +94,9 @@ async function getMyUserDetails()
         {
             for (p = dates.length - 1; p > -1; p--)
             {
-                html += "<th class=\"rotate\"><div><span><a id='date"+p+"' href='./editActivity.html'>"+dates[p].date+"</a></span></div></th>";//yaniv
+                html += "<th class=\"rotate\"><div><span><a id='date"+p+"' href='./editActivity.html'>"+dates[p].date+"</a></span></div></th>";
             }
-            html += "<th class=\"rotate\"><div><tbody></tbody>";
+            html += "<th class=\"rotate\"><div>";
 
             // add totals records BEFORE actual listings
             html += "<tr><td></td>";
@@ -104,7 +109,7 @@ async function getMyUserDetails()
                 {
                     activity = JSON.parse(actJson);
 
-                    window.setTimeout(`.getElementById("date${activity.point}").setAttribute('href', "./editActivity.html?act=${activity.id}"`, 1000);
+                    window.setTimeout(`linkFixer(${activity.point}, ${activity.id})`, 1000);
                     subtype = activity.subtype;
                     if (subtype == "") subtype = "אין";
                     activityHtml = "<b>נושא הפעולה:</b><br>" + activity.Name + 
@@ -128,7 +133,7 @@ async function getMyUserDetails()
         }
         html += "</tr>";
 
-        //ndocument.write(html);            
+        //document.write(html);            
     });
 
     var url = "/getParticipation?instID="+instID;
@@ -139,14 +144,14 @@ async function getMyUserDetails()
         try 
         {
             part = JSON.parse(json2);
-            //alert("understood json for /getParticipation")
+            
 
             var members = new Array();
             var memberInsideAlready = new Array();
 
             //$('#myMembers tbody tr').remove();
 
-            //alert("compare to each of the "+part.length+" participants' dates to show participation for each...");
+            
             for (p = 0; p < part.length; p++)
             {
                 var currName = part[p].member;
@@ -199,7 +204,7 @@ async function getMyUserDetails()
                 }
 
                 html += "</tr>";
-                //alert("created html for users!");
+                
             }
             myMembers.innerHTML = "<table id=\"partTable\">"+html+"</table>";    
             //myMembers.innerHTML = html;
@@ -210,8 +215,14 @@ async function getMyUserDetails()
             alert("exception 8:"+e);
         }        
     });
+    doneUserDetails = true;
 };
-   
+
+    function linkFixer(point, ActivityID)
+   {
+        
+        window.setTimeout(`).getElementById(" date"+point).setAttribute('href', "./editActivity.html?act="+ActivityID)`, 500);
+   }
     
     async function loadData(rakazimArray)
     {
@@ -273,7 +284,7 @@ function createNew()
 {
     var selecteduser = "";
 
-    if (document.getElementById("myMembers").rows.length <= 2) return;
+    //if (document.getElementById("myMembers").rows.length <= 2) return;
     var sel = document.getElementById("rakazim");
     if (sel == null)
     {
@@ -312,12 +323,15 @@ function sleep(ms) {
 
 </script>
 </head>
-<body onload="getUserDetails(); initOnLoad();" dir="rtl">
+<body onload="initOnLoad(); getUserDetails();" dir="rtl">
 
-    <div id=htmlAll">
-    <div style="direction: rtl; height:170px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;"><h1><img src="./style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px;"/>כנפים של קרמבו - אפליקציית 'השתתפות'
-    </h1><br><div style="position: fixed; right: 150px;"><h3><img></div></span></h3></div>`
-            
+    
+        <table style="border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;">
+            <tr><td><img src="./style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px;"/>
+            </td><td><h1>כנפים של קרמבו - אפליקציית 'השתתפות'</td></h1><br>
+        </tr>
+        </table>
+                    
     <h2>רישום השתתפות של חניכים של <span id="instName"></span>  מסניף '<span id="branch"></span>'</h2>
     <br>
     <script language="javascript">
@@ -345,7 +359,6 @@ function sleep(ms) {
     <script lang="=javascript">
        </script>
 
-</div>
 </body>
 
 </html>

@@ -1,0 +1,52 @@
+<html dir='rtl' lang='heb'>
+     <head>
+        <meta content='width=device-width, initial-scale=1' name='viewport'/>
+     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+     <script language="javascript">
+
+     function setID()
+     {           
+        var varStr = window.location.search.toString();
+        var instID = this.window.location.search.substring(8);
+        
+        document.getElementById("instID").value = instID;  
+     }
+
+     var admin = 0;
+var userName = "";
+var userId = -9;
+var district = "";
+
+
+function getUserDetails()
+{    
+    $.get("/userName", "", function(json)
+    {
+        user = JSON.parse(json);
+        userId = user.id;
+        userName = user.name;
+        admin = user.admin;
+        district = user.district;
+
+        //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
+        document.getElementById("instNameHtml").innerHTML = userName;
+        if (admin == 1) loadRakazim();
+        //else alert("you are NOT marked as 'admin' user thus cannot view this page...");
+        else getMembersToClient(instID);
+        document.getElementById("branch").innerHTML = district;
+    });
+}
+
+     </script>
+            </head>
+            <body onLoad="getUserDetails(); setID()">
+            <form id="sendForm" action="/sendMessage" method="get">
+                <input id="instID" name="instID" value="" style="visibility: hidden"></input>
+                <h3>
+                  <span id="instNameHtml">ג'ון</span>, הכנס\י הערות בקשר לנכונות הצוות\חניכים או הערות נוספות שברצונך להעלות...:
+                </h3>
+                <textarea id="sendMsg" name="sendMsg" onclick=" this.focus();this.select();" rows="4" cols="50">יש לכתוב הערתך פה...</textarea>
+                <input id="submitButt" type="submit" value="שלח!"></input>
+            </form>
+            </body>
+    </html>

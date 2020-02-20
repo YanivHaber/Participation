@@ -3,9 +3,13 @@
 <head>
     <meta content='width=device-width, initial-scale=1' name='viewport'/>
         <style>
+            table  {
+                      border-collapse: collapse;
+                   }
+                
+
                 th.rotate 
                 {
-                  /* Something you can count on */
                   height: 160px;
                   white-space: nowrap;
                 }
@@ -13,12 +17,10 @@
                 th.rotate > div 
                 {
                   transform: 
-                    /* Magic Numbers */
                     translate(55px, 5px)
                     
-                    /* 45 is really 360 - 45 */
                     rotate(315deg);
-                  width: 30px;
+                    width: 30px;
                 }
                 th.rotate > div > span 
                 {
@@ -40,43 +42,7 @@ var userName = "";
 var district = "";
 var userId = -9;
 
-async function getUserDetails()
-{
-    
-    $.get("/userName", "", async function(json)
-    {
-        user = JSON.parse(json);
-        userId = user.id;
-        instID = Instructor = user.id;
-        userName = user.name;
-        admin = user.admin;
-        district = user.district;
-        if (admin != "1")
-        {
-            await getMembersToClient(userId);
-        }
-        //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
-        //document.getElementById("selector").innerHTML = userName;
-        document.getElementById("branch").innerHTML = district;
-        document.getElementById("instName").innerHTML = userName;
-    });
-    var sel;
-        sel = document.getElementById("selector");
-        if (sel == null || sel.tagName != "select") return; // first load of page! no selection yet...
-        var selecteduser = sel.options[sel.selectedIndex].id;
 
-    $.get("/membersForInstructor?instID="+selecteduser, "", function(members)
-        {
-            var mems = JSON.parse(members);
-            if (mems.length == 0)
-            {
-                alert("This user does NOT have any members in the DB currently!");
-                return false;
-            }
-        });
-
-    return true;
-};
     
     async function loadRakazim() 
     {    
@@ -164,7 +130,7 @@ function selectedInstructor()
             var mems = JSON.parse(members);
             if (mems.length == 0)
             {
-                alert("This user does NOT have any members in the DB currently!");
+                document.getElementById("messages").innerHTML = "This user does NOT have any members in the DB currently!";
                 return false;
             }
         });
@@ -196,7 +162,7 @@ async function getMembersToClient(instID)
             var mems = JSON.parse(members);
             if (mems.length == 0)
             {
-                alert("This user does NOT have any members in the DB currently!");
+                document.getElementById("messages").innerHTML = "This user does NOT have any members in the DB currently!";
                 return false;
             }
         });
@@ -218,9 +184,8 @@ async function getMembersToClient(instID)
             {
                 for (p = dates.length - 1; p > -1; p--)
                 {
-                    html += "<th class=\"rotate\"><div><span>"+dates[p].date+"</span></div></th>";
+                    html += `<th class="rotate" style="text-decoration: underline;"><div>${dates[p].date}</div></th>`;
                 }
-                html += "<th class=\"rotate\"><div><tbody></tbody>";
                 // add totals records BEFORE actual listings
                 html += "<tr><td></td>";
                 for (var o = dates.length - 1; o > -1; o--)
@@ -231,10 +196,15 @@ async function getMembersToClient(instID)
                     {
                         activity = JSON.parse(actJson);
 
+                        if (activity.Name == "אין תיעוד!")
+                        {
+                            yaniv = 9;
+                        } 
+
                         activityHtml = "<b>נושא הפעולה:</b><br>" + activity.Name + 
                                             "<br> <b>סוג:</b> <br><font color=\"ForestGreen\">" + 
                                             activity.type + "</font><br><b>הערות:</b> <br><font color=\"ForestGreen\">" + 
-                                            activity.subtype + "</font>";
+                                            ((activity.subtype == "")? "אין!": activity.subtype) + "</font>";
                         //var pointerIndex = html.indexOf("?"+activity.point);
                         //var secondPart = html.substr(pointerIndex + 2);
                         //var firstPart = html.substr(0, pointerIndex);
@@ -311,7 +281,7 @@ async function getMembersToClient(instID)
                     //alert("created html for users!");
                 }
                 document.getElementById("myMembers").innerHTML = "<table id=\"partTable\">"+html+"</table>";    
-                document.getElementById("createbutt").style.visibility = "visible";
+                //document.getElementById("createbutt").style.visibility = "visible";
             }
             catch (e)
             {
@@ -361,42 +331,33 @@ function initOnLoad()
         instID = Instructor = user.id;
         userName = user.name;
         admin = user.admin;
-        district = user.district;
+        branch = user.branch;
         if (admin != "1")
         {
             await getMembersToClient(userId);
         }
         //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
         //document.getElementById("selector").innerHTML = userName;
-        document.getElementById("branch").innerHTML = district;
+        document.getElementById("branch").innerHTML = branch;
         document.getElementById("instName").innerHTML = userName;
 
         await loadRakazim();
     });
 }
 
-async function old_initOnLoad()
-{
-    await loadRakazim(); 
-    
-    var ret = await getUserDetails(); 
-    if (ret)
-    {
-        
-        //await getMembersToClient(instID);
-    }
-}
 function sleep(ms) {
                 return new Promise(resolve => setTimeout(resolve, ms));
             }
 </script>
 </head>
 <body onload="initOnLoad()" dir="rtl">
-
-    <div style="direction: rtl; height:170px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;"><h1><img src="./style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px;"/>כנפים של קרמבו - אפליקציית 'השתתפות'
-    </h1><br><div style="position: fixed; right: 150px;"><h3><img></div></span></h3></div>`
-            
-    <h2><span id=topSubject"> רישום השתתפות של חניכים של</span> <span id="instName"></span>  מסניף '<span id="branch"></span>'</h2>
+<table style="border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;">
+    <tr><td><img src="./style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px;"/>
+    </td><td><h1>כנפים של קרמבו - אפליקציית 'השתתפות'</td></h1><br>
+</tr>
+</table>
+<h2><span id="instName"></span>  מסניף '<span id="branch"></span>',
+<span id=topSubject"> הצג רשימות השתתפות של אחד מרשימת הרכזים הבאה:</span> </h2>
     <br>
 
     <h3>בחר רכז: <span id="selector"></span></h3>
@@ -404,6 +365,7 @@ function sleep(ms) {
      
          <!-- used to be:'selector-->
         <hr>
+        <div id="messages"></div>
         <table border=0 id="myMembers" >
                 <tbody>
                     <tr>
@@ -417,8 +379,8 @@ function sleep(ms) {
                     
                 </tbody>
             </table>
-
-            <button ID="createbutt" type="button" onclick="createNew()" STYLE="visibility: hidden">צור פעולה חדשה</button>
+            <!-- do not allow adnmins to create new activity! -->
+            <!-- button ID="createbutt" type="button" onclick="createNew()" STYLE="visibility: hidden">צור פעולה חדשה</!-- button-->
 
                     
 
