@@ -158,6 +158,20 @@ function sendMail(userName, msgHtml, subject, mailaddress)
    
 };
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+app.get('/removeRakaz', async (req, res) => 
+{
+    var removeID = req.query.rakazim;
+    var rakazName = req.query.rakazToDel;
+    console.log("removing rakaz '"+rakazName+"'!");
+
+    var removeSql = "DELETE FROM rakazim WHERE ID='"+removeID+"'";
+    await query(removeSql);
+
+    res.write(`<html lang="he" dir="rtl"><head><meta charset="utf-8" /></head>הרכז '${rakazName}' נמחק!`);
+    res.send();
+});
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/addRakaz', async (req, res) => 
 {
     var i = 0;
@@ -521,13 +535,13 @@ app.get('/rakazim', async (req, res) => {
     let rows = await query("select ID, Name, Branch from rakazim");
 
     var op = "[";
-    for (let i = 0; i < rows.length - 1; i++) {
+    for (let i = 0; i < rows.length; i++) {
         op += "{\"id\":\"" + rows[i].ID + "\"";
         op += ", ";
         op += `"snif":"${rows[i].Branch}"`;
         op += ", ";
         op += "\"Name\":\"" + rows[i].Name + "\"}";
-        if (i != rows.length - 2) op += ", ";
+        if (i != rows.length - 1) op += ", ";
     }
     op += "]";
     res.write(op);

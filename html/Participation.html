@@ -196,11 +196,6 @@ async function getMembersToClient(instID)
                     {
                         activity = JSON.parse(actJson);
 
-                        if (activity.Name == "אין תיעוד!")
-                        {
-                            yaniv = 9;
-                        } 
-
                         activityHtml = "<b>נושא הפעולה:</b><br>" + activity.Name + 
                                             "<br> <b>סוג:</b> <br><font color=\"ForestGreen\">" + 
                                             activity.type + "</font><br><b>הערות:</b> <br><font color=\"ForestGreen\">" + 

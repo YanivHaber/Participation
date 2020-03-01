@@ -1,0 +1,101 @@
+<html lang='he' dir='rtl'>
+
+    <head>
+        <title>מחיקת רכז!</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+        <script language="javascript">
+    function getUserDetails()
+    {
+        $.get("/userName", "", function(json)
+        {
+            user = JSON.parse(json);
+            userId = user.id;
+            userName = user.name;
+            admin = user.admin;
+            branch = user.branch;
+            
+            document.getElementById("instName").innerHTML = userName;
+            document.getElementById("branch").innerHTML = branch;
+            
+            
+            if (userId == 51 || userId == 50)
+            {
+                loadData();
+            }
+            else
+            {
+                document.write(`<img class="irc_mi" src="https://icon2.cleanpng.com/20180619/klp/kisspng-confined-space-warning-sign-hazard-sticker-no-entrance-5b29cebf79ccf9.8924609915294665594989.jpg" alt="Image result for no entrance sign" width="260" height="260" style="">`)
+                alert("אינך מוגדר אדמיניסטרטור ולכן אינך יכול לגשת לדף זה...");
+            }
+        });
+    }
+    
+    async function loadData()
+    {
+        if (admin == "1")
+        {
+
+            // admin user! show ALL rakazim...
+            var html = `<select id="rakazim" name="rakazim" onChange="">`;
+    
+            $.get("/rakazim", "", function (json) 
+            {
+                try 
+                {
+                    var rakazimArray = JSON.parse(json);
+                    var options = "";
+                    for (var i = 0; i < rakazimArray.length; i++)
+                    {
+                        var element = rakazimArray[i];
+                        var elemName = element.Name;
+                        var elemId = element.id;
+                        if (elemName.indexOf('"') != -1) 
+                            elemName = elemName.split('"').join('\\"');
+                        options += `<option id="${elemId}" value="${elemId}">${elemName}</option>`;
+                    }
+                    html += options + "</select>";
+            
+                    document.getElementById("selector").innerHTML = html;
+                }
+                catch(e)
+                {
+                    alert("exception: "+e);
+                }
+
+            });
+        }
+    }
+        
+        </script>
+    </head>
+<body onLoad="getUserDetails()">
+
+    
+
+        
+
+</body>
+<span id="instName"></span>  מסניף '<span id="branch"></span>', בחר רכז שברצונך למחוק:<br>
+<form id="form1" onsubmit="makeSure()" action="/removeRakaz" method="get">
+<span id="selector" name="selector"></span>
+<input id="rakazToDel" name="rakazToDel" type="text" rakaz="" style="visibility: hidden;">
+<script language="javascript">
+function makeSure()
+{
+    var e = document.getElementById("rakazim");
+    var delUser = e.options[e.selectedIndex].innerText;
+    var rInput = document.getElementById("rakazToDel");
+    rInput.setAttribute("value", delUser);
+    res = confirm("בטוח שברצונך למחוק את '"+delUser+"'? (אין דרך חזרה לאחר ביצוע פעולה זו)");
+    if (res)
+    {
+        document.getElementById("form1").submit();
+        //alert("deleting "+document.getElementById("rakazim").getAttribute("id"));
+    }
+
+}
+</script>
+<input type="submit" value="מחק!">
+<form></form>
+</html>
+    
