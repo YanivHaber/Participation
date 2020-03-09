@@ -32,7 +32,8 @@ passport.use(new LocalStrategy(
         }
         else {
             // login failure!
-            return doneCallback("Error! wrong user and/or password!", null);
+            passport.redirect(`http://localhost:1000/html\login.html?user=`+username);
+            return;// doneCallback("Error! wrong user and/or password!", null);
         }
 
     }));
@@ -55,22 +56,51 @@ app.use(expressSession({
 
 app.use(passport.initialize());
 app.use(passport.session());
-
-
-app.get('/login', (req, res) => {
-if (typeof(loginAmount) === "undefined") loginAmount = 0;
-if (typeof(loginDivider) === "undefined") loginDivider = 100;
-
-loginAmount++;
-
-// send alert mail for amount of logins! (10, 20, 40, 80 and every 100...)
-if (loginAmount % loginDivider == 0) 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+app.get('/forgotPassword', async (req, res) => 
 {
-    if (loginDivider < 100) loginDivider = loginDivider * 2;
-    if (loginDivider > 100) loginDivider = 100;
-    sendMail("unknown", "There were <b>"+loginAmount+"</b> logins untill now...:)", "Login amount", "yaniv@krembo.org.il");
+    var user = req.query.user;
+    var newpass = randomString(6);
+
+    if (typeof(user) == "undefined") return;
+
+    var updateSql = "update users set password='"+newpass+"' where username='"+user+"'";
+    var mailbody = "<html lang='heb' dir='rtl'><head><meta charset=\"UTF-8\"></head><body>בחרת לאפס את סיסמתך והוקצתה לך הסיסמא: '"+newpass+"'<br>אנא השתדל לא לשכוח אותה. <b>שוב</B>...</body></html>";
+
+    var currentUser = await query("select * from users where username='"+user+"'");
+    if (currentUser.length == 0)
+    {
+        res.write("<html lang='he' dir='rtl'><head><meta charset=\"UTF-8\"></head><body>המשתמש '</h1>"+user+"'</h1> אינו מוכר למערכת! בקשתך לא תעובד...</body></html>");
+        res.send();
+        return;
+    }
+    var userDetails = await query("select * from rakazim where ID="+currentUser[0].id);
+
+    var changepwd = await query(updateSql);
+    res.write("<html lang='heb' dir='rtl'><head><meta charset=\"UTF-8\"></head><body><h1>סיסמתך הוחלפה לסיסמה חדשה ומייל נשלח אליך לסניף...</h1><br><h1>סגור חלון זה ונסה להיכנס מחדש...</h1><input type=\"button\" value=\"Close\" onclick=\"window.close()\"></body></html>");
     
-}
+    sendMail(user, mailbody, "הוקצתה לך סיסמה חדשה!", userDetails[0].email);
+
+
+});
+
+app.get('/login', (req, res) => 
+{
+    if (typeof(loginAmount) === "undefined") loginAmount = 0;
+    if (typeof(loginDivider) === "undefined") loginDivider = 100;
+
+    var user = req.query.user;
+
+    loginAmount++;
+
+    // send alert mail for amount of logins! (10, 20, 40, 80 and every 100...)
+    if (loginAmount % loginDivider == 0) 
+    {
+        if (loginDivider < 100) loginDivider = loginDivider * 2;
+        if (loginDivider > 100) loginDivider = 100;
+        sendMail("unknown", "There were <b>"+loginAmount+"</b> logins untill now...:)", "Login amount", "yaniv@krembo.org.il");
+        
+    }
 /*    
     res.send(`
 <form action="/login" method="post">
@@ -88,8 +118,17 @@ if (loginAmount % loginDivider == 0)
 </form>
 `)
 */
-res.sendFile(__dirname+"\\html\\Login.html");
+var user = req.query.user;
+if (typeof(user) == "undefined")
+{
+    res.sendFile(__dirname+"\\html\\Login.html");
+}
+else
+{
+    res.sendFile(__dirname+"\\html\\Login.html?user="+user);
+}
 });
+
 
 app.post('/login', passport.authenticate('local', {
     successReturnToOrRedirect: '/good-login',
@@ -696,7 +735,7 @@ app.get('/sendMessage', async (req, res) => {
     var msg = req.query["sendMsg"];
     instID = req.query.instID;
 
-       name = await query("select Name, Branch from rakazim where ID="+instID);
+    var name = await query("select Name, Branch from rakazim where ID="+instID);
     var name = name[0].Name;
 
     sendMail(name, `<html lang='he' dir='rtl'>המשתמש '${name}' שלח מסר מאפליקציית 'השתתפות' בלשון זו:<br><b>"${msg}"</b></html>`, `Message from ${name}`, "yaniv@krembo.org.il; david@krembo.org.il");
@@ -705,7 +744,7 @@ app.get('/sendMessage', async (req, res) => {
     res.send();
 });
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-app.get('/', async (req, res) => { 
+app.get('/addParticipation', async (req, res) => { 
     var params = querystring.parse();
     var queryParams = new Array();
 
@@ -723,18 +762,25 @@ app.get('/', async (req, res) => {
             var actName = req.query["ActivityName"];
         var actType = req.query["ActivityType"];
         var actSubtype = req.query["subtype"];
+        var actSql;
 
         var noDouble = await query(`select * from Activity where Date='${date}' and InstructorID = '${instID}'`);
         if (noDouble.length > 0)
         {
-            // כבר יש פעולה של מדריך זה בתאריך זה! אל תיצור כפילות! צא
+            // instead of updating the activity, delete it completely and add a new one...
+            actSql = `UPDATE Activity SET Name="`+escapeSingleApos(actName)+`", Type="`+escapeSingleApos(actType)+`", subtype="`+escapeSingleApos(actSubtype);
+            actSql += `" , InstructorID="${instID}", Date="${date}" WHERE ActivityID="${noDouble[0].ActivityID}"`;
+    
+            // run update query:
+            await query(actSql);
+
             res.write(`<html lang='heb' dir='rtl'><head><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head>`);
-        res.write("<h1>כבר יש פעולה של מדריך זה בתאריך זה! אל תיצור כפילות!</h1></html>");
-        res.send();
-        return;
+            res.write("<h1>הנתונים היבשים של הפעולה עודכנו...(ללא עדכון משתתפים)!</h1></html>");
+            res.send();
+            retrurn;
         }
         // first create such an activity...
-        var actSql = "INSERT into Activity (Name, Type, subtype, InstructorID, Date) VALUES ("
+        actSql = "INSERT into Activity (Name, Type, subtype, InstructorID, Date) VALUES ("
         actSql += `'`+escapeSingleApos(`${actName}`)+`', '`+escapeSingleApos(`${actType}`)+`', '`+escapeSingleApos(`${actSubtype}`)+`', "${instID}", "${date}")`;
         //actSql += `'`+escapeSingleApos(`'`+${actName}+`')+', '`+escapeSingleApos(`${actType})+`', '`+`escapeSingleApos(`${actSubtype}`)+`', "${instID}", "${date}")`;
         
@@ -866,7 +912,7 @@ app.get('/getActivity', async (req, res) =>
     if (rows.length == 0)
     {
         //retJson = `{"Name": ${rows[0].Name}, "type":${rows[0].Type}, "subtype":${rows[0].subtype}, "ActID":"${rows[0].ActivityID}", "point":"${point}"}`;
-        retJson = `{"Name":"<font color='red'><b>לא תועד!</b></font>", "type":"<font color='red'><b>לא תועד!</b></font>", "subtype":"<font color='red'><b>לא תועד!</b></font>", "point":"${point}"}`;   
+        retJson = `{"Name":"<font color='red'><b>לא תועד!</b></font>", "type":"<font color='red'><b>לא תועד!</b></font>", "subtype":"<font color='red'><b>לא תועד!</b></font>", "point":"${point}"}, "ActID":"${rows[0].ActivityID}`;
     }
     else
     {
@@ -877,7 +923,7 @@ app.get('/getActivity', async (req, res) =>
         }
         actType = rows[0].Type;
         if (actType == "") actType = "אין תיעוד!";
-        retJson = `{"Name":"${name}", "type":"${actType}", "subtype":"`+escapeApostrophes(rows[0].subtype)+`", "id":"${rows[0].ActivityID}", "point":"${point}"`;
+        retJson = `{"Name":"${name}", "type":"${actType}", "subtype":"`+escapeApostrophes(rows[0].subtype)+`", "actID":"${rows[0].ActivityID}", "point":"${point}"`;
         if (point ==="undefined") retJson += `", point":"${point}"}`;
         else retJson += `}`;
     }
@@ -900,6 +946,43 @@ function escapeApostrophes(msg)
     var translated = msg.replace(`"`, `\\"`);
     return translated;
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+function randomString(length) {
+    var result = '';
+    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for (var i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+app.get('/deleteActivity', async (req, res) => {
+    var actID = req.query.actid;
+    var instID = req.query.instid;
+
+    // get axt details:
+    actDetails = "select * from Activity where ActivityID="+actID;
+    res = await query(actDetails);
+var actName = res[0].Name;
+
+    // FIRSTdelete all participation of this activity (due to FK...)
+    removePartSql = "DELETE FROM Participation where Activity="+actID;
+    await query(removePartSql);
+
+removeActSql = "DELETE FROM Activity where ActivityID="+actID;
+    await query(removeActSql);
+        
+    var name = await query("select Name, Branch from rakazim where ID="+instID);
+    var name = name[0].Name;
+
+    sendMail(name, "המשתמש '"+name+"' מחק פעולה '"+actName+"'!", "מחיקת פעולה!", "yaniv@krembo.org.il");
+
+        res.write(`<html lang='he' dir='rtl'><head dir='rtl'><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head>`);
+    res.write("<h1>הפעולה נמחקה בהצלחה!</h1></body></html>");
+    res.send();
+});
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/getParticipation', async (req, res) => {
     var partSof = new Array();
