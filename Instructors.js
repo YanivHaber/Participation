@@ -865,7 +865,7 @@ app.get('/addParticipation', async (req, res) => {
         {
             // instead of updating the activity, delete it completely and add a new one...
             actSql = `UPDATE Activity SET Name="`+escapeSingleApos(actName)+`", Type="`+escapeSingleApos(actType)+`", subtype="`+escapeSingleApos(actSubtype)+`"`;
-            actSql += `" , InstructorID="${instID}", Date="${date}" WHERE ActivityID="${noDouble[0].ActivityID}"`;
+            actSql += ` , InstructorID="${instID}", Date="${date}" WHERE ActivityID="${noDouble[0].ActivityID}"`;
     
             // run update query:
             await query(actSql);

@@ -244,6 +244,7 @@ async function getMyUserDetails()
         {
             alert("exception 8:"+e);
         }        
+        document.getElementById("waitMsg").remove();
     });
     doneUserDetails = true;
 };
@@ -370,7 +371,7 @@ function sleep(ms) {
     </script>
     
     
-     
+    <div id="waitMsg">דף זה הינו <b>כבד</b> ולוקח לו זמן להיטען...סבלנות...<br><img id="wait" src='/html/loading.gif'></div>
          <!-- used to be:'selector-->
         <hr>
         
