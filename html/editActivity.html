@@ -1,0 +1,278 @@
+    <html dir='rtl' lang='heb'>
+     <head>
+        <meta content='width=device-width, initial-scale=1' name='viewport'/>
+     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+     <script language="javascript">
+    var instid;
+    var date;
+    var actID = "";
+
+    function init()
+    {
+        const urlParams = new URLSearchParams(window.location.search);
+        instid = urlParams.get('instid');
+        date = urlParams.get('date');
+
+        $.get("/getActivity?instID=" + instid + "&date=" + date, "", (actJson) => 
+        {
+            activity = JSON.parse(actJson);
+            document.getElementById("ActivityName").value = activity.Name;
+            actType = activity.type;
+            actID = activity.actID;
+
+            window.setTimeout(`document.getElementById("subtypeInput").value = "${activity.subtype}";`, 500);
+
+            options = document.getElementById("ActivityType").options;
+            for (var i = 0; i < options.length - 1; i++)
+            {
+                if (options[i].value == actType) options[i].selected = true;
+            }
+        });
+
+        var parturl = "/getParticipation?instID="+instid;
+        $.get(parturl, "", function (json2) 
+        {
+            part = JSON.parse(json2);
+            var checkMembers = [];
+            currDate = document.getElementById("actDate").value;
+            for (var i = 0; i < part.length; i++)
+            {
+                hasDate = false;
+                for (d = 0; d < part[i].dates.length; d++)
+                {
+                    if (part[i].dates[d].date == currDate)
+                    {
+                        hasDate = true;
+                    }
+                }
+                if (!hasDate) continue;
+                var name = part[i].member;
+                checkMembers[checkMembers.length] = name;
+            }                
+            window.setTimeout(`checkProperUsers("${checkMembers}")`, 500);
+        });
+            
+        var instructor = "none";
+        loadRakazim();
+}
+        function checkProperUsers(names)
+        {
+            var arr = [];
+            if (!Array.isArray(names))
+            {
+                names = names.split(",");
+             }
+            names.forEach(name =>
+            {
+                var membersList = document.getElementById("memList").rows;
+                for (var j = 1; j < membersList.length; j++)
+                {
+                    if (membersList[j].children[0].innerText == name) 
+                    {
+                        membersList[j].children[1].children[0].checked = true;
+                    }
+                }
+            });
+        }
+
+        function instName(instructorID)
+        {
+            $.get("/rakazById?instID="+instructorID, "", function (json)
+            {
+                instructor = JSON.parse(json);
+                document.getElementById("instructor").innerHTML = instructor.Name;
+                getMembersToClient(instid);
+            });
+            document.getElementById("instIDinput").value=instid;
+            document.getElementById("actDate").value = date;
+        }
+//////////////////////////////////////////////////////////////////////////////////////////
+    function loadRakazim() 
+    {
+        $.get("/rakazim", "", function (json) 
+		{
+            console.log(json);
+            //`("got the following json: "+json);
+            try {
+            var rakazimArray = JSON.parse(json);
+            }
+            catch(e)
+            {
+                alert(e);
+            }
+                loadData(rakazimArray);
+        });
+    }
+/////////////////////////////////////////////////////////////////////////////////////////////
+    function loadData(rakazimArray)
+    {
+        if (instid > 0)
+        {
+            html = "<label id=\"instructor\" type=\"text\"></label>";
+            getMembersToClient(instid);
+        }
+        else
+        {
+            var html = "<select id=\"rakazim\" onChange=\"getMembersToClient(this.options[this.selectedIndex].getAttribute('id'))\">";
+            
+            $.each(rakazimArray, function (i, value) 
+            {
+                html += "<option  id=\""+rakazimArray[i].id+"\" value="+rakazimArray[i].Name+"\">"+rakazimArray[i].Name+"</option>";
+            });
+            html += "</select>";
+        }    
+        document.getElementById("selector").innerHTML = html;
+        instName(instid);
+        
+    }
+
+            function getMembersToClient(inst)
+            {
+                $.get("/membersForInstructor?instID="+instid, function (json2)
+                {
+                    drawMembers(json2);
+                });
+            }
+////////////////////////////////////////////////////////////////////////////////////////
+            function drawMembers(json2)
+            {
+                var membersHtml = "<table id='memList'><tr><th>שם</th><th>השתתף בתאריך הנ\"ל?</th></tr>";
+
+                try 
+                {
+                    var members = JSON.parse(json2);
+
+
+                    members.forEach(m => 
+                    {
+                        membersHtml += "<tr><td>"+m.name+"</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"ID-"+m.memberID+"\" name=\"ID-"+m.memberID+"\" type=\"checkbox\"></td></tr>";
+                    });
+                    membersHtml += "</table>";
+                    document.getElementById("membersTable").innerHTML = membersHtml;
+                    document.getElementById("submitButt").style.visibility = "visible";
+                }
+                catch(e)
+                {
+                    alert(e);
+                }     
+            }
+        
+            function selectType(index)
+            {
+                var visible = "hidden";
+                if (index == 2 || index == 3)
+                {
+                        visible = "visible";
+                }
+                document.getElementById("location").style.visibility = visible;
+            }
+  
+
+            
+            var allMarked = false;
+            function selectAll()
+            {
+                var mark = true;
+                var inputs = document.getElementsByTagName("input");
+                if (allMarked)
+                {
+                    mark = false;
+                    document.getElementById("markAllButton").value = "סמן את כווווולם!!";
+                }
+                else
+                {
+                    document.getElementById("markAllButton").value = "בטל סימון כווווולם!";
+                    mark = true;
+                }
+                for (x = 0 ; x < inputs.length ; x++)
+                {
+                    myname = inputs[x].id;
+                    if(myname.substring(0, 3) == "ID-")
+                    {
+                        inputs[x].checked = mark;
+                    }
+                    allMarked = mark;
+                }
+            }
+
+            function checkChars(inp)
+            {
+                alert("checking text: "+inp.value);
+            }
+
+            function keyPress(e) 
+            { // override keypress of " or '
+                if (e.which < 48 && e.which > 33) 
+                {
+                    alert("אסור להכניס תוים כאלו!");
+                    e.preventDefault();
+                    return false;
+                }
+            }
+
+            function eraseAct()
+            {
+                res = confirm("האם את/ה בטוח/ה שברצונך למחוק פעולה זו?");
+
+                if (res)
+                {
+                    // delete this activity:
+                    $.get("/deleteActivity?actid=" + actID + "&instid=" + instid, "", (resjson) => 
+                    {
+                        result = JSON.parse(resjson);
+                        alert("delete operation was "+result);
+                    });
+                }
+            }
+
+            function editAct()
+            {
+                //res = confirm("אין אפשרות לעדכן משתתפים בפעולה קיימת! אם הייתה טעות בסימון המשתתפים, יש למחוק את הפעולה וליצור אותה  מ ח ד ש...");
+                if (true)
+                {
+                    document.getElementById("addForm").submit();
+                }
+            }
+            
+
+            </script>
+            </head>
+            <body onLoad="init();">
+                ערוך פעולה של המדריך:<span id="selector"></span>
+                <br>
+                שים לב: לא ניתן לערוך את רשימת המשתתפים אלא <b>רק</b> את הפרטים האחרים של הפעולה!
+                <br>(אין אפשרות לעדכן משתתפים בפעולה קיימת! אם הייתה טעות בסימון המשתתפים, יש למחוק את הפעולה וליצור אותה  מ ח ד ש...)
+                <br></br></br>
+                <form id="addForm" action="/addParticipation" method="get">
+                תאריך הפעולה: <input type="date" id="actDate" name="actDate"></input>
+                <br><br></br></br>
+                <b>שם הפעולה:</b>
+                <input type="text" id="ActivityName" name="ActivityName" onkeypress="keyPress(event)">
+                <br>
+                <b>סוג הפעולה:</b>
+                
+                <select name="ActivityType" id="ActivityType" onchange="selectType(this.selectedIndex)">
+                    <option value="שכבה">שכבה</option>
+                    <option value="חונכויות">חונכויות</option>
+                    <option value="אירוע חוץ">אירוע חוץ</option>
+                    <option value="חוץ">אחר</option>
+                  </select>
+                  <br>
+                  <div id="location"><!-- style="subtype">-->
+                  <b>מיקום \ מהות:</b><input type="text" id="subtypeInput" name="subtype" onkeypress="keyPress(event)"/></div>
+                <br>
+                <br>
+                <b>החניכים של מדריך זה:</b>
+
+                <div id="membersTable"></div>
+                
+                
+                    <input id="instIDinput" name="instID" value="99" style="visibility: hidden"></input><br>
+                    <!--input type="button" id="markAllButton" onclick="selectAll()" value="סמן את כווווולם!"></input-->
+                    <span id="membersTable">
+                    </span>
+                    <input id="submitButt" type="button" onclick="editAct()" style="visibility: hidden" value="עדכן!"></input>
+                    <input type="button" id="erase" onclick="eraseAct();" style="visibility: visible" value="מחק פעולה זו!"></input>
+                </form>                
+            </body>
+    </html>

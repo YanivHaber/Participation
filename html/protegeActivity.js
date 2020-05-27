@@ -8,6 +8,19 @@ function sleep(ms)
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+    function activateAll()
+    {
+        var inputs = document.getElementsByTagName("input");
+        for (x = 0 ; x < inputs.length ; x++)
+        {
+            myname = inputs[x].id;
+            if(myname.substring(0, 3) == "ID-")
+            {
+                inputs[x].checked = true;
+                setChangeVars(inputs[x].id)
+            }
+        }
+    }
 function selectAll()
 {
     var boxes = document.getElementsByTagName("input");
@@ -107,7 +120,7 @@ function drawMembers(json2, inst)
     
     getUserDetails();
     
-    var membersHtml = `<table><br><tr><th>חניך</th><th>אקטיבי?</th></tr><br> סה"כ חניכים אקטיביים: <span id="activeMembers"></span><br>חניכים שהפסיקו השתתפותם: <span id="nonActive"></span><br>`;
+    var membersHtml = `<table><br><tr><th>חניך</th><th>אקטיבי?</th></tr><br> סה"כ חניכים אקטיביים (בשכבה 'שכבהפה'): <span id="activeMembers"></span><br>חניכים שהפסיקו השתתפותם: <span id="nonActive"></span><br>`;
 
     try 
     {
@@ -118,7 +131,7 @@ function drawMembers(json2, inst)
         // draw active members
         members.forEach(m => 
         {
-            if (m.active != "1") nonActive++;
+            if (m.active != "TRUE") nonActive++;
 
             activeMembers++;
             membersHtml += "<tr><td>"+m.name+"</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>";
@@ -134,9 +147,15 @@ function drawMembers(json2, inst)
             }
         });
 
+        queryString = window.location.search;
+        urlParams = new URLSearchParams(queryString);
+        filterLayer = urlParams.get('filterLayer');
+
         membersHtml += "</table>";
         var innerPoint = membersHtml.indexOf(`"activeMembers">`) + `"activeMembers">`.length;
         membersHtml = membersHtml.substring(0, innerPoint) + activeMembers + membersHtml.substring(innerPoint);
+        innerPoint = membersHtml.indexOf(`שכבהפה`);
+        membersHtml = membersHtml.substring(0, innerPoint) + filterLayer + membersHtml.substring(innerPoint+6);
         innerPoint = membersHtml.indexOf(`"nonActive">`) + `"nonActive">`.length;
         membersHtml = membersHtml.substring(0, innerPoint) + nonActive + membersHtml.substring(innerPoint);
 

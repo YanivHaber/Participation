@@ -52,7 +52,7 @@ function drawMembers(json)
         var userNumber = 1;
         members.forEach(m => 
         {
-            membersHtml += "<tr><td>"+userNumber+". "+m.name+"</td><td>"+m.district+"</td><td><input id=\"ID-"+m.memberID+"\" name=\"ID-"+m.memberID+"\" type=\"checkbox\" onclick=\"setUsersInput('ID-"+m.memberID+"')\"></td></tr>";
+            membersHtml += "<tr><td>"+userNumber+". "+m.name+"</td><td>"+m.branch+"</td><td><input id=\"ID-"+m.memberID+"\" name=\"ID-"+m.memberID+"\" type=\"checkbox\" onclick=\"setUsersInput('ID-"+m.memberID+"')\"></td></tr>";
             userNumber++;
         });
         membersHtml += "</table>";

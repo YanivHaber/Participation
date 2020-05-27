@@ -11,15 +11,15 @@ var userId = -9;
 var branch = "";
 
 
-function getUserDetails() 
+async function getUserDetails() 
 {    
-    $.get("/userName", "", function(json)
+    await $.get("/userName", "", function(json)
     {
         user = JSON.parse(json);
         userId = user.id;
         userName = user.name;
         admin = user.admin;
-        branch = user.Branch;
+        branch = user.branch;
 
         //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
         document.getElementById("instNameHtml").innerHTML = userName;
@@ -160,7 +160,7 @@ function getMembersToClient(instID)
         {
             // get the HTML that lists all members and add some button function to it!
             var reHtml =  drawMembers(json2, inst);
-            var html = "<h3>הסר את ה-V מחניכים שברצונך להפוך ללא אקטיביים ולחץ על כפתור 'שמור'...</h3><br><button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">שמור</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button>"+reHtml;
+            var html = "<h3>הסר את ה-V מחניכים שברצונך להפוך ללא אקטיביים ולחץ על כפתור 'שמור'...</h3><br><button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">שמור</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button><button id=\"selAll\" type=\"button\" onclick=\"activateAll()\" value=\"\">הפוך כולם ל'פעילים'!!</button>"+reHtml;
             //window.parent.document.getElementById("main").srcdoc = "<button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">סמן חניכים והקש כאן כדי להפכם ל'לא אקטיביים'...!</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button>"+reHtml;
             window.parent.document.getElementById("main").srcdoc =  html;
             //window.parent.document.getElementById("main").dir = "rtl";
@@ -177,7 +177,7 @@ function getMembersToClient(instID)
             var clientHTML = `<html lang='heb' dir='rtl'><head><script src="/html/protegeActivity.js"></sc`+`ript><script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></sc`+`ript></head><body><form id="form1" action="/editMembers" method="get"><table><tr><th>אקטיבי?</th><th>שם</tr>`;
             var members = JSON.parse(`${json2}`); 
             members.forEach(function(m) {
-                        var isChecked = (m.Active == "1"? "checked": "");
+                        var isChecked = (m.Active == "TRUE"? "checked": "");
                     clientHTML += `<tr><td><input id="ID-${m.memberID}" name="ID-${m.memberID}" type="checkbox" onclick="setChangeVars('ID-${m.memberID}')" ${isChecked}></td><td>${m.name}</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>`;
             });
            clientHTML += "</tr></table></form></body></html>";
@@ -246,9 +246,26 @@ function setChangeVars(checkId)
     </head>
     <body onload="getUserDetails()">
 
-        <h3>בחר מדריך כדי לבחון אקטיביות חניכיו.</h3><br>
-        המשתמש שכרגע מחובר הינו: '<span id="instNameHtml"></span> (מסניף '<span id='branch'></span>'):<br>
-            בחר מדריך: <span id="selector">?</span>
+    <script language="javascript">
+        
+        document.write(`המשתמש שכרגע מחובר הינו: '<span id="instNameHtml"></span> (מסניף '<span id='branch'></span>'):<br>`);
+        async function drawElements()
+        {
+            await getUserDetails();
+            if (admin == 1)
+            {
+                document.write(`<div dir="rtl"><h3>בחר מדריך כדי לבחון אקטיביות חניכיו.</h3><br>`);
+                document.write(`<span dir="rtl">בחר מדריך: <span id="selector">?</span></div>`);
+            }
+            else
+            {
+                document.write(`המשתמש שכרגע מחובר הינו: '<span id="instNameHtml"></span> (מסניף '<span id='branch'></span>'):<br>`);
+            }
+        }
+        drawElements();
+        </script>
+        
+            
             
             <table border=0 id="myMembers" >
                     <tbody>

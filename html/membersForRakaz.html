@@ -53,6 +53,19 @@ function loadRakazim()
         });
     }
 
+    function SetAllActive()
+    {
+        var boxes = $('*[id^="ID-"]');
+            for (i = 0; i < boxes.length; i++)
+            {
+                if (!boxes[i].checked)
+                {
+                    boxes[i].checked = true;
+                    setChangeVars(boxes[i].id);
+                }
+            }
+
+    }
         function selectAll()
         {
             var boxes = $('*[id^="ID-"]');
@@ -74,7 +87,7 @@ function loadRakazim()
 
                 members.forEach(m => 
                 {
-                    membersHtml += `<tr><td><input id="ID-`+m.memberID + `"" name="ID-`+m.memberID+`" type="checkbox" onclick="setChangeVars(this.id)" `+(m.Active == "1"? "checked": "")+`></td><td>`+(m.Active == "1"?"": "<font color='red'>")+m.name+(m.Active == "1"?"":"</font>")+`</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>`;
+                    membersHtml += `<tr><td><input id="ID-`+m.memberID + `"" name="ID-`+m.memberID+`" type="checkbox" onclick="setChangeVars(this.id)" `+(m.Active == "TRUE"? "checked": "")+`></td><td>`+(m.Active == "TRUE"?"<font color='green'>": "<font color='red'>")+m.name+(m.Active == "1"?"":"</font>")+`</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>`;
                 });
                 membersHtml += "</table><br>";
                 document.getElementById("membersTable").innerHTML = "";
@@ -153,6 +166,7 @@ function loadRakazim()
             {
                 await deactivateOnServer();
                 alert("בחירתך נשמרה...");
+                window.location.reload();
             }
 
             async function deactivateOnServer()
@@ -182,7 +196,8 @@ function loadRakazim()
 
     <input type="text" style="visibility: hidden" name="InstructorID" id="InstructorID"><h3>
     החניכים של המדריך '<span id="instNameHtml"></span> (מסניף '<span id='branch'></span>'):</h3><br>
-<button id="selAll" type="button" onclick="selectAll()" value=""> הפוך את הבחירה בכווווווולם! (כפתור שיעוף מפה)</button>
+<button id="selAll" type="button" onclick="selectAll()" value=""> הפוך את הבחירה בכווווווולם!</button>
+<button id="selAll" type="button" onclick="SetAllActive()" value="">כולם ל'אקטיבי'!</button>
     <div id="membersTable"><img id="wait" src='/html/loading.gif'></div>
     <br><br></br></br><hr>
     <button id='await' type="button" onclick="deactivateMembers();">שמור בחירה!</button>

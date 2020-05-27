@@ -107,6 +107,13 @@
             var allMarked = false;
             function selectAll()
             {
+                // only on MARKALL action:
+                if (!allMarked)
+                {
+                    res = confirm("פעולה זו תסמן את כל המשתתפים! להמשיך בזה?!");
+                    if (!res) return;
+                }
+
                 var mark = true;
                 var inputs = document.getElementsByTagName("input");
                 if (allMarked)
@@ -147,7 +154,6 @@
 
             function createNewActivity()
             {
-                debugger;
                 var allSet = false;
                 date = document.getElementById("actDate");
                 actName = document.getElementById("ActivityName");
@@ -156,8 +162,9 @@
                 var checkedMembers = false;
                 var membersCheckboxes = $('[id^="ID-"]');
 
-                foreach(chkbox in membersCheckboxes)
+                for(var ci = 0; ci < membersCheckboxes.length; ci++)
                 {
+                    var chkbox = membersCheckboxes[ci];
                     if (chkbox != null && chkbox.checked) 
                     {
                         checkedMembers = true;
@@ -215,7 +222,7 @@
                     <input type="button" id="markAllButton" onclick="selectAll()" value="סמן את כווווולם!"></input>
                     <span id="membersTable">
                     </span>
-                    <input id="submitButt" type="submit" onclick="return createNewActivity();" style="visibility: hidden" value="עדכן!"></input>
+                    <input id="submitButt" type="button" onclick="return createNewActivity();" style="visibility: hidden" value="עדכן!"></input>
                 </form>
                 
             </body>

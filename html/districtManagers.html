@@ -1,0 +1,62 @@
+<html lang='h' dir='rtl'>
+
+    <head>
+        <meta content='width=device-width, initial-scale=1' name='viewport'/>
+  
+        <title>מנהלי מחוזות:</title>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+    </head>
+  
+  
+
+    <script language="javascript">
+      function getUserDetails()
+      {
+          $.get("/userName", "", function(json)
+          {
+              user = JSON.parse(json);
+              userId = user.id;
+              userName = user.name;
+              admin = user.admin;
+              branch = user.Branch;
+      
+                if (admin == 1)
+                {
+                    document.write(`<html lang='h' dir='rtl'>`);
+                    document.write(`<span><section style="direction: rtl; height:120px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2;; background: #4a90e2;"><img style="width:70px; height:70px;" src="./style/סמל_קרמבו_חדש_עברית.jpg"><h2>  כנפים של קרמבו. שלום '<span id="userName"></span>' ... <img></h2></span></section><br><span id=links"></span>`);
+
+                    document.getElementById("userName").innerHTML = userName;
+
+                    var html = `<center><h2>טבלת מנהלי מחוזות:</h2><table border="1" id="distManagers2"><tr><td>שם</trd><td>מחוז</td><td>כמות סניפים</td><td>כמות חניכים כוללת</td></tr>`;
+    
+                    $.get("/distManagers", "", function (json) 
+                    {
+                        var options = "";
+                        distManagers = JSON.parse(json);
+                        for (var i = 0; i < distManagers.length; i++)
+                        {
+                            var elem = distManagers[i];
+                            html += `<tr><td>${elem.Name}</td><td>${elem.district}</td>`;
+                            html += `<td>${elem.branches}</td><td>${elem.members}</td>`;
+                        }
+                        html += `</table>`;
+                        document.write(html);
+                    });
+                }
+                else
+                {
+                    document.write(`<img class="irc_mi" src="https://icon2.cleanpng.com/20180619/klp/kisspng-confined-space-warning-sign-hazard-sticker-no-entrance-5b29cebf79ccf9.8924609915294665594989.jpg" alt="Image result for no entrance sign" width="260" height="260" style="">`)
+                    alert("אינך מוגדר אדמיניסטרטור ולכן אינך יכול לגשת לדף זה...");
+                }
+          });
+    }
+
+    </script>
+    <body  onLoad="getUserDetails()">
+
+    </body>
+    </html>

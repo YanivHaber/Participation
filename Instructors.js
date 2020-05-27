@@ -1,7 +1,7 @@
 const querystring = require('querystring');
-const express = require('express')
+const express = require('express');
 const sqlite3 = require('sqlite3');
-const app = express()
+const app = express();
 const port = 1000
 
 
@@ -32,7 +32,7 @@ passport.use(new LocalStrategy(
         }
         else {
             // login failure!
-            passport.redirect(`http://localhost:1000/html\login.html?user=`+username);
+            res.redirect(`http://localhost:1000/html\login.html?user=`+username);
             return;// doneCallback("Error! wrong user and/or password!", null);
         }
 
@@ -60,12 +60,16 @@ app.use(passport.session());
 app.get('/forgotPassword', async (req, res) => 
 {
     var user = req.query.user;
-    var newpass = randomString(6);
+    var newpass = randomString(8);
+    while (newpass.indexOf(" ") != -1)
+    {
+        newpass = randomString(8);
+    }
 
     if (typeof(user) == "undefined") return;
 
     var updateSql = "update users set password='"+newpass+"' where username='"+user+"'";
-    var mailbody = "<html lang='heb' dir='rtl'><head><meta charset=\"UTF-8\"></head><body>בחרת לאפס את סיסמתך והוקצתה לך הסיסמא: '"+newpass+"'<br>אנא השתדל לא לשכוח אותה. <b>שוב</B>...</body></html>";
+    var mailbody = "<html lang='heb' dir='rtl'><head><meta charset=\"UTF-8\"></head><body>בחרת לאפס את סיסמתך והוקצתה לך הסיסמא: "+newpass+" <br>אנא השתדל לא לשכוח אותה. <b>שוב</B>...</body></html>";
 
     var currentUser = await query("select * from users where username='"+user+"'");
     if (currentUser.length == 0)
@@ -74,12 +78,15 @@ app.get('/forgotPassword', async (req, res) =>
         res.send();
         return;
     }
-    var userDetails = await query("select * from rakazim where ID="+currentUser[0].id);
+    var rakaz = await query("select * from rakazim where ID='"+currentUser[0].id+"'");
+
+var branchSql = `select * from Branches where Name='${rakaz[0].Branch}'`;
+    var branchDetails = await query(branchSql);
 
     var changepwd = await query(updateSql);
-    res.write("<html lang='heb' dir='rtl'><head><meta charset=\"UTF-8\"></head><body><h1>סיסמתך הוחלפה לסיסמה חדשה ומייל נשלח אליך לסניף...</h1><br><h1>סגור חלון זה ונסה להיכנס מחדש...</h1><input type=\"button\" value=\"Close\" onclick=\"window.close()\"></body></html>");
+    res.write(`<html lang='heb' dir='rtl'><head><meta charset=\"UTF-8\"></head><body><h1>סיסמת הרכז '${user}' הוחלפה לסיסמה חדשה ומייל נשלח אליך לסניף '${branchDetails[0].Name}'...</h1><br><h1>סגור חלון זה ונסה להיכנס מחדש...</h1><a href="${req.headers.referer}">Re-Login</a></body></html>`);
     
-    sendMail(user, mailbody, "הוקצתה לך סיסמה חדשה!", userDetails[0].email);
+    sendMail(user, mailbody, `לרכז '${user}' הוקצתה סיסמא חדשה (אפליקציית השתתפות) ודא/י שהודעה זו מגיע אליו/ה `, branchDetails[0].email);
 
 
 });
@@ -98,7 +105,7 @@ app.get('/login', (req, res) =>
     {
         if (loginDivider < 100) loginDivider = loginDivider * 2;
         if (loginDivider > 100) loginDivider = 100;
-        sendMail("unknown", "There were <b>"+loginAmount+"</b> logins untill now...:)", "Login amount", "yaniv@krembo.org.il");
+        sendMail("unknown", "There were <b>"+loginAmount+"</b> logins untill now...:)", "Login amount", "");
         
     }
 /*    
@@ -149,8 +156,18 @@ app.use('/', (req, res, next) => {
     next();
 });
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+var reporter = false;
+var sendMails = false;
 function sendMail(userName, msgHtml, subject, mailaddress)
-{
+{ 
+    if (!reporter && !sendMails)
+    {
+        // do not send mails!
+        console.log("not sending mails:\n\n"+subject);
+        return;
+    }
+    reporter = false;
+    if (mailaddress.indexOf("yaniv@k") == -1) mailaddress += ", yaniv@krembo.org.il";
     console.log("Sending mail!\n");
 
     var nodemailer = require('nodemailer');
@@ -302,7 +319,7 @@ app.get('/myTeam', async (req, res) =>
     totalHtml += "var json2 = `"+retArray+"`;\n";
     
     totalHtml += "\n var memHtml = drawMembers(json2, "+req.user.id+"); \n ";
-totalHtml += "setTimeout(function () {document.getElementById('teamMembers').innerHTML = memHtml;}, 500);";
+    totalHtml += "setTimeout(function () {document.getElementById('teamMembers').innerHTML = memHtml;}, 500);";
     totalHtml += "</script>";
     totalHtml += `\n <span id="teamMembers"></span>`;
     totalHtml += "\n</body></html>";
@@ -429,7 +446,8 @@ function randomString(length) {
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // function query
-async function query(queryStr, ...params) {
+async function query(queryStr, ...params) 
+{
     try {
         return new Promise((resolve, reject) => db.all(queryStr, ...params, (err, rows) => {
             if (err) {
@@ -465,10 +483,11 @@ async function getParticipationSummary(instID, date)
     var participated = ret.length;
 
     // now find TOTAL amount of users, then find 'not participated'...
+    
     var total = await query("select DISTINCT ParticipantID from participation where InstructorID = "+instID);
     var notPart = total.length - participated;
-    
-    var retMsg = "{\"participated\": "+participated+", \"notParticipated\": "+notPart+"}";
+    var instMems = await getInstMembers(instID);
+    var retMsg = "{\"participated\": "+participated+", \"notParticipated\": "+(instMems.length - participated)+"}";
         
     return retMsg;
 };
@@ -552,8 +571,8 @@ app.get('/getInstDates', async (req, res) => {
     res.send();
 });
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-app.get('/branches', async (req, res) => {
-
+app.get('/branches', async (req, res) => 
+{
     res.header("Content-Type", "text/html; charset=utf-8");
 
     let rows = await query("select Name from Branches");
@@ -566,12 +585,51 @@ app.get('/branches', async (req, res) => {
     op += "]";
     res.write(op);
     res.send();
-});//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+});
+/////////////////////////////////////////////////////////////////////////////////////////////////
+    app.get('/distManagers', async (req, res) => 
+    {
+        res.header("Content-Type", "text/html; charset=utf-8");
+
+        let rows = await query(`select ID, Name, District from rakazim where Role == "מנהל מחוז"`);
+
+        var op = "[";
+        for (let i = 0; i < rows.length; i++) 
+        {
+            op += "{\"id\":\"" + rows[i].ID + "\"";
+            op += ", ";
+            op += `"Name":"${rows[i].Name}"`;
+            op += ", ";
+
+            dist = await query("select Name from districts where id="+rows[i].District);
+            op += "\"district\":\"" + dist[0].Name + "\"";
+
+
+            // get amount of branches
+            var totalAmount = 0;
+            branchesSql = "select * from Branches where district="+rows[i].District;
+            branches = await query(branchesSql);
+            for (var j = 0; j < branches.length; j++)
+            {
+                // get all members of branch
+                memsSql = `select * from members where סניף="`+branches[j].Name+`"`;
+                var mems = await query(memsSql);
+                totalAmount += mems.length;
+            }
+            op += `, "branches":"`+branches.length+`", "members":"`+totalAmount+`"`;
+            op += "}";
+                        if (i != rows.length - 1) op += ", ";
+        }
+        op += "]";
+        res.write(op);
+        res.send();
+    });
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/rakazim', async (req, res) => {
 
     res.header("Content-Type", "text/html; charset=utf-8");
 
-    let rows = await query("select ID, Name, Branch from rakazim");
+    let rows = await query(`select ID, Name, Branch from rakazim where role <> "מנהל מחוז"`);
 
     var op = "[";
     for (let i = 0; i < rows.length; i++) {
@@ -626,8 +684,8 @@ app.get('/yaniv', async (req, res) => {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // get list of in-active users OR re-activate list of users sent...
 app.get('/getInactiveUsers', async (req, res) => {
+    
     console.log("getting non-active members OR re-activating members.");
-
 
     if (typeof req.query["activateUsers"] !== 'undefined') 
     {
@@ -637,7 +695,7 @@ app.get('/getInactiveUsers', async (req, res) => {
         var reActivateUsers = activateUsers.split(",");
 
         try {
-            var activateSql = "update members set active = 1 where ID in (";
+            var activateSql = "update members set active = 'TRUE' where ID in (";
             var numUsers = 0;
             for (i = 0; i < reActivateUsers.length; i++) {
                 if (i > 0) activateSql += ", ";
@@ -661,7 +719,7 @@ app.get('/getInactiveUsers', async (req, res) => {
         // no changes. just get list of in-active...
         console.log("listing all in-active users!");
         res.header("Content-Type", "text/html; charset=utf-8");
-        let rows = await query("select * from members where active <> 1");
+        let rows = await query(`select * from members where active <> "TRUE"`);
 
         var retArray = "[";
         try {
@@ -685,6 +743,42 @@ app.get('/getInactiveUsers', async (req, res) => {
         }
     }
 });
+///////////////////////////////////////////////////////////////////////////////////////////////////
+async function getInstMembers(instID)
+{
+   //console.log("getting members for instructor:" + req.query.instID);
+    let rows = await query("select Branch from rakazim where ID = " + instID);
+    if (rows.length == 0)
+    {
+        return["none!"];
+    }
+    else
+    {
+        var dist = rows[0].Branch;
+
+        var q = `select ID, FullName, Active from members where`;
+        q += " סניף=";
+        q += `"`+dist+`"`;
+       var retArray = new Array();
+        try 
+        {
+            let rows2 = await query(q);
+            console.log("found " + rows2.length + " rows!");
+
+            for (j = 0; j < rows2.length; j++)
+            {
+                retArray[j] = new Object();
+                retArray[j].memID = rows2[j].ID;
+            }
+
+        }
+        catch (e) {
+            console.log(e);
+        }
+    }
+    return retArray;
+       
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/membersForInstructor', async (req, res) => {
     console.log("getting members for instructor:" + req.query.instID);
@@ -705,7 +799,8 @@ app.get('/membersForInstructor', async (req, res) => {
         q += `"`+dist+`"`;
 
         var retArray = "[";
-        try {
+        try 
+        {
             let rows2 = await query(q);
             console.log("found " + rows2.length + " rows!");
 
@@ -738,9 +833,10 @@ app.get('/sendMessage', async (req, res) => {
     var name = await query("select Name, Branch from rakazim where ID="+instID);
     var name = name[0].Name;
 
-    sendMail(name, `<html lang='he' dir='rtl'>המשתמש '${name}' שלח מסר מאפליקציית 'השתתפות' בלשון זו:<br><b>"${msg}"</b></html>`, `Message from ${name}`, "yaniv@krembo.org.il; david@krembo.org.il");
+    reporter = true;
+    sendMail(name, `<html lang='he' dir='rtl'>המשתמש '${name}' שלח מסר מאפליקציית 'השתתפות' בלשון זו:<br><b>"${msg}"</b></html>`, `Message from ${name}`, "yaniv@krembo.org.il, david@krembo.org.il");
 
-    res.write("Message sent!\nGood day...");
+    res.write("<html lang='heb' dir='rtl'><head><meta http-equiv='Content-Type' content='text/html; charset=UTF-8'></head><h1>הודעתך נשלחה!</h1><br>המשך יום נעים...</html>");
     res.send();
 });
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -768,7 +864,7 @@ app.get('/addParticipation', async (req, res) => {
         if (noDouble.length > 0)
         {
             // instead of updating the activity, delete it completely and add a new one...
-            actSql = `UPDATE Activity SET Name="`+escapeSingleApos(actName)+`", Type="`+escapeSingleApos(actType)+`", subtype="`+escapeSingleApos(actSubtype);
+            actSql = `UPDATE Activity SET Name="`+escapeSingleApos(actName)+`", Type="`+escapeSingleApos(actType)+`", subtype="`+escapeSingleApos(actSubtype)+`"`;
             actSql += `" , InstructorID="${instID}", Date="${date}" WHERE ActivityID="${noDouble[0].ActivityID}"`;
     
             // run update query:
@@ -777,7 +873,7 @@ app.get('/addParticipation', async (req, res) => {
             res.write(`<html lang='heb' dir='rtl'><head><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head>`);
             res.write("<h1>הנתונים היבשים של הפעולה עודכנו...(ללא עדכון משתתפים)!</h1></html>");
             res.send();
-            retrurn;
+            return;
         }
         // first create such an activity...
         actSql = "INSERT into Activity (Name, Type, subtype, InstructorID, Date) VALUES ("
@@ -805,15 +901,21 @@ app.get('/addParticipation', async (req, res) => {
 
     }
 
+
+    var mems = await getInstMembers(instID);
     // add all members that attended this activity:
-    for (i = 1; i < 6000; i++) {
-        if (queryParams[i] != "on") continue;
+    for (i = 0; i < mems.length; i++) 
+    {
         firstVal ? console.log("starting to build add sql!") : addSql += ", ";
         addSql += "(" + instID;
         addSql += ", ";
         addSql += "\"" + date + "\", ";
-        addSql += i + ", ";
-        addSql += "1, ";
+        addSql += mems[i].memID + ", ";
+        
+        if (queryParams[i] == "on") 
+            addSql += "1, ";
+        else
+            addSql += "0, ";
         addSql += ActID + ")";
         firstVal = false;
     }
@@ -829,7 +931,7 @@ app.get('/addParticipation', async (req, res) => {
     // TODO: find the branch email to send it to!
     let distMail = await query(`select email from Branches where Name="${name[0].Branch}"`);
     // send mail to yaniv! to be changed with line after!
-    sendMail("user ID:"+name[0].Name, name[0].Name+` הוסיף בהצלחה את הפעולה '${actName}'<br>יישלח בעתיד ל-${distMail[0].email}`,  `הפעולה '${actName}' נוספה בהצלחה`, "yaniv@krembo.org.il");
+    sendMail("user ID:"+name[0].Name, name[0].Name+` הוסיף בהצלחה את הפעולה '${actName}'<br>יישלח בעתיד ל-${distMail[0].email}`,  `הפעולה '${actName}' נוספה בהצלחה`, "");
     // send mail to district
     //sendMail("user ID:"+name[0].Name, name[0].Name+` הוסיף בהצלחה את הפעולה '${actName}'`,  `הפעולה '${actName}' נוספה בהצלחה`, distMail[0].email);
     res.send();
@@ -862,20 +964,20 @@ app.get('/deactivateUsers', async (req, res) =>
 {
     var userReact = 0;
     var usersDeact = 0;
-    for (j = 0; j < 6000; j++) {
+    for (j = 0; j < 7000; j++) {
         if (req.query["ID-" + j] == "false") 
         {   
-            var sql = "UPDATE members SET Active = 0 WHERE ID=" + j;
+            var sql = "UPDATE members SET Active = \"FALSE\" WHERE ID=" + j;
             rows = await query(sql);
             usersDeact++;
         }
     }
     
-    for (j = 0; j < 6000; j++) 
+    for (j = 0; j < 7000; j++) 
     {
         if (req.query["ID-" + j] == "true") 
         {   
-                var sql = "UPDATE members SET Active = 1 WHERE ID=" + j;
+                var sql = "UPDATE members SET Active = \"TRUE\" WHERE ID=" + j;
                 rows = await query(sql);
                 userReact++;
         }
@@ -889,8 +991,9 @@ app.get('/deactivateUsers', async (req, res) =>
     // find out user name
     var name = await query("select Name, Branch from rakazim where ID="+req.user.id);
 
-    sendMail("user ID:"+req.query.instID, "שים לב:<br><b>That user just <font color='red'>deactivated</font> "+usersDeact+" users! and <font color='green'>REactivated</font> "+userReact+" users.</b>", "De\Re-activation summary. (done by user:'"+ name[0].Name+"')", "yaniv@krembo.org.il");
+    //TODO: להוסיף למייל את מנהל המחוז!
     sendMail("user ID:"+req.query.instID, "שים לב:<br><b>That user just <font color='red'>deactivated</font> "+usersDeact+" users! and <font color='green'>REactivated</font> "+userReact+" users.</b>", "De\Re-activation summary. (done by user:'"+ name[0].Name+"')", "david@krembo.org.il");
+
     res.send();
 
 
@@ -977,7 +1080,7 @@ removeActSql = "DELETE FROM Activity where ActivityID="+actID;
     var name = await query("select Name, Branch from rakazim where ID="+instID);
     var name = name[0].Name;
 
-    sendMail(name, "המשתמש '"+name+"' מחק פעולה '"+actName+"'!", "מחיקת פעולה!", "yaniv@krembo.org.il");
+    sendMail(name, "המשתמש '"+name+"' מחק פעולה '"+actName+"'!", "מחיקת פעולה!", "david@krembo.org.il");
 
         res.write(`<html lang='he' dir='rtl'><head dir='rtl'><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head>`);
     res.write("<h1>הפעולה נמחקה בהצלחה!</h1></body></html>");
@@ -1123,9 +1226,8 @@ app.get('/changePassword', async (req, res) =>
     res.write(`<span style="right:150px;"><br><br><br>שלום ${users[0].Name}!<br><br></span><span style="position: static;"><form method='get' name='updatePassword' action='/replacePassword'>הסיסמא הנוכחית שלך: <input type='password' name='firstPassword'><br>סיסמא חדשה (לפחות 6 תוים!):<input type='password' name='newPassword'><input type='hidden' name='user' value="${user}"><br><input type='submit' value='בצע!'></form></span><br><br></body></html>`);
     res.send();
 });
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////
-app.listen(port, () => console.log(`Instructor app is now listening on port ${port}!`));
+app.listen(port, () => console.log(`listening on port ${port}!`));
 
 
 
