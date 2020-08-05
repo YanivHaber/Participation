@@ -1346,7 +1346,7 @@ app.get('/addParticipation', async (req, res) => {
     // TODO: find the branch email to send it to!
     let distMail = await query(`select email from Branches where Name="${name[0].Branch}"`);
     // send mail to yaniv! to be changed with line after!
-    sendFormalMail(name[0].Name, name[0].Name+` הוסיף בהצלחה את הפעולה '${actName}'`,  `הפעולה '${actName}' נוספה בהצלחה`, ${distMail[0].email});
+    sendFormalMail(name[0].Name, name[0].Name+` הוסיף בהצלחה את הפעולה '${actName}'`,  `הפעולה '${actName}' נוספה בהצלחה`, "${distMail[0].email}");
     // send mail to district
     //sendMail("user ID:"+name[0].Name, name[0].Name+` הוסיף בהצלחה את הפעולה '${actName}'`,  `הפעולה '${actName}' נוספה בהצלחה`, distMail[0].email);
     res.send();
