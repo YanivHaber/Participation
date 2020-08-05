@@ -68,7 +68,7 @@ async function getUserDetails(ID)
         {
             loginGood = false;
             alert("You CANNOT watch other instructor unless you login with his credentials!");
-            document.getElementById("htmlAll").innerHTML = `<img class="irc_mi" src="https://icon2.cleanpng.com/20180619/klp/kisspng-confined-space-warning-sign-hazard-sticker-no-entrance-5b29cebf79ccf9.8924609915294665594989.jpg" alt="Image result for no entrance sign" width="260" height="260" style="">`;
+            document.getElementById("htmlAll").innerHTML = `<img src="./style/NoEntry.jpg">`;
             return;   
         }
         
@@ -99,7 +99,7 @@ async function getMyUserDetails()
         {
             for (p = dates.length - 1; p > -1; p--)
             {
-                html += `<th class="rotate"><div><span><a id='date+${p}+' href='./editActivity.html?instid=${instID}&date=${dates[p].date}'>${dates[p].date}</a></span></div></th>`;
+                html += `<th class="rotate"><div><span><a id='date+${p}+' title="ערוך את פרטי הפעולה (ללא עריכת המשתתפים!)" href='./editActivity.html?instid=${instID}&date=${dates[p].date}'>${dates[p].date}</a></span></div></th>`;
             }
             html += "<th class=\"rotate\"><div>";
 
@@ -108,7 +108,7 @@ async function getMyUserDetails()
             for (var o = dates.length - 1; o > -1; o--)
             {
                 //var activityHtml = "<span dir='rtl' id='act"+o+"Description'>"+o+"</span>";
-                var activityHtml = "<span dir='rtl' id='act"+o+"Description'>?"+o+"</span>";
+                var activityHtml = "<span dir='ltr' id='act"+o+"Description'>Loading Details (it's slow)...<img style='width:20px; height:20px' src='/html/loading.gif'></span>";
                 
                 $.get("/getActivity?instID=" + instID + "&date=" + dates[o].date + "&point=" + o, "", (actJson) => 
                 {
@@ -145,9 +145,19 @@ async function getMyUserDetails()
 
         //document.write(html);            
     });
+    //alert("Loding data from server...(might be slow...)");
+    $.get("/checkMembersAvailability?instID="+instID, "", function (probMembers)
+    {
+        var pMembers = JSON.parse(probMembers);
+        alert("got "+pMembers.length+ " results!");
+    });   
 
     var url = "/getParticipation?instID="+instID;
     html = "<th class=\"straight\"><div><span></span></div></th>";
+
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
 
     $.get(url, "", function (json2) 
     {
@@ -198,7 +208,7 @@ async function getMyUserDetails()
 
 
                     // compare them to the dates returned from prticipation table to un\check them...
-                    for (var dateInd = part[p].dates.length - 1; dateInd > -1; dateInd--)
+                    for (var dateInd = part[p].dates.length - 1; dateInd > - 1; dateInd--)
                     {
                         dateAvailable = false;
                         if (part[p].dates[dateInd].date == currDate.date) 
@@ -210,16 +220,23 @@ async function getMyUserDetails()
                     }
                     if ( dateAvailable )
                     {
+                        if 
+                        (dateIndex == 1)
+                            yan2 = 0;
+                            
                         if(part[p].dates[dateIndex].participated)
                         {
+                            if (dateIndex > 0) 
+                                var yaniv = "stop";
+
                             html += "<td><center><input type=\"checkbox\"";
                             html += part[p].dates[dateIndex].participated ? "checked=\"checked\"": "";
-                            html += " disabled style=\"color: green\"></center></td>"; 
+                            html += " ></center></td>"; 
                             columnsCount++;
                         }
                         else
                         {
-                            html += "<td><center>X</center></td>";
+                            html += `<td><center style="color:red">X</center></td>`;
                         }
                     } 
                     else
@@ -354,7 +371,7 @@ function sleep(ms) {
 
 </script>
 </head>
-<body onload="initOnLoad(); getUserDetails();" dir="rtl">
+<body onload="initOnLoad();" dir="rtl">
 
     
         <table style="border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;">
@@ -363,6 +380,7 @@ function sleep(ms) {
         </tr>
         </table>
                     
+        <div id="htmlAll">
     <h2>רישום השתתפות של חניכים של <span id="instName"></span>  מסניף '<span id="branch"></span>'</h2>
     <br>
     <script language="javascript">
@@ -385,7 +403,8 @@ function sleep(ms) {
         </table><br>
                     <hr>
                     
-                    <input type="button" id="createbutt" onClick="createNew()" style="visibility: visible" value="צור פעולה חדשה"></input>
+        <input type="button" id="createbutt" onClick="createNew()" style="visibility: visible" value="צור פעולה חדשה"></input>
+    </div>
 </body>
 
 </html>

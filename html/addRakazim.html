@@ -25,7 +25,7 @@ a:active {
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 
 </head>
-<body  style="direction: rtl;" onLoad="getUserDetails();">
+<body  style="direction: rtl;" onLoad="getUserDetails();  setScreen()">
   
   
 
@@ -39,7 +39,7 @@ a:active {
       }
 function getUserDetails()
 {
-    $.get("/userName", "", function(json)
+      $.get("/userName", "", function(json)
     {
         user = JSON.parse(json);
         userId = user.id;
@@ -71,22 +71,26 @@ function getUserDetails()
                     extraHTML += `<br>סניף: ` + snifimHtml + "<br>";
                     extraHTML += `<input type="submit" value="הכנס"></form>`;
 
-                    document.write(`<html lang='he' dir='rtl'><head><title>הוספת רכז!</title></head><body style="direction: rtl;">`);
-                    document.write(`<span><section style="direction: rtl; height:120px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2;; background: #4a90e2;"><img style="width:70px; height:70px;" src="./style/סמל_קרמבו_חדש_עברית.jpg"><h2>  כנפים של קרמבו. שלום '<span id="userName"></span>' ... <img></h2></span></section><br><span id=links"></span></body>`);
+                    document.write(`<html lang='he' dir='rtl'><head><title>הוספת רכז!</title></head><body  onload="setScreen()" style="direction: rtl;">`);
+                    document.write(`<span><section style="direction: rtl; height:120px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2;; background: #4a90e2;"><img style="width:70px; height:70px;" src="./style/סמל_קרמבו_חדש_עברית.jpg"><h2>  כנפים של קרמבו. שלום <span id="userName"></span> ... <img></h2></span></section><br><span id=links"></span></body>`);
                     document.write(extraHTML);
 
               });
 
-              //document.getElementById("userName").innerHTML = userName;
+              
           }
           else
           {
-            document.write(`<img class="irc_mi" src="https://icon2.cleanpng.com/20180619/klp/kisspng-confined-space-warning-sign-hazard-sticker-no-entrance-5b29cebf79ccf9.8924609915294665594989.jpg" alt="Image result for no entrance sign" width="260" height="260" style="">`)
+            document.write(`<img class="irc_mi" src="./style/NoEntry.jpg" width="260" height="260" style="">`)
             alert("אינך מוגדר אדמיניסטרטור ולכן אינך יכול לגשת לדף זה...");
           }
         });
 };
 
+function setScreen()
+{
+  window.setTimeout(`document.getElementById("userName").innerHTML = userName`, 500);
+}
 
 
 </script>

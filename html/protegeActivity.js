@@ -1,6 +1,7 @@
 
 function selectLayer(lay)
 {
+    //if (lay == "לא הוגדר") lay = "";
     document.getElementById("myTeamForm").submit();
 }
 function sleep(ms) 
@@ -116,11 +117,10 @@ async function getUserDetails()
 };
 
 function drawMembers(json2, inst)
-{
-    
+{    
     getUserDetails();
     
-    var membersHtml = `<table><br><tr><th>חניך</th><th>אקטיבי?</th></tr><br> סה"כ חניכים אקטיביים (בשכבה 'שכבהפה'): <span id="activeMembers"></span><br>חניכים שהפסיקו השתתפותם: <span id="nonActive"></span><br>`;
+    var membersHtml = `<table><br><tr><th>חניך</th><th>אקטיבי?</th></tr><br> סה"כ חניכים אקטיביים (בשכבה 'שכבהפה'): <span id="activeMembers"></span><br>חניכים שהפסיקו השתתפותם (הפכו ל'לא אקטיביים'): <span id="nonActive"></span><br>`;
 
     try 
     {
@@ -135,7 +135,8 @@ function drawMembers(json2, inst)
 
             activeMembers++;
             membersHtml += "<tr><td>"+m.name+"</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>";
-            var chkbox = `<input id=\"ID-${m.memberID}" name=\"ID-${m.memberID}" type="checkbox" onclick="" `+((m.active== "1")? "checked": "")+` disabled>`;
+            var chkbox = `<input id=\"ID-${m.memberID}" name=\"ID-${m.memberID}" type="checkbox" onclick="" `+((m.active== "TRUE")? "checked": "")+` disabled>`;
+            if (m.active != "TRUE") chkbox = `&nbsp;<span style="color:red">X</span>`;
             membersHtml += "<td>"+chkbox+"</td></tr>";
         });
         // draw NON active members
@@ -150,6 +151,7 @@ function drawMembers(json2, inst)
         queryString = window.location.search;
         urlParams = new URLSearchParams(queryString);
         filterLayer = urlParams.get('filterLayer');
+        if (filterLayer == null) filterLayer = "כולם";
 
         membersHtml += "</table>";
         var innerPoint = membersHtml.indexOf(`"activeMembers">`) + `"activeMembers">`.length;

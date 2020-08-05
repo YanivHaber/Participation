@@ -53,7 +53,7 @@ async function getUserDetails()
         document.getElementById("branch").innerHTML = branch;
         document.getElementById("link1").href = `http://${window.location.hostname}:${PORT}/html/membersForRakaz.html?instID=`+userId;
         document.getElementById("link11").href = `http://${window.location.hostname}:${PORT}/html/sendMsg.html?instID=`+userId;        
-        document.getElementById("link2").href = `http://${window.location.hostname}:${PORT}/html/re-activateUsers.html`;
+        //document.getElementById("link2").href = `http://${window.location.hostname}:${PORT}/html/re-activateUsers.html`;
         
     });
 };
@@ -100,13 +100,13 @@ function arrangeLinks()
   
 
   
-  <p><b>יצירת פעולה עבור מדריך (פעולה זו אפשר לבצע לאחר בחירת מדריך לצפיה בהשתתפות חניכיו!)</a></b></p>
+  
 
   <script language="javascript">
 
 document.write(`<p><b><a href="http://${window.location.hostname}:${PORT}/changePassword" target="_blank">החלפת סיסמא!</a></b></p>`);
 document.write(`<span id="myMembersLink"><p><b><a href="http://${window.location.hostname}:${PORT}/myTeam" target="_blank">רשימת החניכים בסניף שלי</a></b></p></span>`);
-document.write(`<p><b><a id=\"link8\" href="http://${window.location.hostname}:${PORT}/html/viewActivity.html?instID=" target="_blank">צפיה ברשימות ההשתתפות של החניכים שלי!</a></b></p>`);
+document.write(`<p><b><a id=\"link8\" href="http://${window.location.hostname}:${PORT}/html/viewActivity.html?instID=" target="_blank">צפיה ברשימות ההשתתפות של החניכים שלי!</a></b><b><br>(יצירת פעולה ניתן לבצע ממסך הצפיה ברשימות ההשתתפות)<br></b></p>`);
 document.write(`<p><b><a id="link1" target="_blank" href="http://${window.location.hostname}:${PORT}/html/Activiyut.html?instID=">ערוך אקטיביות החניכים שלי!</a></b></p>`);
 document.write(`<p><b><a id="link11" target="_blank" href="wow.com">דווח על בעיה...!</a></b></p>`);
 //document.write(`<p><b><a id="link2" href="amazing.com" target="_blank">החזר אקטיביות של חניכים (לינק שצריך לעוף מפה!)</a></b></p>`);

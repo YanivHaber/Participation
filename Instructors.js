@@ -1,9 +1,10 @@
+const REALLYSENDALLMAILS = false;
 const querystring = require('querystring');
 const express = require('express');
 const sqlite3 = require('sqlite3');
 const app = express();
 const port = 1000
-
+const FULL_DAY = 1000 * 60 * 60 * 24;
 
 // Ariel add from here
 const passport = require('passport');
@@ -18,6 +19,7 @@ passport.use(new LocalStrategy(
         usernameField: 'username',
         passwordField: 'password'
     },
+    
     // added async and query
     async (username, password, doneCallback) => {
         //TODO: /getActivity if the user and the password are OK
@@ -26,7 +28,13 @@ passport.use(new LocalStrategy(
         // check user\pw against db:
         let ret = await query("select * from users where username = \"" + username + "\"");
 
-        if (ret.length > 0 && ret[0].password == password) {
+        if (ret.length > 0 && ret[0].password == password) 
+        {
+            // count amount of logins...
+            countRequests(ret[0].id);
+
+            // test members that are missing more than 2 weeks
+
             // login success!
             return doneCallback(null, { name: "\"" + username + "\"", id: ret[0].id });
         }
@@ -56,6 +64,172 @@ app.use(expressSession({
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+var lastDateCeck;
+if (lastDateCeck === undefined) lastDateCeck = new Date();
+
+var dateAvailabilityCheck = null;
+
+//////////////////////////////////////////////////////////////////////////////////////
+async function isCheckNow(dist)
+{
+    today = new Date();
+    // check last time check for district:
+    lastCheckSql = "select membersCheckDate from districts where id="+dist;
+    var lastCheck = await query(lastCheckSql);
+    var distDate = lastCheck[0].membersCheckDate;
+    if (distDate == "") 
+    {
+        distDate = new Date("8/27/1970");
+    }
+    var diffFromLastCheck = Math.round((today - new Date(distDate)) / FULL_DAY);
+    if (diffFromLastCheck < 7) return false;
+    else return true;
+}
+/////////////////////////////////////////////////////////////////////////////////////
+// run this check will run for ALL districts (once a week)!
+async function checkMembersAvailability()
+{
+    // run this check for ALL districts!
+    var distsSql = "select * from districts";
+    var dists = await query(distsSql);
+
+    for (var distIdx = 0; distIdx < dists.length; distIdx++)
+    {
+        dist = dists[distIdx].id;
+
+        var check = await isCheckNow(dist);
+        if (!Boolean(check)) continue;
+        console.log(`checking availability of ALL members in district ${dist}`);
+
+        // get instructors of this district:
+        distInstsSql = "select ID from rakazim where District = "+dist;
+        var distInsts = await query(distInstsSql);
+
+        // search ALL members for each instructor of this district:
+        for (instNum = 0; instNum < distInsts.length; instNum++)
+        {
+            inst = distInsts[instNum].ID;
+            if (inst == "6")
+                console.log("stop here");
+            
+             var oldParticipants = new Array();
+            var sql = `select ParticipantID, max("Date") as maxDate from Participation where InstructorID=${inst} and participated="1" group by ParticipantID`;
+            var ret = "";
+            try
+            {
+                ret = await query(sql);
+            } 
+            catch(e) { console.log("error running query!\n"+e); };
+           
+            var resultArray = new Array();
+
+            // check dates of all members to assert availability in last 2 weeks!
+                            var today = Intl.DateTimeFormat('en-US').format(new Date());
+
+            for (i = 0; i < ret.length; i++)
+            {
+                var returnResult = "[";
+                var part = ret[i];
+                var d = new Date(part.maxDate);
+
+                //var today = (new Date()).format('DD-MM-YYYY');
+
+                var diff = Math.round((new Date(today) - new Date(d)) / (1000 * 60 * 60 * 24));
+                if (diff > 14)
+                {
+                    if (returnResult != "[") returnResult += ", ";
+                    returnResult += `{"ParticipantID": ${part.ParticipantID}}`;
+                    resultArray.push(part.ParticipantID);
+
+                    continue;
+                }            
+            }
+
+            returnResult += "]";
+            if (resultArray.length > 0)
+            {
+                alertMissingMembers(dist, resultArray, inst);
+            }
+            // update 'last check date' in DB...
+        }
+        // write when district was tested
+        var addSql = `UPDATE districts SET membersCheckDate='${today}' WHERE id='${dist}'`;
+
+        await query(addSql);
+
+        // do not return those results as mails where sent instead! see alertMissingMembers
+        //res.write(returnResult);
+        //res.send();
+    }
+};
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+async function alertMissingMembers(myDist, memberArr, instID)
+{
+    // start the missing check:
+
+ 
+        // get district name:
+        var dNameSql = "select * from districts where id="+myDist;
+        var dName = await query(dNameSql);
+        var myDistName = dName[0].Name;
+
+        var distMgrSql = "select * from rakazim where Role='מנהל מחוז' AND District="+myDist;
+        try {
+            res = await query(distMgrSql);
+        } catch(e) {};
+        var distMgrName = res[0].Name;
+        var distMgrMail = res[0].email;
+    // get their names:
+    var sql = "select FullName from members where ID in (";
+    for (var i = 0; i < memberArr.length; i++)
+    {
+        if (i > 0) sql += ", ";
+        sql += memberArr[i];
+    }
+    sql += ")";
+    console.log("searching problematic member with this query:\n"+sql);
+    var missingNames;
+    try{
+        missingNames = await query(sql);
+    } catch(e) {};
+    console.log("found "+missingNames.length+" result!");
+
+    // find instructor's name:
+    var instSql = "select * from rakazim where ID="+instID;
+    var instRes = await query(instSql);
+    var instName = instRes[0].Name;
+
+    // now send alerting mail:
+    var subject = `: החניכים הבאים לא היו כבר שבועיים או יותר!`;
+    var msgHtml = `היי,<br><b><font color='red'>מייל זה יישלח בעתיד ל ${distMgrName} מנהל מחוז ${myDistName}</font></b><br><br><font color='blue'>:לתשומת לבך הפעילים הבאים (של המדריך ${instName}) לא הגיעו לפעילות בשבועיים האחרונים</font><br>`;
+
+    for (p = 0; p < missingNames.length; p++)
+    {
+        msgHtml += (p+1)+". ";
+        msgHtml += missingNames[p].FullName + "<br>";
+    }
+    msgHtml += "<br><b>את/ה מכיר/ה את זה? אולי כדאי להרים טלפון לראות שהכל בסדר...<br>בהצלחה</b>";
+
+    //TODO: change mail address to district manager!
+    sendInnerFormalMail(instID, msgHtml, subject, "");
+
+    // write in DB the date of this check!
+    var day = today.getDate();
+    var month = today.getMonth();
+    var year = today.getFullYear();
+
+    var properDate = day+"/" + month + "/" + year;
+    var addDate  = `update rakazim set missingMembersCheck='`+properDate+`' where ID=`+instID;
+
+    var prevMail = await query(addDate);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+app.get('/checkMembersAvailability', async (req, res) => 
+{
+    await checkMembersAvailability();
+});
 //////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/forgotPassword', async (req, res) => 
 {
@@ -86,17 +260,19 @@ var branchSql = `select * from Branches where Name='${rakaz[0].Branch}'`;
     var changepwd = await query(updateSql);
     res.write(`<html lang='heb' dir='rtl'><head><meta charset=\"UTF-8\"></head><body><h1>סיסמת הרכז '${user}' הוחלפה לסיסמה חדשה ומייל נשלח אליך לסניף '${branchDetails[0].Name}'...</h1><br><h1>סגור חלון זה ונסה להיכנס מחדש...</h1><a href="${req.headers.referer}">Re-Login</a></body></html>`);
     
-    sendMail(user, mailbody, `לרכז '${user}' הוקצתה סיסמא חדשה (אפליקציית השתתפות) ודא/י שהודעה זו מגיע אליו/ה `, branchDetails[0].email);
+    sendFormalMail(user, mailbody, `לרכז '${user}' הוקצתה סיסמא חדשה (אפליקציית השתתפות) ודא/י שהודעה זו מגיע אליו/ה `, branchDetails[0].email);
 
 
 });
 
-app.get('/login', (req, res) => 
+
+async function countRequests(user)
 {
     if (typeof(loginAmount) === "undefined") loginAmount = 0;
     if (typeof(loginDivider) === "undefined") loginDivider = 100;
 
-    var user = req.query.user;
+    var u = await query("select * from users where id="+user);
+    var username = u[0].username;
 
     loginAmount++;
 
@@ -104,10 +280,12 @@ app.get('/login', (req, res) =>
     if (loginAmount % loginDivider == 0) 
     {
         if (loginDivider < 100) loginDivider = loginDivider * 2;
-        if (loginDivider > 100) loginDivider = 100;
-        sendMail("unknown", "There were <b>"+loginAmount+"</b> logins untill now...:)", "Login amount", "");
+        else loginDivider = 100;
+        sendFormalMail("application", `There were <b>${loginAmount}</b> logins untill now...:), (last one: '${username}').`, `${loginAmount} logins`, "");
         
     }
+}
+app.get('/login', (req, res) => {
 /*    
     res.send(`
 <form action="/login" method="post">
@@ -152,23 +330,126 @@ app.use('/', ensureLogin.ensureLoggedIn('/login'), (req, res, next) => next());
 app.use('/', (req, res, next) => {
     //log the current user:
     console.log("Logged in user" + JSON.stringify(req.user));
-    
+        
     next();
 });
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-var reporter = false;
-var sendMails = false;
+async function sendInnerFormalMail(userName, msgHtml, subject, mailaddress)
+{ 
+    sendMails = true;
+    yanivReporter = true;
+    await sendFormalMail(userName, msgHtml, subject, mailaddress)
+    yanivReporter = false;
+    sendMails = true;
+};
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+async function sendFormalMail(userName, msgHtml, subject, mailaddress)
+{ 
+    if (!sendMails)
+    {
+         return;
+    }
+    if (yanivReporter)
+    {
+        mailaddress += ", yaniv@krembo.org.il";
+    }
+ 
+    var nodemailer = require('nodemailer');
+
+    // Create the transporter with the required configuration for Outlook
+    // change the user and pass !
+    var transporter = nodemailer.createTransport({
+        host: "smtp-mail.outlook.com", // hostname
+        secureConnection: false, // TLS requires secureConnection to be false
+        port: 587, // port for secure SMTP
+        tls: {
+        ciphers:'SSLv3'
+        },
+        auth: {
+            user: 'krembo@krembo.org.il',
+            pass: 'Wings2020'
+        }
+    });
+
+// setup e-mail data, even with unicode symbols
+    var mailOptions = 
+    {
+        from: 'krembo@krembo.org.il', // sender address (who sends)
+        to:mailaddress, // list of receivers (who receives)
+        subject: subject, // Subject line
+        html: `<html dir="rtl">` + msgHtml + `</html>` // html body
+    };
+
+    // send mail with defined transport object
+    await transporter.sendMail(mailOptions, function(error, info)
+    {
+        if(error)
+        {
+            console.log(error);
+            return -1;
+        }
+        console.log('Message sent: ' + info.response);
+    });
+    console.log("mail with meesage was sent to "+mailaddress+ "!");
+
+
+}
+
+
+
+
+
+
+
+
+    ///////////////////////////////////////////////////////////////////////////////////
+    /*
+    var outlookMail = require('nodejs-nodemailer-outlook');
+    //outlookMail.base.setAnchorMailbox = "krembo@krembo.org.il";
+    var res = outlookMail.sendEmail({
+    auth: {
+        user: "krembo@krembo.org.il",
+        pass: "Wings2020"
+    },
+    host: 'https://outlook.office.com',
+    port:443,
+    secureConnection: true,
+    tls:{
+        ciphers:'SSLv3'
+    },
+    from: 'krembo@krembo.org.il',
+    to: mailaddress,
+    subject: subject,
+    html: '<b>Msg FROM krembo@krembo.org.il!</b>\n\n'+ msgHtml,
+    replyTo: 'krembo@krembo.org.il',
+    attachments: [],
+    onSuccess: (i) => console.log("secceeded sending mail: "+i),
+    onError: (e) => console.log("error sending mail: "+e)
+    
+    });
+    console.log("mail sent:\n"+res);
+ 
+}
+*/
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+var sendToDistrictManagers = false;
+var yanivReporter = true;
+var sendMails = true;
+//////////////////////////////////////////////////////////////////////////////////////
 function sendMail(userName, msgHtml, subject, mailaddress)
 { 
-    if (!reporter && !sendMails)
+    if (!sendMails)
     {
         // do not send mails!
         console.log("not sending mails:\n\n"+subject);
+
+        if (yanivReporter)
+        {
+            mailaddress += "; yaniv@krembo.org.il";
+        }
         return;
     }
-    reporter = false;
-    if (mailaddress.indexOf("yaniv@k") == -1) mailaddress += ", yaniv@krembo.org.il";
-    console.log("Sending mail!\n");
+     console.log("Sending mail!\n");
 
     var nodemailer = require('nodemailer');
 
@@ -181,15 +462,15 @@ function sendMail(userName, msgHtml, subject, mailaddress)
             pass: 'Y2a7niv!8' 
             user: 'krembo@krembo.org.il',
             pass: 'Wings2020' */
-            user: 'yaniv@krembo.org.il',
-            pass: 'Omeryoav15'
+            user: 'james@bond.com',
+            pass: ',yPass'
 
         }
     });
 
     var mailOptions = 
     {
-        from: 'yaniv@krembo.org.il',
+        from: '',
         to: mailaddress,
         subject: subject,
         html: msgHtml    
@@ -233,16 +514,51 @@ app.get('/addRakaz', async (req, res) =>
     var i = 0;
     var fullName = req.query.name;
     var role = req.query.role;
-    var phone = req.query.phone;
+    var phone = req.query.memPhone;
     var email = req.query.email;
     var branch = req.query.branch;
+    
 
     // now add this new rakaz to DB...
     var addSql = `INSERT INTO rakazim (Name, Tel, Role, email, Branch) VALUES ('${fullName}', '${phone}', '${role}', '${email}', '${branch}')`;
+    
     await query(addSql);
 
     res.write(`<html lang="he" dir="rtl"><head><meta charset="utf-8" /></head>`);
     res.write(`<h3>הרכז '${fullName}' נוסף לבסיס הנתונים!</h3></body></html>`);
+    res.send();
+});
+////////////////////////////////////////////////////////////////////////////////////
+app.get('/addMember', async (req, res) => 
+{
+    var i = 0;
+    var fullName = req.query.name;
+    var idnum = req.query.IDNum;
+    var phone = req.query.phone;
+    var email = req.query.email;
+    var branch = req.query.branch;
+    var layer = req.query.layer;
+
+    // find proper district
+    distSql = `select district from Branches where Name = "${branch}"`;
+    let distFromDB = await query(distSql);
+
+    var distName = `select Name from districts where id="`+distFromDB[0].district+`"`;
+    distFromDB = await query(distName);
+
+    // now add this new rakaz to DB...
+    var addSql = `INSERT INTO members (FullName, District, Branch, IDnum, Active, layer, Phone, MailAddress) VALUES ("${fullName}", '${distFromDB[0].Name}', "${branch}", '${idnum}', 'true', '${layer}', '${phone}', '${email}')`;
+    await query(addSql);
+
+    res.write(`<html lang="he" dir="rtl"><head><meta charset="utf-8" /></head>`);
+    res.write(`<h3>הפעיל "${fullName}" נוסף לבסיס הנתונים!</h3></body></html>`);
+
+    var ret = await query("select * from users where id="+req.user.id);
+    var username = ret[0].username;
+
+    var msg = `<p dir="rtl">המשתמש '${username}' הכניס כרגע את הפעיל החדש: '${fullName}'.<br>פרטי הפעיל שנוסף הינם: <br>שם:"${fullName}", <br>מחוז:'${distFromDB[0].Name}', <br>סניף:"${branch}", <br>מס. ת.ז.:'${idnum}', <br>שכבת גיל:'${layer}', <br>טלפון:'${phone}', <br>אימייל:'${email}<br><br>עכשיו צריך להוסיף אותו ל-!SF</div>`;
+        sendFormalMail(username, msg, `משתמש זה הוסיף כעת פעיל חדש!`, `david@krembo.org.il`);
+
     res.send();
 });
 
@@ -251,6 +567,7 @@ app.get('/myTeam', async (req, res) =>
 {
     var layerFilter = null;
     layerFilter = req.query["filterLayer"];
+    if (layerFilter == null) layerFilter = "כולם";
     var totalHtml = "";
         name = await query("select Name, Branch from rakazim where ID="+req.user.id);
     
@@ -263,7 +580,7 @@ app.get('/myTeam', async (req, res) =>
     totalHtml +=  `<script src="./html/protegeActivity.js"></script>\n`;
         totalHtml += "<script language=\"javascript\">\n";
 
-    layers = await query(`select distinct layer from members  where סניף = '${name[0].Branch}' ;`);
+    layers = await query(`select distinct layer from members  where Branch = '${name[0].Branch}' ;`);
     var layNum = 1;
     var layersHtml = `<form id='myTeamForm' action='./myTeam' method='get'><select name='filterLayer' id='layers' onChange='selectLayer(this.options[this.selectedIndex].value)'>`;
     
@@ -271,12 +588,15 @@ app.get('/myTeam', async (req, res) =>
     for (var i = 0; i < layers.length; i++)
     {
         var lay = layers[i];
-        if (lay.layer == null && i ==0) break;        
+        if (layers[i].layer == "") lay.layer = "לא הוגדר";
+        if (lay.layer == null && i == 0) break;        
     
         var filterBy = false;
-        if (lay.layer == layerFilter) filterBy = true;
+        if (lay.layer == layerFilter || (layerFilter == "" && lay.layer == "לא הוגדר")) filterBy = true;
         if (lay.layer == null)  { break; };
-        layersHtml += `<option id='layer${layNum}' value='${lay.layer}'`+(filterBy? " selected>": ">")+`${lay.layer}</option>`;
+        var currLayer = lay.layer;
+        if (currLayer == "לא הוגדר") currLayer = "";
+        layersHtml += `<option id='layer${layNum}' value='${currLayer}'`+(filterBy? " selected>": ">")+`${lay.layer}</option>`;
         layNum++;
     }
     layersHtml += "</select></form>";
@@ -295,9 +615,9 @@ app.get('/myTeam', async (req, res) =>
     var dist = rows[0].Branch;
 
 
-    var q = "select * from members where סניף='" + dist + "'";
+    var q = "select * from members where Branch='" + dist + "'";
     if (layerFilter !== undefined && layerFilter != 'כולם') q += " AND layer='"+layerFilter+"'";
-    //let rows = await query("Select * from members where סניף='"+req.query.snif+"'");
+    //let rows = await query("Select * from members where Branch='"+req.query.Branch+"'");
     var retArray = "[";
     try 
     {
@@ -352,8 +672,19 @@ app.get('/good-login', async (req, res) => {
 //
 app.get("/userName", async(req, res) => 
 {
-    name = await query("select Name, Branch from rakazim where ID="+req.user.id);
-    res.write("{ \"name\": \""+name[0].Name+"\", \"id\": "+req.user.id + ", \"branch\":"+((name[0].Branch!== 'undefined') ? "\""+name[0].Branch+"\"": 'unknown'));
+    name = await query("select Name, Branch, Role, District from rakazim where ID="+req.user.id);
+
+    var rightBranch = ((name[0].Branch !== "undefined") ? name[0].Branch: "unknown");
+    //if (name[0].Role == "מנהל מחוז")
+    {
+        // get name of district
+        distNameSql = `select * from Branches where Name="`+name[0].Branch+`"`;
+        dName = await query(distNameSql);
+    }
+    distName = 
+    res.write(`{ "name": "${name[0].Name}", "id": "${req.user.id}", "role":"${name[0].Role}", "District":"${dName[0].district}", "branch":"${rightBranch}"`);
+
+    //test = "{ \"name\": \""+name[0].Name+"\", \"id\": "+req.user.id + ", \"role\":\""+name[0].role + "\", \"branch\":"+((name[0].Branch!== 'undefined') ? "\""+name[0].Branch+"\"": 'unknown');
 
     admin = await query("select * from users where id="+req.user.id); 
     res.write(", \"admin\":"+admin[0].admin+"}");
@@ -364,15 +695,21 @@ app.get("/userName", async(req, res) =>
 app.get("/userDetails", async(req, res) => 
 {
     var id = req.query.ID;
-    var retJSON = "";
+    if (id == "")
+    {
+        res.write("No user ID!");
+        res.send();
+        return;
+    }
+    var retJson = "";
     name = await query("select Name, Branch from rakazim where ID="+id);
     if (name.length > 0)
     {
-        retJSON = "{ \"name\": \""+name[0].Name+"\", \"id\": "+id + ", \"branch\":"+((name[0].Branch!== 'undefined') ? "\""+name[0].Branch+"\"": 'unknown');
+        retJson = "{ \"name\": \""+name[0].Name+"\", \"id\": "+id + ", \"branch\":"+((name[0].Branch!== 'undefined') ? "\""+name[0].Branch+"\"": 'unknown');
 
         logInUser = await query("select * from users where id="+id); 
-        retJSON += ", \"admin\":"+((logInUser.length > 0)? logInUser[0].admin: "0") + `, "loggedUser":"${req.user.id}"}`;
-        res.write(retJSON);
+        retJson += ", \"admin\":"+((logInUser.length > 0)? logInUser[0].admin: "0") + `, "loggedUser":"${req.user.id}"}`;
+        res.write(retJson);
         res.send();
 
         console.log("returned:\n"+retJson);
@@ -547,6 +884,7 @@ app.get('/rakazById', async (req, res) => {
 
 });
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// get dates of sctivities which are logged for current instructor
 app.get('/getInstDates', async (req, res) => {
     var instID = req.query.instID;
     res.header("Content-Type", "text/html; charset=utf-8");
@@ -558,13 +896,13 @@ app.get('/getInstDates', async (req, res) => {
     // also add date totals summary:
 
     var op = "[";
-    for (i = 0; i < rows.length; i++) 
+    for (var row = 0; row < rows.length; row++) 
     {
-        if (rows[i].Date == "") continue;
-        var msg = await getParticipationSummary(instID, rows[i].Date);
+        if (row > 0) op += ", ";
+        if (rows[row].Date == "") continue;
+        var msg = await getParticipationSummary(instID, rows[row].Date);
         var datesSummary = JSON.parse(msg);
-        if (i > 0) op += ", ";
-        op += "\{\"date\":\"" + rows[i].Date + "\", \"yes\":\""+datesSummary.participated+"\", \"no\":\""+datesSummary.notParticipated+"\"}";
+         op += "\{\"date\":\"" + rows[row].Date + "\", \"yes\":\""+datesSummary.participated+"\", \"no\":\""+datesSummary.notParticipated+"\"}";
     }
     op += "]";
     res.write(op);
@@ -585,6 +923,49 @@ app.get('/branches', async (req, res) =>
     op += "]";
     res.write(op);
     res.send();
+});
+///////////////////////////////////////////////////////////////////////////////////////////
+app.get('/getDistrict', async(req, res) =>
+{
+    var dist = req.query["dist"];
+    var sql = "select * from districts where id = "+dist;
+
+    var ret = await query(sql);
+    
+    res.write(`{"Name":"${ret[0].Name}", "id":"${dist}" }`);
+
+    res.send();
+});
+///////////////////////////////////////////////////////////////////////////////////////////
+app.get('/distBranches', async(req, res) =>
+{
+        let dist =  req.query["dist"];
+        if (dist == undefined) 
+        {
+            res.write("ERROR: You should supply psaram 'dist' for the requested district!");
+            res.send();
+        }
+        else
+        {
+            var getDistrict = "select * from districts where id = "+dist;
+
+            var ret = await query(getDistrict);
+    
+            var json = `{"Name":"${ret[0].Name}", "id":"${dist}", `;
+
+
+            json += `"branches":[`;
+            let sql = "select Name from Branches where district = " + dist;
+            var branches = await query(sql);
+            for (let i = 0; i < branches.length; i++)
+            {
+                json += `{ "branch": "${branches[i].Name}" }`;
+                if (i != branches.length - 1) json += ", ";
+            }
+            json += "]}";
+            res.write(json);
+            res.send();
+        }
 });
 /////////////////////////////////////////////////////////////////////////////////////////////////
     app.get('/distManagers', async (req, res) => 
@@ -612,7 +993,7 @@ app.get('/branches', async (req, res) =>
             for (var j = 0; j < branches.length; j++)
             {
                 // get all members of branch
-                memsSql = `select * from members where סניף="`+branches[j].Name+`"`;
+                memsSql = `select * from members where Branch="`+branches[j].Name+`"`;
                 var mems = await query(memsSql);
                 totalAmount += mems.length;
             }
@@ -627,18 +1008,36 @@ app.get('/branches', async (req, res) =>
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/rakazim', async (req, res) => {
 
+        currUser = await query("select * from rakazim where ID = "+req.user.id);
+        var rakazimQuery = "";
+        if (currUser[0].Role == "מנהל מחוז")
+        {
+            var managerDist = currUser[0].District;
+            rakazimQuery = "select ID, Name, Branch from rakazim where Branch in ";
+            rakazimQuery += "(";
+            rakazimQuery += "select Name from branches where district = "+managerDist;
+            rakazimQuery += ")";
+            //`select * from rakazim where District = `+req.user.District;
+        }
+        else
+            rakazimQuery = `select ID, Name, Branch from rakazim where Role <> "מנהל מחוז"`;
+
     res.header("Content-Type", "text/html; charset=utf-8");
 
-    let rows = await query(`select ID, Name, Branch from rakazim where role <> "מנהל מחוז"`);
+    // query: `select ID, Name, Branch from rakazim where Role <> "מנהל מחוז"`
+    let rows = await query(rakazimQuery);
 
     var op = "[";
-    for (let i = 0; i < rows.length; i++) {
-        op += "{\"id\":\"" + rows[i].ID + "\"";
+    op += `{"id":"", "Name":"Please select", "snif":""}, `;
+    for (let i = 0; i < rows.length; i++) 
+    {
+        if (rows[i].Name == currUser[0].Name) continue;
+        if (op.substring(op.length - 1) == "}") op += ", ";
+                op += "{\"id\":\"" + rows[i].ID + "\"";
         op += ", ";
         op += `"snif":"${rows[i].Branch}"`;
         op += ", ";
         op += "\"Name\":\"" + rows[i].Name + "\"}";
-        if (i != rows.length - 1) op += ", ";
     }
     op += "]";
     res.write(op);
@@ -677,8 +1076,8 @@ app.get('/selectInst', async (req, res) => {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/yaniv', async (req, res) => {
-    res.write("klum3");
-    sendMail("yaniv", "This is N email! :-0", "testing email", "yaniv@krembo.org.il");
+    res.write("klum4");
+    sendFormalMail("yaniv", "This is N email! :-0", "testing email", "");
     res.send();
 });
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -729,7 +1128,7 @@ app.get('/getInactiveUsers', async (req, res) => {
                 if (i > 0) retArray += ", ";
                 retArray += "{";
                 retArray += "\"name\": \"" + rows[i].FullName + "\", ";
-                retArray += "\"branch\": \"" + rows[i].סניף + "\", ";
+                retArray += "\"branch\": \"" + rows[i].Branch + "\", ";
                 retArray += "\"memberID\": \"" + rows[i].ID + "\"";
                 retArray += "}";
             }
@@ -756,8 +1155,7 @@ async function getInstMembers(instID)
     {
         var dist = rows[0].Branch;
 
-        var q = `select ID, FullName, Active from members where`;
-        q += " סניף=";
+        var q = `select ID, FullName, Active from members where Branch=`;
         q += `"`+dist+`"`;
        var retArray = new Array();
         try 
@@ -795,7 +1193,7 @@ app.get('/membersForInstructor', async (req, res) => {
         var dist = rows[0].Branch;
 
         var q = `select ID, FullName, Active from members where`;
-        q += " סניף=";
+        q += " Branch=";
         q += `"`+dist+`"`;
 
         var retArray = "[";
@@ -830,11 +1228,27 @@ app.get('/sendMessage', async (req, res) => {
     var msg = req.query["sendMsg"];
     instID = req.query.instID;
 
-    var name = await query("select Name, Branch from rakazim where ID="+instID);
-    var name = name[0].Name;
+    var name = await query("select Name, Branch, District from rakazim where ID="+instID);
+    var myName = name[0].Name;
+    var myDist = name[0].District;
 
+    // find districtManager:
+    var distMgrSql = "select * from rakazim where Role=\"מנהל מחוז\" and District="+myDist;
+    var mgrName = await query(distMgrSql);
+    var distMgrName = mgrName[0].Name;
+    var distMgrMail = mgrName[0].email;
+
+    // send to dist manager only when system is set to REAL mode...
+    if (!REALLYSENDALLMAILS) distMgrMail = "";
+    
     reporter = true;
-    sendMail(name, `<html lang='he' dir='rtl'>המשתמש '${name}' שלח מסר מאפליקציית 'השתתפות' בלשון זו:<br><b>"${msg}"</b></html>`, `Message from ${name}`, "yaniv@krembo.org.il, david@krembo.org.il");
+    try{
+        sendFormalMail(myName, `<html lang='he' dir='rtl'>המשתמש '${myName}' שלח מסר מאפליקציית 'השתתפות' בלשון זו:<br><b>"${msg}"</b></html>`, `Message from ${myName}`, "yaniv@krembo.org.il; "+distMgrMail);
+    }
+    catch (e)
+    {
+        console.log("failed sending mail because:\n"+e);
+    }
 
     res.write("<html lang='heb' dir='rtl'><head><meta http-equiv='Content-Type' content='text/html; charset=UTF-8'></head><h1>הודעתך נשלחה!</h1><br>המשך יום נעים...</html>");
     res.send();
@@ -847,7 +1261,8 @@ app.get('/addParticipation', async (req, res) => {
     var instID = req.query.instID;
     var date = req.query.actDate;
     var paramCount = 0;
-    for (i = 1; i < 6000; i++) {
+    for (i = 0; i < 8000; i++) 
+    {
         if (req.query["ID-" + i] != undefined) 
         {
             queryParams[i] = req.query["ID-" + i];
@@ -912,7 +1327,7 @@ app.get('/addParticipation', async (req, res) => {
         addSql += "\"" + date + "\", ";
         addSql += mems[i].memID + ", ";
         
-        if (queryParams[i] == "on") 
+        if (queryParams[mems[i].memID] == "on") 
             addSql += "1, ";
         else
             addSql += "0, ";
@@ -931,7 +1346,7 @@ app.get('/addParticipation', async (req, res) => {
     // TODO: find the branch email to send it to!
     let distMail = await query(`select email from Branches where Name="${name[0].Branch}"`);
     // send mail to yaniv! to be changed with line after!
-    sendMail("user ID:"+name[0].Name, name[0].Name+` הוסיף בהצלחה את הפעולה '${actName}'<br>יישלח בעתיד ל-${distMail[0].email}`,  `הפעולה '${actName}' נוספה בהצלחה`, "");
+    sendFormalMail(name[0].Name, name[0].Name+` הוסיף בהצלחה את הפעולה '${actName}'`,  `הפעולה '${actName}' נוספה בהצלחה`, ${distMail[0].email});
     // send mail to district
     //sendMail("user ID:"+name[0].Name, name[0].Name+` הוסיף בהצלחה את הפעולה '${actName}'`,  `הפעולה '${actName}' נוספה בהצלחה`, distMail[0].email);
     res.send();
@@ -991,8 +1406,19 @@ app.get('/deactivateUsers', async (req, res) =>
     // find out user name
     var name = await query("select Name, Branch from rakazim where ID="+req.user.id);
 
-    //TODO: להוסיף למייל את מנהל המחוז!
-    sendMail("user ID:"+req.query.instID, "שים לב:<br><b>That user just <font color='red'>deactivated</font> "+usersDeact+" users! and <font color='green'>REactivated</font> "+userReact+" users.</b>", "De\Re-activation summary. (done by user:'"+ name[0].Name+"')", "david@krembo.org.il");
+    sendFormalMail("user ID:"+req.query.instID, "שים לב:<br><b>That user just <font color='red'>deactivated</font> "+usersDeact+" users! and <font color='green'>REactivated</font> "+userReact+" users.</b>", "De\Re-activation summary. (done by user:'"+ name[0].Name+"')", "david@krembo.org.il");
+
+    // מצא את המחוז של הרכז:
+    dist = await query(`select district from Branches where Name='${name[0].Branch}'`);
+
+    distMan = await query(`select * from rakazim where Role='מנהל מחוז' AND District=${dist[0].district}`);
+
+    // שלח מייל גם למנהל המחוז:
+    if ( sendToDistrictManagers )
+    {
+        sendFormalMail("user ID:"+req.query.instID, "שים לב:<br><b>That user just <font color='red'>deactivated</font> "+usersDeact+" users! and <font color='green'>REactivated</font> "+userReact+" users.</b>", "De\Re-activation summary. (done by user:'"+ name[0].Name+"')", distMan[0].email+", david@krembo.org.il");
+    }
+
 
     res.send();
 
@@ -1080,7 +1506,7 @@ removeActSql = "DELETE FROM Activity where ActivityID="+actID;
     var name = await query("select Name, Branch from rakazim where ID="+instID);
     var name = name[0].Name;
 
-    sendMail(name, "המשתמש '"+name+"' מחק פעולה '"+actName+"'!", "מחיקת פעולה!", "david@krembo.org.il");
+    sendFormalMail(name, "המשתמש '"+name+"' מחק פעולה '"+actName+"'!", "מחיקת פעולה!", "david@krembo.org.il");
 
         res.write(`<html lang='he' dir='rtl'><head dir='rtl'><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head>`);
     res.write("<h1>הפעולה נמחקה בהצלחה!</h1></body></html>");
@@ -1105,23 +1531,31 @@ app.get('/getParticipation', async (req, res) => {
         // the variable which will hold the json of the data:
         var retJson = "[";
 
-        for (u = 0; u < rows.length; u++) {
+        for (u = 0; u < rows.length; u++) 
+        {
             member = rows[u].ParticipantID;
 
             // get member name
-            var member = await query("select FullName from members where ID = " + member);
-            var memberName = member[0].FullName;
+            var memberRes = await query("select FullName from members where ID = " + member);
+            if (memberRes.length > 0)
+            {
+                if (u > 0 && retJson != "[") retJson += ", ";
+                var memberName = memberRes[0].FullName;
 
-            // noe get all participation logged for that user and instructor
-            var memberPart = await query("select * from participation where InstructorID = " + instructor + " and ParticipantID = " + rows[u].ParticipantID)
+                // now get all participation logged for that user and instructor
+                var memberPart = await query("select * from participation where InstructorID = " + instructor + " and ParticipantID = " + rows[u].ParticipantID)
 
-            if (u > 0) retJson += ", ";
-            retJson += "{\"member\":\"" + memberName + "\", \"dates\":[";
-            for (d = 0; d < memberPart.length; d++) {
-                if (d > 0) retJson += ", ";
-                retJson += "{\"date\":\"" + memberPart[d].Date + "\", \"participated\":" + memberPart[d].participated + "}";
+                retJson += "{\"member\":\"" + memberName + "\", \"dates\":[";
+                for (d = 0; d < memberPart.length; d++) {
+                    if (d > 0) retJson += ", ";
+                    retJson += "{\"date\":\"" + memberPart[d].Date + "\", \"participated\":" + memberPart[d].participated + "}";
+                }
+                retJson += "]}";
             }
-            retJson += "]}";
+            else
+            {
+                console.log("user was removed...");
+            }
         }
         retJson += "]";
         o = 9;

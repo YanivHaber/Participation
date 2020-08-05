@@ -1,0 +1,72 @@
+<html lang='heb' dir='rtl'>
+    
+    <head>
+        <title> סניפים לפי מחוז</title>
+        <meta content='width=device-width, initial-scale=1' name='viewport'/>
+  
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+    </head>
+    <script language="javascript">
+
+        var totalBranchAmount = 0;
+
+
+        for (var dist = 1; dist < 7; dist++)
+        {
+            $.get("/distBranches?dist="+dist, "", function(json3) 
+            {
+                if (json3.startsWith("ERROR"))
+                {
+                // its an error...
+                        document.write("ERROR GETTING BRANCHES FOR "+dist + "\n\n" + branches);
+                }
+                else
+                {
+                    var branches = JSON.parse(json3);
+                    document.write(`<br><br>הסניפים של "${branches.Name}" הינם:\n\n`);
+
+                    totalBranchAmount += branches.branches.length;
+
+                    document.write("<body dir='rtl'><br><br>");
+                    for (var j = 0; j < branches.branches.length; j++)
+                    {
+                        document.write("<li>"+branches.branches[j].branch);
+                    }
+                    
+                    
+                    
+                        
+                }
+            });
+            if (dist == 6)
+            {
+                window.setTimeout(`writeSum(totalBranchAmount)`, 1000);
+                document.write("</ol></body>");
+            }
+
+        }
+        function getParam(parameterName) 
+        {
+            
+            var result = null,
+                tmp = [];
+            location.search
+                .substr(1)
+                .split("&")
+                .forEach(function (item) {
+                tmp = item.split("=");
+                if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
+                });
+            return result;
+        }
+
+        function writeSum(sum)
+        {
+            document.write("<br></ol><br>כמות הסניפים הכוללת הינה: <b>"+sum+"</b>");
+        }
+    </script>
+
+</html>

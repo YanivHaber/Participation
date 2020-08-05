@@ -1,0 +1,147 @@
+<html lang='he' dir='rtl'>
+
+<head>
+    <title>הוספת פעיל חדש!</title>
+  <meta content='width=device-width, initial-scale=1' name='viewport'/>
+  
+  
+<style>
+a:link {
+  text-decoration: none;
+}
+
+a:visited {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+a:active {
+  text-decoration: underline;
+}
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+
+</head>
+<body  style="direction: rtl;" onLoad="getUserDetails();  setScreen()">
+  
+  
+
+  <script language="javascript">
+      
+      function checkVars()
+      {
+        var ret = true;
+
+
+          var field = document.getElementById("IDNum").value;
+          field = checkField("IDNum", field);
+          ret = ret && field;
+          name = document.getElementById("memberName").value;
+          field = checkField("memberName", name);
+          ret = ret && field;
+                    phone = document.getElementById("memPhone").value;
+          field = checkField("memPhone", phone);
+          ret = ret && field;
+          mail = document.getElementById("mailAddress").value;
+          field = checkField("mailAddress", mail);
+          ret = ret && field;
+          field = document.getElementById("branch");
+          var branchVal = field[field.selectedIndex].value;
+          field = checkField("branch", branchVal);
+          ret = ret && field;
+          field = document.getElementById("layer");
+          var layerVal = field[field.selectedIndex].value;
+          field = checkField("layer", layerVal);
+          ret = ret && field;
+
+          return ret;
+      }
+      var msgOnce = false;
+
+      function checkField(fName, val)
+      {
+        if (val != "" && val != "בחר") return true;
+        else
+        {
+          name = document.getElementById(fName).style.borderColor = "red";
+          if (msgOnce == false)
+          {
+              alert("   לא מולאו כל השדות!");
+              msgOnce = true;
+          }
+          return false;
+        }
+
+        function showMsg(msg)
+        {
+          window.setTimeout("document.getElementById('msg').innerHTML = msg;", 500);
+        }
+      }
+function getUserDetails()
+{
+      $.get("/userName", "", function(json)
+    {
+        user = JSON.parse(json);
+        userId = user.id;
+        userName = user.name;
+        admin = user.admin;
+        branch = user.Branch;
+
+        
+          if (admin == 1)
+          {
+
+              var extraHTML = `<form id="form1" onsubmit="return checkVars()" on action="/addMember" method="get">הוסף פעיל:<br>`;
+              extraHTML += `<br>שמו המלא של הפעיל החדש: <input type="text" name="name" id="memberName"></input><br>`;
+              extraHTML += `<br>מספר ת"ז: <input type="text" name="IDNum" id="IDNum"></input><br>`;
+              extraHTML += `<br>טלפון: <input type="text" name="phone" id="memPhone"></input><br>`;
+              extraHTML += `<br>כתובת מייל: <input type="text" name="email" id="mailAddress"></input><br>`;
+              extraHTML += `<br>שכבת גיל: <select type="text" name="layer" id="layer"><option>בחר</option><option>ח</option><option>ט</option><option>י</option><option>יא</option><option>יב</option></select><br>`;
+              
+              var snifimHtml = `<select id="branch" name="branch">`;
+
+              $.get("/branches", "", function (json) 
+              {
+                  snifim = JSON.parse(json);
+                  snifimHtml += `<option>בחר</option>`;
+                    snifim.forEach (snif => 
+                    {
+                      snifimHtml += `<option>${snif.Name}</option>`;
+                    });
+                    
+                    snifimHtml += "</select>";
+                    extraHTML += `<br>סניף: ` + snifimHtml + "<br>";
+                    extraHTML += `<input type="submit" value="הכנס"></form>`;
+
+                    document.write(`<html lang='he' dir='rtl'><head><title>הוספת פעיל!</title></head><body  onload="setScreen()" style="direction: rtl;">`);
+                    document.write(`<span><section style="direction: rtl; height:120px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2;; background: #4a90e2;"><img style="width:70px; height:70px;" src="./style/סמל_קרמבו_חדש_עברית.jpg"><h2>  כנפים של קרמבו. שלום <span id="userName"></span> ... <img></h2></span></section><br><span id=links"></span></body>`);
+                    document.write(extraHTML);
+
+              });
+
+              
+          }
+          else
+          {
+            document.write(`<img class="irc_mi" src="./style/NoEntry.jpg" width="260" height="260" style="">`)
+            alert("אינך מוגדר אדמיניסטרטור ולכן אינך יכול לגשת לדף זה...");
+          }
+        });
+};
+
+function setScreen()
+{
+  window.setTimeout(`document.getElementById("userName").innerHTML = userName`, 500);
+}
+
+
+</script>
+</body>
+<span id='msg'></span>
+    
+</body>
+</html>
+ 

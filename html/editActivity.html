@@ -6,6 +6,7 @@
     var instid;
     var date;
     var actID = "";
+    var checkMembers = [];
 
     function init()
     {
@@ -28,13 +29,14 @@
                 if (options[i].value == actType) options[i].selected = true;
             }
         });
-
+        
         var parturl = "/getParticipation?instID="+instid;
         $.get(parturl, "", function (json2) 
         {
             part = JSON.parse(json2);
-            var checkMembers = [];
+            
             currDate = document.getElementById("actDate").value;
+            var currDateIdx;
             for (var i = 0; i < part.length; i++)
             {
                 hasDate = false;
@@ -42,34 +44,39 @@
                 {
                     if (part[i].dates[d].date == currDate)
                     {
+                        currDateIdx = d;
                         hasDate = true;
                     }
                 }
                 if (!hasDate) continue;
                 var name = part[i].member;
-                checkMembers[checkMembers.length] = name;
-            }                
-            window.setTimeout(`checkProperUsers("${checkMembers}")`, 500);
+                checkMembers[checkMembers.length] = {"name": name, "part": part[i].dates[currDateIdx].participated};
+            }
+            window.setTimeout(`checkProperUsers()`, 500);    
         });
+        
             
         var instructor = "none";
         loadRakazim();
-}
-        function checkProperUsers(names)
+    }
+        function checkProperUsers()
         {
+            var names = checkMembers;
             var arr = [];
             if (!Array.isArray(names))
             {
                 names = names.split(",");
              }
-            names.forEach(name =>
+            names.forEach(object =>
             {
+                var name = object.name;
                 var membersList = document.getElementById("memList").rows;
                 for (var j = 1; j < membersList.length; j++)
                 {
                     if (membersList[j].children[0].innerText == name) 
                     {
-                        membersList[j].children[1].children[0].checked = true;
+                        membersList[j].children[1].children[0].checked = object.part;
+                        membersList[j].children[1].children[0].disabled = true;
                     }
                 }
             });
@@ -239,9 +246,11 @@
             </head>
             <body onLoad="init();">
                 ערוך פעולה של המדריך:<span id="selector"></span>
-                <br>
-                שים לב: לא ניתן לערוך את רשימת המשתתפים אלא <b>רק</b> את הפרטים האחרים של הפעולה!
-                <br>(אין אפשרות לעדכן משתתפים בפעולה קיימת! אם הייתה טעות בסימון המשתתפים, יש למחוק את הפעולה וליצור אותה  מ ח ד ש...)
+                <br><font size="+2" style="text-align:right; font-weight: bold; color:red">
+                    שים לב: לא ניתן לערוך את רשימת המשתתפים אלא <span style="color:black">רק</span>  את פרטי הפעולה (שם\סוג\מיקום!)
+                    <br>
+                    (אין אפשרות לעדכן משתתפים בפעולה קיימת! אם הייתה טעות בסימון המשתתפים, יש למחוק את הפעולה וליצור אותה  <span style="color:black"></span><span style="color:black">מ ח ד ש</span>...)
+                    </font>
                 <br></br></br>
                 <form id="addForm" action="/addParticipation" method="get">
                 תאריך הפעולה: <input type="date" id="actDate" name="actDate"></input>

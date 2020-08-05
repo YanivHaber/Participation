@@ -1,6 +1,7 @@
 <html lang='heb' dir='rtl'>
 
 <head>
+    <title>רשימות השתתפות</title>
     <meta content='width=device-width, initial-scale=1' name='viewport'/>
         <style>
             table  {
@@ -41,6 +42,7 @@ var admin = 0;
 var userName = "";
 var district = "";
 var userId = -9;
+var role = "";
 
 
     
@@ -54,7 +56,7 @@ var userId = -9;
         }
         else
         {
-            $.get("/rakazim", "", function (json) 
+            await $.get("/rakazim", "", function (json) 
             {
                 try 
                 {
@@ -75,15 +77,23 @@ var userId = -9;
     {
         if (admin == "1")
         {
-
+            // עבור מנהלי מחוז הצג רק את המחוז שלהם...
+            
             // admin user! show ALL rakazim...
             var html = `<select id="rakazim" onChange="getMembersToClient(this.options[this.selectedIndex].getAttribute('id'))">`;
     
-                $.get("/rakazim", "", function (json) 
+            await $.get("/rakazim", "", function (json) 
             {
+                
                 try 
                 {
+                    try {
                     var rakazimArray = JSON.parse(json);
+                    }
+                    catch (e)
+                    {
+                        alert(e + "\n\n"+json);
+                    }
                     var options = "";
                     for (var i = 0; i < rakazimArray.length; i++)
             {
@@ -125,9 +135,10 @@ function selectedInstructor()
         if (sel == null || sel.tagName != "select") return; // first load of page! no selection yet...
         var selecteduser = sel.options[sel.selectedIndex].id;
 
-    $.get("/membersForInstructor?instID="+selecteduser, "", function(members)
+        $.get("/membersForInstructor?instID="+selecteduser, "", function(members)
         {
             var mems = JSON.parse(members);
+            //alert("2. got "+mems.length + " members!");
             if (mems.length == 0)
             {
                 document.getElementById("messages").innerHTML = "This user does NOT have any members in the DB currently!";
@@ -157,9 +168,10 @@ async function getMembersToClient(instID)
         if (sel == null || sel.tagName != "select") return; // first load of page! no selection yet...
         var selecteduser = sel.options[sel.selectedIndex].id;
 */
-    $.get("/membersForInstructor?instID="+instID, "", function(members)
+        $.get("/membersForInstructor?instID="+instID, "", function(members)
         {
             var mems = JSON.parse(members);
+            //alert("got "+mems.length + " members!");
             if (mems.length == 0)
             {
                 document.getElementById("messages").innerHTML = "This user does NOT have any members in the DB currently!";
@@ -169,11 +181,13 @@ async function getMembersToClient(instID)
 
     var url = "/getParticipation?instID="+instID;
     var html = "<th class=\"straight\"><div><span></span></div></th>";
-    $.get(url, "", async function (json2) 
+    await $.get(url, "", async function (json2) 
     {
         $.get("/getInstDates?instID="+instID, "", function (datesJson)
         {    
             dates = JSON.parse(datesJson);
+            if (dates.length == 0) 
+                alert("You currently have NO activities logged in the system!");
         
             //let activities = await getActivityDetails(dates);
             //if (activities === undefined) activities = ["אין!"];
@@ -255,7 +269,7 @@ async function getMembersToClient(instID)
                                 dateAvailable = true;
                             }
                         }
-                        if ( dateAvailable )
+                        if ( dateAvailable && part[p].dates[dateIndex].participated)
                         {
                             html += "<td><center><input type=\"checkbox\"";
                             html += part[p].dates[dateIndex].participated ? "checked=\"checked\"": "";
@@ -319,21 +333,31 @@ function createNew()
 
 function initOnLoad()
 {
-    $.get("/userName", "", async function(json)
+        $.get("/userName", "", async function(json)
     {
         user = JSON.parse(json);
         userId = user.id;
+        role = user.role;
         instID = Instructor = user.id;
         userName = user.name;
         admin = user.admin;
         branch = user.branch;
+        district = user.District;
+
         if (admin != "1")
         {
             await getMembersToClient(userId);
         }
         //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
         //document.getElementById("selector").innerHTML = userName;
-        document.getElementById("branch").innerHTML = branch;
+        if (role == "מנהל מחוז")
+        {
+            document.getElementById("branch").innerHTML = " מנהל מחוז '"+district+"'";
+        }
+        else
+        {
+            document.getElementById("branch").innerHTML = " מסניף '"+branch+"'";
+        }
         document.getElementById("instName").innerHTML = userName;
 
         await loadRakazim();
@@ -351,7 +375,7 @@ function sleep(ms) {
     </td><td><h1>כנפים של קרמבו - אפליקציית 'השתתפות'</td></h1><br>
 </tr>
 </table>
-<h2><span id="instName"></span>  מסניף '<span id="branch"></span>',
+<h2><span id="instName"></span><span id="branch"></span>,
 <span id=topSubject"> הצג רשימות השתתפות של אחד מרשימת הרכזים הבאה:</span> </h2>
     <br>
 

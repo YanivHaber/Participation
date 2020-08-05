@@ -140,7 +140,7 @@ function loadRakazim()
                     if (instID != loggedUserId)
                     {
                         document.getElementById("wait").remove();
-                        document.write(`<img class="irc_mi" src="https://icon2.cleanpng.com/20180619/klp/kisspng-confined-space-warning-sign-hazard-sticker-no-entrance-5b29cebf79ccf9.8924609915294665594989.jpg" width="260" height="260">`)
+                        document.write(`<img class="irc_mi" src="./style/NoEntry.jpg" width="260" height="260">`)
                         await sleep(1000);
                         alert("אינך יכול/ה לצפות בנתוני מדריך אחר מבלי לעשות מחדש לוגין בעזרת שם המשתמש שלו (או שלה)! :-)");
                         return;
@@ -171,7 +171,7 @@ function loadRakazim()
 
             async function deactivateOnServer()
             {
-                var url = "/deactivateUsers?" + changedVars;
+                var url = "/deactivateUsers?instID="+ instID + "&" + changedVars;
                 var res = "";
                 try
                 {

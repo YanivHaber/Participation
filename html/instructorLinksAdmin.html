@@ -1,4 +1,4 @@
-<html lang='h' dir='rtl'>
+<html lang='heb' dir='rtl'>
 <head>
   <meta content='width=device-width, initial-scale=1' name='viewport'/>
   
@@ -36,7 +36,8 @@ function getUserDetails()
         userId = user.id;
         userName = user.name;
         admin = user.admin;
-        branch = user.Branch;
+        branch = user.branch;
+        role = user.role;
 
         
  
@@ -44,22 +45,29 @@ function getUserDetails()
           {
 
               var extraHTML = `<p><b><a ID="link3" target="_blank" href="http://${window.location.hostname}:1000/changePassword\">החלפת סיסמא!</a></b></p>`; 
-              extraHTML += `<p><b><a ID="link4" target="_blank" href="http://${window.location.hostname}:1000/html/Participation.html">צפיה בהשתתפות החניכים של מדריך כלשהוא!</a></b></p>`;
-              extraHTML += `<p><b>יצירת פעולה עבור מדריך (פעולה זו אפשר לבצע לאחר בחירת מדריך לצפיה בהשתתפות חניכיו!)</b></p>`;
+              extraHTML += `<p><b><a ID="link4" target="_blank" href="http://${window.location.hostname}:1000/html/Participation.html">צפיה בהשתתפות החניכים של מדריך כלשהוא!</a></b>`;
+              extraHTML += `<b>   (יצירת פעולה עבור המדריך ניתן לבצע לאחר בחירת מדריך לצפיה בהשתתפות חניכיו!)</b></p>`;
               extraHTML += `<p><b><a id="link5" target="_blank" href=\"http://${window.location.hostname}:1000/html/activiyut.html">ערוך אקטיביות חניכים של מדריך לבחירתך!</a></b></p>`;
               extraHTML += `<p><b><a id="link6" target="_blank" href="http://${window.location.hostname}:1000/html/re-activateUsers.html">החזר אקטיביות של חניכים (אותו מדריך ספציפי)</a></b></p>`;
               extraHTML += `<p><b><a id="link7" target="_blank" href="http://${window.location.hostname}:1000/html/districtManagers.html">רשימת מנהלי מחוזות</a></b></p>`;
               extraHTML += `<p><b><a id="link7" target="_blank" href="http://${window.location.hostname}:1000/html/addRakazim.html">הוספת רכז</a></b></p>`;
+              extraHTML += `<p><b><a id="link7" target="_blank" href="http://${window.location.hostname}:1000/html/addMember.html">הוספת פעיל חדש</a></b></p>`;
+              extraHTML += `<p><b><a id="link7" target="_blank" href="http://${window.location.hostname}:1000/html/districtBranches.html">רשימת כל הסניפים לפי מחוזות</a></b></p>`;
 
               document.write(`<html lang='h' dir='rtl'>`);
-              document.write(`<span><section style="direction: rtl; height:120px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2;; background: #4a90e2;"><img style="width:70px; height:70px;" src="./style/סמל_קרמבו_חדש_עברית.jpg"><h2>  כנפים של קרמבו. שלום '<span id="userName"></span>' ... <img></h2></span></section><br><span id=links"></span>`);
+              document.write(`<span><section style="direction: rtl; height:120px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2;; background: #4a90e2;"><img style="width:70px; height:70px;" src="./style/סמל_קרמבו_חדש_עברית.jpg"><h2>  כנפים של קרמבו. שלום <span id="userName"></span> ... <img></h2></span></section><br><span id=links"></span>`);
               document.write(extraHTML);
 
-              document.getElementById("userName").innerHTML = userName;
+                var nameLabel = "'"+userName+"'";
+                if (role != "")
+                {
+                  nameLabel += " (" + role +")";
+                }
+              document.getElementById("userName").innerHTML = nameLabel;
           }
           else
           {
-            document.write(`<img class="irc_mi" src="https://icon2.cleanpng.com/20180619/klp/kisspng-confined-space-warning-sign-hazard-sticker-no-entrance-5b29cebf79ccf9.8924609915294665594989.jpg" alt="Image result for no entrance sign" width="260" height="260" style="">`)
+            document.write(`<img class="irc_mi" src="./style/NoEntry.jpg" alt="Image result for no entrance sign" width="260" height="260" style="">`)
             alert("אינך מוגדר אדמיניסטרטור ולכן אינך יכול לגשת לדף זה...");
           }
         });
