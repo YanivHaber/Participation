@@ -26,7 +26,7 @@
                 else
                 {
                     var branches = JSON.parse(json3);
-                    document.write(`<br><br>הסניפים של "${branches.Name}" הינם:\n\n`);
+                    document.write(`<br><br> ${branches.branches.length} הסניפים של "${branches.Name}" הינם:\n\n`);
 
                     totalBranchAmount += branches.branches.length;
 

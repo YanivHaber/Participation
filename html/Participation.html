@@ -186,9 +186,17 @@ async function getMembersToClient(instID)
         $.get("/getInstDates?instID="+instID, "", function (datesJson)
         {    
             dates = JSON.parse(datesJson);
-            if (dates.length == 0) 
-                alert("You currently have NO activities logged in the system!");
-        
+            if (dates.length == 0)
+            { 
+                document.getElementById("messages").innerHTML = "This user does NOT currently have any activities logged in the system!";
+            }
+            else
+            {
+                var select = document.getElementById("rakazim");
+                var instName = select[select.selectedIndex].innerHTML; // first load of page! no selection yet...
+
+                document.getElementById("messages").innerHTML =  "הפעולות של "+instName +":";
+            }
             //let activities = await getActivityDetails(dates);
             //if (activities === undefined) activities = ["אין!"];
             

@@ -1243,7 +1243,7 @@ app.get('/sendMessage', async (req, res) => {
     
     reporter = true;
     try{
-        sendFormalMail(myName, `<html lang='he' dir='rtl'>המשתמש '${myName}' שלח מסר מאפליקציית 'השתתפות' בלשון זו:<br><b>"${msg}"</b></html>`, `Message from ${myName}`, "yaniv@krembo.org.il; "+distMgrMail);
+        sendFormalMail(myName, `<html lang='he' dir='rtl'>המשתמש '${myName}' שלח מסר מאפליקציית 'השתתפות' בלשון זו:<br><b>"${msg}"</b></html>`, `Message from ${myName}`, distMgrMail);
     }
     catch (e)
     {
