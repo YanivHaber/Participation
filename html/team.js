@@ -4,6 +4,7 @@
 <script language="javascript">
 var id = "+inst+";
  getMembers(id);
+ alert("yaniv");
 </script>
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script></head><body><table><tr><th>������?</th><th>��</tr><form id="form1" action="/editMembers" method="get">";
 

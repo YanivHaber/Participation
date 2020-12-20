@@ -26,14 +26,14 @@
                 else
                 {
                     var branches = JSON.parse(json3);
-                    document.write(`<br><br> ${branches.branches.length} הסניפים של "${branches.Name}" הינם:\n\n`);
+                    document.write(`<br><br> ${branches.branches.length} הסניפים של <b>"${branches.Name}"</b> הינם:\n\n`);
 
                     totalBranchAmount += branches.branches.length;
 
                     document.write("<body dir='rtl'><br><br>");
                     for (var j = 0; j < branches.branches.length; j++)
                     {
-                        document.write("<li>"+branches.branches[j].branch);
+                        document.write("<li>סניף "+branches.branches[j].branch + "(כמות החניכים: "+branches.branches[j].members+")");
                     }
                     
                     

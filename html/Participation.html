@@ -1,6 +1,7 @@
 <html lang='heb' dir='rtl'>
 
 <head>
+    <meta http-equiv="content-type" content="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
     <title>רשימות השתתפות</title>
     <meta content='width=device-width, initial-scale=1' name='viewport'/>
         <style>
@@ -73,7 +74,7 @@ var role = "";
         }
     }
     
-    async function loadData()
+    async function loadData(instructorID)
     {
         if (admin == "1")
         {
@@ -82,6 +83,19 @@ var role = "";
             // admin user! show ALL rakazim...
             var html = `<select id="rakazim" onChange="getMembersToClient(this.options[this.selectedIndex].getAttribute('id'))">`;
     
+            //await $.get("/participationExcel", "", function(res)
+            {//yaniv
+                sel = document.getElementById("selector");
+                //if (sel == null || sel.tagName != "select") return; // first load of page! no selection yet...
+                sel = document.getElementById("rakazim");
+                if (sel != null)
+                {
+                    var selecteduser = sel.options[sel.selectedIndex].id;
+                    var csvFile = "/partCsv?instID=" + selecteduser;
+                    document.getElementById("excelFile").innerHTML = `<a href="${csvFile}" onClick="window.open('csvDirections.html', 'How to open this CSV', 'width=500,height=500,top=100,left=600');" download>Download as CSV</a>`;//<a href="http://localhost:1000/downloadFile?name=myExcel.xlsx" download>EXCEL FILE</a>`;
+                }
+            }
+            
             await $.get("/rakazim", "", function (json) 
             {
                 
@@ -96,13 +110,13 @@ var role = "";
                     }
                     var options = "";
                     for (var i = 0; i < rakazimArray.length; i++)
-            {
-                    var element = rakazimArray[i];
-                    var elemName = element.Name;
-                    if (elemName.indexOf('"') != -1) 
-                        elemName = elemName.split('"').join('\\"');
-                    options += `<option id="${element.id}" value="${elemName}">${elemName}</option>`;
-            }
+                    {
+                        var element = rakazimArray[i];
+                        var elemName = element.snif;
+                        if (elemName.indexOf('"') != -1) 
+                            elemName = elemName.split('"').join('\"');
+                        options += `<option id="${element.id}" value="${elemName}">${elemName}</option>`;
+                    }
                     html += options + "</select>";
             
                     document.getElementById("selector").innerHTML = html;
@@ -114,6 +128,7 @@ var role = "";
                 }
 
             });
+            
 
         }
     }
@@ -152,6 +167,16 @@ function selectedInstructor()
 //
 async function getMembersToClient(instID)
 {
+    sel = document.getElementById("selector");
+                //if (sel == null || sel.tagName != "select") return; // first load of page! no selection yet...
+                sel = document.getElementById("rakazim");
+                if (sel != null)
+                {
+                    var selecteduser = sel.options[sel.selectedIndex].id;
+                    var csvFile = "/partCsv?instID=" + selecteduser;
+                    document.getElementById("excelFile").innerHTML = `<a href="${csvFile}" onClick="window.open('csvDirections.html', 'How to open this CSV', 'width=500,height=500,top=100,left=600');" download>Download as CSV</a>`;//<a href="http://localhost:1000/downloadFile?name=myExcel.xlsx" download>EXCEL FILE</a>`;
+                }
+
         // firstcheck that this inst has members...
 
     if (instID < 0) return;
@@ -195,7 +220,8 @@ async function getMembersToClient(instID)
                 var select = document.getElementById("rakazim");
                 var instName = select[select.selectedIndex].innerHTML; // first load of page! no selection yet...
 
-                document.getElementById("messages").innerHTML =  "הפעולות של "+instName +":";
+                document.getElementById("messages").innerHTML =  "הפעולות של "+instName +":<br><font size='-1'>(שמם של חניכים שלא השתתפו בפעולה <u>האחרונה</u>, יופיע ב<font color='red'>אדום</font>...)";
+                
             }
             //let activities = await getActivityDetails(dates);
             //if (activities === undefined) activities = ["אין!"];
@@ -255,7 +281,23 @@ async function getMembersToClient(instID)
                     html += "<tr><th class=\"straight\"><div><span></span></div></th>";
                 
                     html += "<tr>";
-                    html += "<th>"+(p+1)+". "+currName+"</th>";
+                    html += "<th>";
+
+                    if (currName == "ימית אטיאס") 
+                    {
+                        yaniv = 9;
+                    }
+                       
+
+                    if (!part[p].dates[part[p].dates.length - 1].participated)
+                    {
+                        html += (p+1)+". <font color='red'>"+currName+"</font></th>";
+                    }
+                    else
+                    {
+                        html += (p+1)+". "+currName+"</th>";
+                    }
+                    
                     var columnsCount = 0;
                     // go over all available dates (table columns) if they exist
                     if (typeof(dates) == "undefined")
@@ -279,14 +321,14 @@ async function getMembersToClient(instID)
                         }
                         if ( dateAvailable && part[p].dates[dateIndex].participated)
                         {
-                            html += "<td><center><input type=\"checkbox\"";
+                            html += "<td><center><input id=\"user"+p+"\" type=\"checkbox\"";
                             html += part[p].dates[dateIndex].participated ? "checked=\"checked\"": "";
                             html += " disabled></center></td>"; 
                             columnsCount++;
                         } 
                         else
                         {
-                            html += "<td><center>X</center></td>";
+                            html += "<td><center><font color=\"red\">X</font></center></td>";
                             columnsCount++;
                         }
                     }
@@ -378,11 +420,14 @@ function sleep(ms) {
 </script>
 </head>
 <body onload="initOnLoad()" dir="rtl">
+    <meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8">
 <table style="border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;">
     <tr><td><img src="./style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px;"/>
     </td><td><h1>כנפים של קרמבו - אפליקציית 'השתתפות'</td></h1><br>
 </tr>
+
 </table>
+<span id="excelFile"></span>
 <h2><span id="instName"></span><span id="branch"></span>,
 <span id=topSubject"> הצג רשימות השתתפות של אחד מרשימת הרכזים הבאה:</span> </h2>
     <br>

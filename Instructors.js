@@ -1,7 +1,10 @@
 const REALLYSENDALLMAILS = false;
+const AMOUNT_DAYS_OF_LAST = 14;
 const querystring = require('querystring');
 const express = require('express');
 const sqlite3 = require('sqlite3');
+//var xl = require('msexcel-builder');
+const xl = require('excel4node');
 const app = express();
 const port = 1000
 const FULL_DAY = 1000 * 60 * 60 * 24;
@@ -14,7 +17,7 @@ var cookieParser = require('cookie-parser');
 var expressSession = require('express-session');
 var ensureLogin = require('connect-ensure-login');
 
-passport.use(new LocalStrategy(
+    passport.use(new LocalStrategy(
     {
         usernameField: 'username',
         passwordField: 'password'
@@ -110,8 +113,6 @@ async function checkMembersAvailability()
         for (instNum = 0; instNum < distInsts.length; instNum++)
         {
             inst = distInsts[instNum].ID;
-            if (inst == "6")
-                console.log("stop here");
             
              var oldParticipants = new Array();
             var sql = `select ParticipantID, max("Date") as maxDate from Participation where InstructorID=${inst} and participated="1" group by ParticipantID`;
@@ -133,15 +134,32 @@ async function checkMembersAvailability()
                 var part = ret[i];
                 var d = new Date(part.maxDate);
 
+                var maxDateForInst = `select max("Date") as maxDate from Participation where InstructorID=${inst} and participated="1"`;
+
+                mDateInst = await query(maxDateForInst);
+
                 //var today = (new Date()).format('DD-MM-YYYY');
 
-                var diff = Math.round((new Date(today) - new Date(d)) / (1000 * 60 * 60 * 24));
-                if (diff > 14)
+                // make sure that last date logged is within last 2 weeks! (AMOUNT_DAYS_OF_LAST)
+                var diff = Math.round((new Date(mDateInst[0].maxDate) - new Date(d)) / (1000 * 60 * 60 * 24));
+                if (diff > AMOUNT_DAYS_OF_LAST)
                 {
-                    if (returnResult != "[") returnResult += ", ";
-                    returnResult += `{"ParticipantID": ${part.ParticipantID}}`;
-                    resultArray.push(part.ParticipantID);
+                    // check if participant attended one of last 2 actions performed...
+                    var attendedLast = false;
+                    var sqlLast = `select Date from Participation where InstructorID=${inst} group by Date`;
+                    var lastActs = await query(sqlLast);
 
+                    if (lastActs[lastActs.length - 1] != mDateInst[0].maxDate || lastActs[lastActs.length - 2] != mDateInst[0].maxDate)
+                    {
+                        attendedLast = true;
+                    }
+
+                    if (!attendedLast)
+                    {
+                        if (returnResult != "[") returnResult += ", ";
+                        returnResult += `{"ParticipantID": ${part.ParticipantID}}`;
+                        resultArray.push(part.ParticipantID);
+                    }
                     continue;
                 }            
             }
@@ -202,7 +220,7 @@ async function alertMissingMembers(myDist, memberArr, instID)
 
     // now send alerting mail:
     var subject = `: החניכים הבאים לא היו כבר שבועיים או יותר!`;
-    var msgHtml = `היי,<br><b><font color='red'>מייל זה יישלח בעתיד ל ${distMgrName} מנהל מחוז ${myDistName}</font></b><br><br><font color='blue'>:לתשומת לבך הפעילים הבאים (של המדריך ${instName}) לא הגיעו לפעילות בשבועיים האחרונים</font><br>`;
+    var msgHtml = `היי,<br><b><font color='red'>מייל זה יישלח בעתיד ל ${distMgrName} מנהל מחוז ${myDistName}</font></b><br><br><font color='blue'>:לתשומת לבך הפעילים הבאים (של המדריך ${instName})  :לא הגיעו לפעילות בשבועיים האחרונים (בהן הייתה פעילות של הקבוצה)</font><br>`;
 
     for (p = 0; p < missingNames.length; p++)
     {
@@ -254,7 +272,7 @@ app.get('/forgotPassword', async (req, res) =>
     }
     var rakaz = await query("select * from rakazim where ID='"+currentUser[0].id+"'");
 
-var branchSql = `select * from Branches where Name='${rakaz[0].Branch}'`;
+    var branchSql = `select * from Branches where Name='${rakaz[0].Branch}'`;
     var branchDetails = await query(branchSql);
 
     var changepwd = await query(updateSql);
@@ -285,33 +303,35 @@ async function countRequests(user)
         
     }
 }
-app.get('/login', (req, res) => {
-/*    
-    res.send(`
-<form action="/login" method="post">
-    <div>
-        <label>Username:</label>
-        <input type="text" name="username"/>
-    </div>
-    <div>
-        <label>Password:</label>
-        <input type="password" name="password"/>
-    </div>
-    <div>
-        <input type="submit" value="Log In"/>
-    </div>
-</form>
-`)
-*/
-var user = req.query.user;
-if (typeof(user) == "undefined")
+
+app.get('/login', (req, res) => 
 {
-    res.sendFile(__dirname+"\\html\\Login.html");
-}
-else
-{
-    res.sendFile(__dirname+"\\html\\Login.html?user="+user);
-}
+    /*    
+        res.send(`
+    <form action="/login" method="post">
+        <div>
+            <label>Username:</label>
+            <input type="text" name="username"/>
+        </div>
+        <div>
+            <label>Password:</label>
+            <input type="password" name="password"/>
+        </div>
+        <div>
+            <input type="submit" value="Log In"/>
+        </div>
+    </form>
+    `)
+    */
+    var user = req.query.user;
+    if (typeof(user) == "undefined")
+    {
+        res.sendFile(__dirname+"\\html\\Login.html");
+    }
+    else
+    {
+        res.sendFile(__dirname+"\\html\\Login.html?user="+user);
+    }
 });
 
 
@@ -367,7 +387,7 @@ async function sendFormalMail(userName, msgHtml, subject, mailaddress)
         },
         auth: {
             user: 'krembo@krembo.org.il',
-            pass: 'Wings2020'
+            pass: 'Poqe12346'
         }
     });
 
@@ -562,6 +582,139 @@ app.get('/addMember', async (req, res) =>
     res.send();
 });
 
+function writeXl()
+{
+    var xl = require('excel4node');
+
+var wb = new xl.Workbook();
+var ws = wb.Worksheet('My Worksheet');
+
+var myCell = ws.Cell(1, 1);
+myCell.String('Test Value');
+
+wb.write('myExcel.xlsx');
+console.write("written myExcel.xlsx");
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+app.get('/partCsv', async (req, res) => 
+{
+    var http = require('http');
+    const fs = require('fs');
+    
+    var instructor = req.query.instID;
+    var file = "participation.csv";
+    
+    var filePath = __dirname+"\\part"+instructor + "\\";
+    try
+    {
+        res.writeHead(200, 
+        {
+              "Content-Type": "application/octet-stream",
+              "Content-Disposition" : "attachment; filename=" + "participation.csv"
+        });
+            fs.createReadStream(filePath + file).pipe(res);
+    }
+    catch (e)
+    {
+        console.log("exception line 626: "+e);
+    }
+});
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+function createParticipationExcel(rowsJson, instructor)
+{ 
+    if (rowsJson == "[]") return;
+    var fs = require('fs');
+    var rowData = JSON.parse(rowsJson);
+
+    var csvContent = "FullName, Dates, \n, ";
+    for (var datesIn = 0; datesIn < rowData[0].dates.length; datesIn++)
+    {
+        csvContent += rowData[0].dates[datesIn].date+ ",";
+    }
+    csvContent += "\n";
+    // first convert rowData => csv file content
+    for (var rNum = 0; rNum < rowData.length; rNum++)
+    {
+        //if (rNum > 0) csvContent += ", ";
+        var row = rowData[rNum];
+        csvContent += row.member + ", ";
+
+       for (var di = 0; di < row.dates.length; di++)
+       {
+            if (di > 0) csvContent += ", ";
+           var d = row.dates[di];
+           if (d.participated)
+                csvContent += "YES";
+            else
+                csvContent += "NO";            
+       }
+       csvContent += "\n";
+    }
+    // create dir if does not exist:
+    var dir = __dirname+"\\part"+instructor;
+    if (!fs.existsSync(dir))
+    {
+        fs.mkdirSync(dir);
+    }
+    var fName = dir+"\\participation.csv";
+    
+    fs.writeFile(fName, Buffer.from(csvContent,'utf8'), 'utf8',  function (err) 
+    {
+        if (err) throw err;
+        console.log('Saved!');
+    });
+
+    return fName;
+
+    
+    // write csv file:
+    /*
+}
+    const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+    const csvWriter = createCsvWriter(
+    {
+        path: dir+"\\participation.csv",
+        header: [
+            {id: 'fullName', title: 'FullName'},
+            {id: 'Dates', title: 'Dates'},
+            {id: 'Participated', title: 'Participated'},
+        ]
+    });
+    // now write the csv content to file
+    //csvWriter.writeRecords(csvContent);
+    csvWriter.writeRecords(csvContent)
+    .then(() => {
+        console.log('...Done');
+        
+    });
+    
+    
+    // Create a new instance of a Workbook class
+  fs.writeFile(CSV_NAME, 'utf8', function(err, data) 
+  {
+    if (err == null)
+    {
+        // error is 'file does not exist'? create it!
+    }
+    if (!data)
+    {
+        // file does not exist yet. create it
+        var fileData = "";
+        for (var f = 0; f < rowData.length; f++)
+        {
+            fileData += rowData[f].FullName + "\n";
+        }
+
+        fs.writeFile(CSV_NAME, fileData,'utf8', function (err) 
+        {
+            if (err) return console.log(err);
+        });
+    }
+    console.log('OK: ' + "wrote "+CSV_NAME);
+  });
+  */
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/myTeam', async (req, res) => 
 {
@@ -617,6 +770,7 @@ app.get('/myTeam', async (req, res) =>
 
     var q = "select * from members where Branch='" + dist + "'";
     if (layerFilter !== undefined && layerFilter != 'כולם') q += " AND layer='"+layerFilter+"'";
+    q += " order by FullName";
     //let rows = await query("Select * from members where Branch='"+req.query.Branch+"'");
     var retArray = "[";
     try 
@@ -816,7 +970,7 @@ app.use(function (req, res, next) {
 async function getParticipationSummary(instID, date)
 {
 
-    var ret = await query("select * from participation where instructorid="+instID+" and date='"+date+"' and participated=true");
+    var ret = await query("select * from Participation where InstructorID="+instID+" and Date='"+date+"'");
     var participated = ret.length;
 
     // now find TOTAL amount of users, then find 'not participated'...
@@ -957,9 +1111,14 @@ app.get('/distBranches', async(req, res) =>
             json += `"branches":[`;
             let sql = "select Name from Branches where district = " + dist;
             var branches = await query(sql);
+       
             for (let i = 0; i < branches.length; i++)
             {
-                json += `{ "branch": "${branches[i].Name}" }`;
+                // find amount of members for each branch
+                let branchAmountSql = "select * from members where Branch = \""+branches[i].Name+"\"";
+                memsAmount = await query(branchAmountSql);
+
+                json += `{ "branch": "${branches[i].Name}", "members": "${memsAmount.length}" }`;
                 if (i != branches.length - 1) json += ", ";
             }
             json += "]}";
@@ -1008,6 +1167,7 @@ app.get('/distBranches', async(req, res) =>
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/rakazim', async (req, res) => {
 
+        // first check current user:
         currUser = await query("select * from rakazim where ID = "+req.user.id);
         var rakazimQuery = "";
         if (currUser[0].Role == "מנהל מחוז")
@@ -1017,10 +1177,12 @@ app.get('/rakazim', async (req, res) => {
             rakazimQuery += "(";
             rakazimQuery += "select Name from branches where district = "+managerDist;
             rakazimQuery += ")";
+            rakazimQuery += " order by rakazim.Name";
             //`select * from rakazim where District = `+req.user.District;
         }
         else
             rakazimQuery = `select ID, Name, Branch from rakazim where Role <> "מנהל מחוז"`;
+            rakazimQuery += ` order by rakazim.Name`;
 
     res.header("Content-Type", "text/html; charset=utf-8");
 
@@ -1195,6 +1357,7 @@ app.get('/membersForInstructor', async (req, res) => {
         var q = `select ID, FullName, Active from members where`;
         q += " Branch=";
         q += `"`+dist+`"`;
+        q += ` order by FullName`;
 
         var retArray = "[";
         try 
@@ -1235,8 +1398,15 @@ app.get('/sendMessage', async (req, res) => {
     // find districtManager:
     var distMgrSql = "select * from rakazim where Role=\"מנהל מחוז\" and District="+myDist;
     var mgrName = await query(distMgrSql);
-    var distMgrName = mgrName[0].Name;
-    var distMgrMail = mgrName[0].email;
+    if (mgrName.length == 0)
+    {
+        distMgrName = distMgrMail = "";
+    }
+    else
+    {
+        var distMgrName = mgrName[0].Name;
+        var distMgrMail = mgrName[0].email;
+    }
 
     // send to dist manager only when system is set to REAL mode...
     if (!REALLYSENDALLMAILS) distMgrMail = "";
@@ -1253,6 +1423,44 @@ app.get('/sendMessage', async (req, res) => {
     res.write("<html lang='heb' dir='rtl'><head><meta http-equiv='Content-Type' content='text/html; charset=UTF-8'></head><h1>הודעתך נשלחה!</h1><br>המשך יום נעים...</html>");
     res.send();
 });
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+app.get('/downloadFile', async (req, res) => { 
+
+const http = require('http');
+const fs = require('fs');
+
+// get participation data from getParticipation and write it to excel! 
+
+
+const file = fs.createWriteStream("myExcel.xlsx");
+
+
+var readStream = fs.createReadStream("myExcel.xlsx");
+
+
+
+readStream.on('open', function () 
+    {
+            // This just pipes the read stream to the response object (which goes to the client)
+            //var data = fs.readFileSync("myExcel.xlsx", , 'utf8');
+        
+        
+        //res.write(
+            //readStream.pipe(res);
+            //res.pipe(readStream.readStream());
+            //readStream.readStream(); );
+        //});
+        
+        readStream.on('error', function(err) {
+            console.log("got error: "+err);
+        });
+        
+        res.pipe(readStream);
+        res.send();
+
+    });
+});
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/addParticipation', async (req, res) => { 
     var params = querystring.parse();
@@ -1524,19 +1732,29 @@ app.get('/getParticipation', async (req, res) => {
     var rows;
     var current = null;
 
-    try {
-        var userPartArr = new Array();
-        rows = await query("select DISTINCT ParticipantID from participation where InstructorID = \"" + instructor + "\"");
-
+    try 
+    {
+        var sortByNameQ = "select DISTINCT participation.ParticipantID, members.FullName from participation INNER JOIN members ON Participation.ParticipantID = members.ID where Participation.InstructorID = "+instructor+" order by members.FullName";
+        //rows = await query("select DISTINCT ParticipantID from participation where InstructorID = \"" + instructor + "\"");
+        rows = await query(sortByNameQ);
+   
+        
+        
         // the variable which will hold the json of the data:
         var retJson = "[";
+
+        //participSheet.set(1, 1, 'חניך');
 
         for (u = 0; u < rows.length; u++) 
         {
             member = rows[u].ParticipantID;
+            if (member == 23)
+            {
+                var breakhere=true;
+            }
 
             // get member name
-            var memberRes = await query("select FullName from members where ID = " + member);
+            var memberRes = await query("select FullName from members where ID = " + rows[u].ParticipantID);
             if (memberRes.length > 0)
             {
                 if (u > 0 && retJson != "[") retJson += ", ";
@@ -1546,8 +1764,13 @@ app.get('/getParticipation', async (req, res) => {
                 var memberPart = await query("select * from participation where InstructorID = " + instructor + " and ParticipantID = " + rows[u].ParticipantID)
 
                 retJson += "{\"member\":\"" + memberName + "\", \"dates\":[";
+                //participSheet.set(u+2, 1, memberName);
                 for (d = 0; d < memberPart.length; d++) {
                     if (d > 0) retJson += ", ";
+                    if (memberPart[0].ParticipantID == 19)
+                    {
+                        var stophere=true;
+                    }
                     retJson += "{\"date\":\"" + memberPart[d].Date + "\", \"participated\":" + memberPart[d].participated + "}";
                 }
                 retJson += "]}";
@@ -1602,13 +1825,37 @@ app.get('/getParticipation', async (req, res) => {
                         }
                     }
                 }*/
-        res.write(retJson);
-        res.send();
+                var file = createParticipationExcel(retJson, instructor);
+                res.write(retJson);
+                res.send();
     }
     catch (e) {
         console.log(e);
     }
 });
+
+function csvNextLine(fileName)
+{
+    var stream = fs.createWriteStream(fileName);
+    tream.once('open', function(fd) 
+    {
+    stream.write("\n");
+        stream.end();
+    });
+}
+var CSV_NAME = "Participation.csv";
+function saveInCSV(inst, msg)
+{
+    var fileName = inst+CSV_NAME;
+    var fs = require('fs');
+    var stream = fs.createWriteStream(fileName);
+    stream.once('open', function(fd) 
+    {
+    stream.write(","+msg);
+        stream.end();
+    });
+    return fileName;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/replacePassword', async (req, res) => 

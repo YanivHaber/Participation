@@ -125,6 +125,11 @@ function drawMembers(json2, inst)
     try 
     {
         var members = JSON.parse(json2);
+        if (members.length == 0) 
+        {
+            membersHtml = "<font color='red'>!This user DOES NOT HAVE ANY members</font>";
+            return membersHtml;
+        }
         var activeMembers = 0;
         var nonActive = 0;
 

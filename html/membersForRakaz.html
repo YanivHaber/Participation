@@ -84,6 +84,12 @@ function loadRakazim()
                 sleep(1000);
                 var members = JSON.parse(json2);
 
+                if (members.length == 0) 
+                {
+                    membersHtml = "<font color='red'>!This user DOES NOT HAVE ANY members</font>";
+                    document.getElementById("membersTable").innerHTML = membersHtml;
+                    return;
+                }
 
                 members.forEach(m => 
                 {

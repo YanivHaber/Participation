@@ -51,11 +51,12 @@
             
             $.each(rakazimArray, function (i, value) 
             {
-                html += "<option  id=\""+rakazimArray[i].id+"\" value="+rakazimArray[i].Name+"\">"+rakazimArray[i].Name+"</option>";
+                html += "<option  id=\""+rakazimArray[i].id+"\" value="+rakazimArray[i].snif+"\">"+rakazimArray[i].snif+"</option>";
             });
             html += "</select>";
         }    
         document.getElementById("selector").innerHTML = html;
+        document.getElementById("instructor").disabled = true;
         instName(instID);
         
     }
@@ -70,12 +71,16 @@
 ////////////////////////////////////////////////////////////////////////////////////////
             function drawMembers(json2)
             {
-                var membersHtml = "<table><tr><th>שם</th><th>השתתף בתאריך הנ\"ל?</th></tr>";
-
                 try 
                 {
                     var members = JSON.parse(json2);
+                    if (members.length == 0) 
+                    {
+                        document.getElementById("memberMessages").innerHTML = "<font color='red'>This user cannot add actions as he DOES NOT HAVE ANY members...</font>";
+                        return;
+                    }
 
+                    var membersHtml = "<table><tr><th>שם</th><th>השתתף בתאריך הנ\"ל?</th></tr>";
 
                     members.forEach(m => 
                     {
@@ -213,9 +218,9 @@
                   <b>מיקום \ מהות:</b><input type="text" name="subtype" onkeypress="keyPress(event)"/></div>
                 <br>
                 <br>
-                <b>החניכים של מדריך זה:</b>
+                <b><span id="memberMessages">החניכים של מדריך זה:</b>
 
-                <div id="membersTable"></div>
+                <div id="membersTable"></div></span>
                 
                 
                     <input id="instIDinput" name="instID" value="99" style="visibility: hidden"></input><br>
