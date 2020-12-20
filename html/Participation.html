@@ -174,7 +174,7 @@ async function getMembersToClient(instID)
                 {
                     var selecteduser = sel.options[sel.selectedIndex].id;
                     var csvFile = "/partCsv?instID=" + selecteduser;
-                    document.getElementById("excelFile").innerHTML = `<a href="${csvFile}" onClick="window.open('csvDirections.html', 'How to open this CSV', 'width=500,height=500,top=100,left=600');" download>Download as CSV</a>`;//<a href="http://localhost:1000/downloadFile?name=myExcel.xlsx" download>EXCEL FILE</a>`;
+                    document.getElementById("excelFile").innerHTML = `<a href="${csvFile}" onClick="window.open('csvDirections.html', 'How to open this CSV', 'width=500,height=500,top=100,left=600');" download>View in Excel</a>`;//<a href="http://localhost:1000/downloadFile?name=myExcel.xlsx" download>EXCEL FILE</a>`;
                 }
 
         // firstcheck that this inst has members...

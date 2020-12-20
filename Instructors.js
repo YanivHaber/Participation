@@ -616,7 +616,7 @@ app.get('/partCsv', async (req, res) =>
     }
     catch (e)
     {
-        console.log("exception line 626: "+e);
+        console.log("exception line 626\\: "+e);
     }
 });
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
