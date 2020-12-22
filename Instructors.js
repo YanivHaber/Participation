@@ -1417,7 +1417,7 @@ app.get('/sendMessage', async (req, res) => {
     }
     catch (e)
     {
-        console.log("failed sending mail because:\n"+e);
+        console.log("ERROR: failed sending mail because:\n"+e);
     }
 
     res.write("<html lang='heb' dir='rtl'><head><meta http-equiv='Content-Type' content='text/html; charset=UTF-8'></head><h1>הודעתך נשלחה!</h1><br>המשך יום נעים...</html>");
