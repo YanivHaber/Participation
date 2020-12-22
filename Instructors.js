@@ -219,7 +219,7 @@ async function alertMissingMembers(myDist, memberArr, instID)
     var instName = instRes[0].Name;
 
     // now send alerting mail:
-    var subject = `: החניכים הבאים לא היו כבר שבועיים או יותר!`;
+    var subject = `: שים לב: החניכים הבאים לא היו כבר שבועיים או יותר!`;
     var msgHtml = `היי,<br><b><font color='red'>מייל זה יישלח בעתיד ל ${distMgrName} מנהל מחוז ${myDistName}</font></b><br><br><font color='blue'>:לתשומת לבך הפעילים הבאים (של המדריך ${instName})  :לא הגיעו לפעילות בשבועיים האחרונים (בהן הייתה פעילות של הקבוצה)</font><br>`;
 
     for (p = 0; p < missingNames.length; p++)
