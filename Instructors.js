@@ -6,7 +6,7 @@ const sqlite3 = require('sqlite3');
 //var xl = require('msexcel-builder');
 const xl = require('excel4node');
 const app = express();
-const port = 1000
+const port = 1000 
 const FULL_DAY = 1000 * 60 * 60 * 24;
 
 // Ariel add from here
@@ -371,7 +371,13 @@ async function sendFormalMail(userName, msgHtml, subject, mailaddress)
     }
     if (yanivReporter)
     {
-        mailaddress += ", yaniv@krembo.org.il";
+        if ( REALLYSENDALLMAILS)
+        {
+            mailaddress += ", yaniv@krembo.org.il, david@krembo.org.il";
+        }
+        else{
+            mailaddress += ", yaniv@krembo.org.il";
+        }
     }
  
     var nodemailer = require('nodemailer');
@@ -577,7 +583,7 @@ app.get('/addMember', async (req, res) =>
     var username = ret[0].username;
 
     var msg = `<p dir="rtl">המשתמש '${username}' הכניס כרגע את הפעיל החדש: '${fullName}'.<br>פרטי הפעיל שנוסף הינם: <br>שם:"${fullName}", <br>מחוז:'${distFromDB[0].Name}', <br>סניף:"${branch}", <br>מס. ת.ז.:'${idnum}', <br>שכבת גיל:'${layer}', <br>טלפון:'${phone}', <br>אימייל:'${email}<br><br>עכשיו צריך להוסיף אותו ל-!SF</div>`;
-        sendFormalMail(username, msg, `משתמש זה הוסיף כעת פעיל חדש!`, `david@krembo.org.il`);
+        sendFormalMail(username, msg, `משתמש זה הוסיף כעת פעיל חדש!`, ``);
 
     res.send();
 });
@@ -1265,7 +1271,7 @@ app.get('/getInactiveUsers', async (req, res) => {
                 numUsers++;
             }
             activateSql += ")";
-            let res = await query(activateSql);
+            var qRes = await query(activateSql);
         }
         catch (e) {
             console.log("Failed reactivating user/s:\n" + e);
@@ -1614,7 +1620,7 @@ app.get('/deactivateUsers', async (req, res) =>
     // find out user name
     var name = await query("select Name, Branch from rakazim where ID="+req.user.id);
 
-    sendFormalMail("user ID:"+req.query.instID, "שים לב:<br><b>That user just <font color='red'>deactivated</font> "+usersDeact+" users! and <font color='green'>REactivated</font> "+userReact+" users.</b>", "De\Re-activation summary. (done by user:'"+ name[0].Name+"')", "david@krembo.org.il");
+    sendFormalMail("user ID:"+req.query.instID, "שים לב:<br><b>That user just <font color='red'>deactivated</font> "+usersDeact+" users! and <font color='green'>REactivated</font> "+userReact+" users.</b>", "De\Re-activation summary. (done by user:'"+ name[0].Name+"')", "");
 
     // מצא את המחוז של הרכז:
     dist = await query(`select district from Branches where Name='${name[0].Branch}'`);
@@ -1624,7 +1630,7 @@ app.get('/deactivateUsers', async (req, res) =>
     // שלח מייל גם למנהל המחוז:
     if ( sendToDistrictManagers )
     {
-        sendFormalMail("user ID:"+req.query.instID, "שים לב:<br><b>That user just <font color='red'>deactivated</font> "+usersDeact+" users! and <font color='green'>REactivated</font> "+userReact+" users.</b>", "De\Re-activation summary. (done by user:'"+ name[0].Name+"')", distMan[0].email+", david@krembo.org.il");
+        sendFormalMail("user ID:"+req.query.instID, "שים לב:<br><b>That user just <font color='red'>deactivated</font> "+usersDeact+" users! and <font color='green'>REactivated</font> "+userReact+" users.</b>", "De\Re-activation summary. (done by user:'"+ name[0].Name+"')", distMan[0].email+"");
     }
 
 
@@ -1696,29 +1702,38 @@ function randomString(length) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/deleteActivity', async (req, res) => {
-    var actID = req.query.actid;
-    var instID = req.query.instid;
+    
+    try
+    {
+        var actID = req.query.actid;
+        var instID = req.query.instid;
 
-    // get axt details:
-    actDetails = "select * from Activity where ActivityID="+actID;
-    res = await query(actDetails);
-var actName = res[0].Name;
+        // get axt details:
+        actDetails = "select * from Activity where ActivityID="+actID;
+        var qRes = await query(actDetails);
+    var actName = qRes[0].Name;
 
-    // FIRSTdelete all participation of this activity (due to FK...)
-    removePartSql = "DELETE FROM Participation where Activity="+actID;
-    await query(removePartSql);
+        // FIRSTdelete all participation of this activity (due to FK...)
+        removePartSql = "DELETE FROM Participation where Activity="+actID;
+        await query(removePartSql);
 
-removeActSql = "DELETE FROM Activity where ActivityID="+actID;
-    await query(removeActSql);
-        
-    var name = await query("select Name, Branch from rakazim where ID="+instID);
-    var name = name[0].Name;
+    removeActSql = "DELETE FROM Activity where ActivityID="+actID;
+        await query(removeActSql);
+            
+        var name = await query("select Name, Branch from rakazim where ID="+instID);
+        var name = name[0].Name;
 
-    sendFormalMail(name, "המשתמש '"+name+"' מחק פעולה '"+actName+"'!", "מחיקת פעולה!", "david@krembo.org.il");
+        sendFormalMail(name, "המשתמש '"+name+"' מחק פעולה '"+actName+"'!", "מחיקת פעולה!", "");
 
-        res.write(`<html lang='he' dir='rtl'><head dir='rtl'><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head>`);
-    res.write("<h1>הפעולה נמחקה בהצלחה!</h1></body></html>");
-    res.send();
+        res.write(`{"msg":"הפעולה נמחקה בהצלחה!"}`);
+        res.end();
+    }
+    catch(e)
+    {
+        msg = `{"msg":"פעולת המחיקה נכשלה כי "+e.toString()}`;
+        res.write(`{msg=${msg}`);
+        res.end();
+    }
 });
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/getParticipation', async (req, res) => {

@@ -198,7 +198,11 @@ async function getMyUserDetails()
                 */
                 html += (p+1)+". ";
                 
-                if(part[p].dates[part[p].dates.length - 1].participated)
+                
+                var ladstEv = part[p].dates[part[p].dates.length - 1].participated;
+                var former =  part[p].dates[part[p].dates.length - 2].participated;
+                
+                if (ladstEv || former)
                 {
                     html += currName+"</th>";
                 }

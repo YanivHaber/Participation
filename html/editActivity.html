@@ -16,6 +16,7 @@
 
         $.get("/getActivity?instID=" + instid + "&date=" + date, "", (actJson) => 
         {
+
             activity = JSON.parse(actJson);
             document.getElementById("ActivityName").value = activity.Name;
             actType = activity.type;
@@ -224,10 +225,11 @@
                 if (res)
                 {
                     // delete this activity:
-                    $.get("/deleteActivity?actid=" + actID + "&instid=" + instid, "", (resjson) => 
+                    $.get("/deleteActivity?actid=" + actID + "&instid=" + instid, "", function (resjson) 
                     {
                         result = JSON.parse(resjson);
-                        alert("delete operation was "+result);
+                        alert(result.msg);
+                        window.history.back();
                     });
                 }
             }
