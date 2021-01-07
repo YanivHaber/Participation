@@ -1,4 +1,5 @@
 const REALLYSENDALLMAILS = false;
+const REALLYSENDALLMAILS_INWARD = true;
 const AMOUNT_DAYS_OF_LAST = 14;
 const querystring = require('querystring');
 const express = require('express');
@@ -23,7 +24,7 @@ var ensureLogin = require('connect-ensure-login');
         passwordField: 'password'
     },
     
-    // added async and query
+    // added /וקרט and query
     async (username, password, doneCallback) => {
         //TODO: /getActivity if the user and the password are OK
         //For now only support Yaniv/king
@@ -41,7 +42,8 @@ var ensureLogin = require('connect-ensure-login');
             // login success!
             return doneCallback(null, { name: "\"" + username + "\"", id: ret[0].id });
         }
-        else {
+        else 
+        {
             // login failure!
             res.redirect(`http://localhost:1000/html\login.html?user=`+username);
             return;// doneCallback("Error! wrong user and/or password!", null);
@@ -179,7 +181,7 @@ async function checkMembersAvailability()
         // do not return those results as mails where sent instead! see alertMissingMembers
         //res.write(returnResult);
         //res.send();
-    }
+    } 
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 async function alertMissingMembers(myDist, memberArr, instID)
@@ -230,7 +232,7 @@ async function alertMissingMembers(myDist, memberArr, instID)
     msgHtml += "<br><b>את/ה מכיר/ה את זה? אולי כדאי להרים טלפון לראות שהכל בסדר...<br>בהצלחה</b>";
 
     //TODO: change mail address to district manager!
-    sendInnerFormalMail(instID, msgHtml, subject, "");
+    sendFormalMail(instID, msgHtml, subject, "");
 
     // write in DB the date of this check!
     var day = today.getDate();
@@ -354,31 +356,19 @@ app.use('/', (req, res, next) => {
     next();
 });
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-async function sendInnerFormalMail(userName, msgHtml, subject, mailaddress)
-{ 
-    sendMails = true;
-    yanivReporter = true;
-    await sendFormalMail(userName, msgHtml, subject, mailaddress)
-    yanivReporter = false;
-    sendMails = true;
-};
-///////////////////////////////////////////////////////////////////////////////////////////////////////
 async function sendFormalMail(userName, msgHtml, subject, mailaddress)
 { 
     if (!sendMails)
     {
          return;
     }
-    if (yanivReporter)
-    {
-        if ( REALLYSENDALLMAILS)
+        if ( REALLYSENDALLMAILS_INWARD)
         {
-            mailaddress += ", yaniv@krembo.org.il, david@krembo.org.il";
+            mailaddress += ", yaniv@krembo.org.il, gil@krembo.org.il";
         }
         else{
             mailaddress += ", yaniv@krembo.org.il";
         }
-    }
  
     var nodemailer = require('nodemailer');
 
@@ -953,6 +943,8 @@ async function query(queryStr, ...params)
             }
             resolve(rows);
         }))
+
+
     }
     catch (e) {
         console.log(e);

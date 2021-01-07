@@ -74,6 +74,15 @@ var role = "";
         }
     }
     
+    function compareRakazim(a,b)
+    {
+        if (a.snif == " " || a.snif == "") return 100;
+        if (b.snif == " " || b.snif == "") return -100;
+        if(a.snif.substring(0,1) > b.snif.substring(0,1))
+            return 1;
+        else 
+        return -1;
+    }
     async function loadData(instructorID)
     {
         if (admin == "1")
@@ -103,6 +112,7 @@ var role = "";
                 {
                     try {
                     var rakazimArray = JSON.parse(json);
+                    rakazimArray = rakazimArray.sort(compareRakazim);
                     }
                     catch (e)
                     {
@@ -113,6 +123,10 @@ var role = "";
                     {
                         var element = rakazimArray[i];
                         var elemName = element.snif;
+                        if (elemName == "" || elemName == " ")
+                        {
+                            elemName = element.Name + " (סניף לא ידוע)";
+                        }
                         if (elemName.indexOf('"') != -1) 
                             elemName = elemName.split('"').join('\"');
                         options += `<option id="${element.id}" value="${elemName}">${elemName}</option>`;
