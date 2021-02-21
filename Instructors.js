@@ -968,7 +968,7 @@ app.use(function (req, res, next) {
 async function getParticipationSummary(instID, date)
 {
 
-    var ret = await query("select * from Participation where InstructorID="+instID+" and Date='"+date+"'");
+    var ret = await query("select * from Participation where InstructorID="+instID+" and Date='"+date+"'  and Participated=1");
     var participated = ret.length;
 
     // now find TOTAL amount of users, then find 'not participated'...
