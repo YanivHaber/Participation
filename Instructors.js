@@ -2,6 +2,8 @@ const REALLYSENDALLMAILS = false;
 const REALLYSENDALLMAILS_INWARD = true;
 const AMOUNT_DAYS_OF_LAST = 14;
 const querystring = require('querystring');
+const DB_NAME = "‏‏Participation2.db";
+
 const express = require('express');
 const sqlite3 = require('sqlite3');
 //var xl = require('msexcel-builder');
@@ -17,6 +19,7 @@ var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var expressSession = require('express-session');
 var ensureLogin = require('connect-ensure-login');
+const { Console } = require('console');
 
     passport.use(new LocalStrategy(
     {
@@ -360,15 +363,16 @@ async function sendFormalMail(userName, msgHtml, subject, mailaddress)
 { 
     if (!sendMails)
     {
-         return;
-    }
-        if ( REALLYSENDALLMAILS_INWARD)
+        if ( REALLYSENDALLMAILS_INWARD )
         {
             mailaddress += ", yaniv@krembo.org.il, gil@krembo.org.il";
         }
-        else{
-            mailaddress += ", yaniv@krembo.org.il";
+        else
+        {
+            Console.log("not sending mails at all!");
+            return;
         }
+    }
  
     var nodemailer = require('nodemailer');
 
@@ -382,30 +386,33 @@ async function sendFormalMail(userName, msgHtml, subject, mailaddress)
         ciphers:'SSLv3'
         },
         auth: {
-            user: 'krembo@krembo.org.il',
-            pass: 'Poqe12346'
+            user: 'yaniv@krembo.org.il',
+            pass: 'Omeryoav25'
         }
     });
 
 // setup e-mail data, even with unicode symbols
     var mailOptions = 
     {
-        from: 'krembo@krembo.org.il', // sender address (who sends)
+        from: 'yaniv@krembo.org.il', // sender address (who sends)
         to:mailaddress, // list of receivers (who receives)
         subject: subject, // Subject line
         html: `<html dir="rtl">` + msgHtml + `</html>` // html body
     };
 
-    // send mail with defined transport object
-    await transporter.sendMail(mailOptions, function(error, info)
+    if (sendMails)
     {
-        if(error)
+        // send mail with defined transport object
+        await transporter.sendMail(mailOptions, function(error, info)
         {
-            console.log(error);
-            return -1;
-        }
-        console.log('Message sent: ' + info.response);
-    });
+            if(error)
+            {
+                console.log("Error sending mail msg due to: "+error);
+                return -1;
+            }
+            console.log('Message sent: ' + info.response);
+        });
+    }
     console.log("mail with meesage was sent to "+mailaddress+ "!");
 
 
@@ -450,14 +457,13 @@ async function sendFormalMail(userName, msgHtml, subject, mailaddress)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 var sendToDistrictManagers = false;
 var yanivReporter = true;
-var sendMails = true;
+var sendMails = false;
 //////////////////////////////////////////////////////////////////////////////////////
 function sendMail(userName, msgHtml, subject, mailaddress)
 { 
     if (!sendMails)
     {
-        // do not send mails!
-        console.log("not sending mails:\n\n"+subject);
+        // do not send mails BUT maybe only inward ones...
 
         if (yanivReporter)
         {
@@ -577,20 +583,6 @@ app.get('/addMember', async (req, res) =>
 
     res.send();
 });
-
-function writeXl()
-{
-    var xl = require('excel4node');
-
-var wb = new xl.Workbook();
-var ws = wb.Worksheet('My Worksheet');
-
-var myCell = ws.Cell(1, 1);
-myCell.String('Test Value');
-
-wb.write('myExcel.xlsx');
-console.write("written myExcel.xlsx");
-}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/partCsv', async (req, res) => 
 {
@@ -722,8 +714,15 @@ app.get('/myTeam', async (req, res) =>
     
     totalHtml += `<html lang="he" dir="rtl"><head><meta charset="utf-8" /></head>`;
 
-    totalHtml += `<section style="direction: rtl;  border:50px; border-width: 5px; border-style: solid; border-color: navy; background-color: "#4a90e2"><img src="http://`+req.get("host")+`\/html\/לוגו_כנפיים_של_קרמבו.jpg" alt='כנפים של קרמבו' style="height: 150px; width: 150px;"></img>`;
-    totalHtml += `<span style="position: absolute; top: 30; right: 150;">כנפים של קרמבו - אפליקציית 'השתתפות' <br>${name[0].Name} מסניף '${name[0].Branch}'</span></h1><br><div style="position: fixed; right: 150px;"></span></div></section>`;
+    totalHtml += `<table style="border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;">`;
+    totalHtml += `<tr><td><img src="./html/style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px;"/>`;
+    totalHtml += `<tr></td><td><h1>כנפים של קרמבו - אפליקציית 'השתתפות'</td></h1></tr>`;
+    totalHtml +=  `<tr><td>אלו החניכים של ${name[0].Name} מסניף '${name[0].Branch}':</span></h1><br><div style="position: fixed; right: 150px;"></span></div></tr></table>`;
+    totalHtml += `<input type="text" style="visibility: hidden" name="InstructorID" id="InstructorID">`;//<h3>`;
+    totalHtml += `<br>`;
+
+    //totalHtml += `<section style="direction: rtl;  border:50px; border-width: 5px; border-style: solid; border-color: navy; background-color: "#4a90e2"><img src="http://`+req.get("host")+`\/html\/לוגו_כנפיים_של_קרמבו.jpg" alt='כנפים של קרמבו' style="height: 150px; width: 150px;"></img>`;
+    //totalHtml +=  `<br>אלו החניכים של ${name[0].Name} מסניף '${name[0].Branch}:'</span></h1><br><div style="position: fixed; right: 150px;"></span></div></section>`;
     
     totalHtml += '<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>\n';
     totalHtml +=  `<script src="./html/protegeActivity.js"></script>\n`;
@@ -822,17 +821,17 @@ app.get('/good-login', async (req, res) => {
 //
 app.get("/userName", async(req, res) => 
 {
-    name = await query("select Name, Branch, Role, District from rakazim where ID="+req.user.id);
+    var rakaz = await query("select Name, Branch, Role, District from rakazim where ID="+req.user.id);
 
-    var rightBranch = ((name[0].Branch !== "undefined") ? name[0].Branch: "unknown");
-    //if (name[0].Role == "מנהל מחוז")
+    var rightBranch = ((rakaz[0].Branch !== "undefined") ? rakaz[0].Branch: "לא ידוע...");
+    //if (rakaz[0].Role == "מנהל מחוז")
     {
         // get name of district
-        distNameSql = `select * from Branches where Name="`+name[0].Branch+`"`;
+        distNameSql = `select * from Branches where Name="`+rakaz[0].Branch+`"`;
         dName = await query(distNameSql);
     }
     distName = 
-    res.write(`{ "name": "${name[0].Name}", "id": "${req.user.id}", "role":"${name[0].Role}", "District":"${dName[0].district}", "branch":"${rightBranch}"`);
+    res.write(`{ "name": "${rakaz[0].Name}", "id": "${req.user.id}", "role":"${rakaz[0].Role}", "District":"${dName[0].district}", "branch":"${rightBranch}"`);
 
     //test = "{ \"name\": \""+name[0].Name+"\", \"id\": "+req.user.id + ", \"role\":\""+name[0].role + "\", \"branch\":"+((name[0].Branch!== 'undefined') ? "\""+name[0].Branch+"\"": 'unknown');
 
@@ -914,7 +913,7 @@ app.use('/html', express.static('html'));
 
 console.log("starting Instructors.js...");
 
-let db = new sqlite3.Database('Participation.db', (err) => {
+let db = new sqlite3.Database(DB_NAME, (err) => {
     if (err) 
     {
         console.log("error connecting to db...");
@@ -1026,7 +1025,7 @@ app.get('/rakazById', async (req, res) => {
 
     let ret = await query("select Name, Branch from rakazim where ID = " + instructor);
     res.header("Content-Type", "text/html; charset=utf-8");
-    res.write("{\"Name\":\"" + ret[0].Name + "\", \"branch\":\"" + ret[0].Branch + "\"");
+    res.write("{\"Name\":\" רכז/ת" + ret[0].Branch + "\", \"branch\":\"" + ret[0].Branch + "\"");
 
     // add 'admin' flag
     let AD = await query("select * from users where id=" + instructor);
@@ -1216,9 +1215,14 @@ app.get('/selectInst', async (req, res) => {
 
         //res.writeHead(200, {"Content-Type": "text/html; charset=utf-8"});
         var retStr = "[";
-        for (let i = 0; i < rows.length - 1; i++) {
+        for (let i = 0; i < rows.length - 1; i++) 
+        {
             var currDist = rows[i].Branch;
+            if (currDist == null) continue;
             if (currDist.length == 0) continue;
+            
+
+            // delete all spaces BEFORE the name:
             if (!currDist.replace(/\s/g, '').length) {
                 continue;
             }
@@ -1871,7 +1875,7 @@ app.get('/replacePassword', async (req, res) =>
     var newPass = req.query.newPassword;
     var user = req.query.user;
 
-    if (db == null) db = new sqlite3.Database('C:\\develop\\Node.js\\Participation\\Participation.db', (err) => {
+    if (db == null) db = new sqlite3.Database('C:\\develop\\Node.js\\Participation\\'+DB_NAME, (err) => {
         if (err) 
         {
             console.log("error connecting to db...:"+err);
@@ -1884,7 +1888,7 @@ app.get('/replacePassword', async (req, res) =>
     {
         // old password is correct :) change to new...
         var newUser = await query("update users set password = '"+newPass+"' where id="+user);
-        res.write("<html lang='he' dir='rtl'><head><meta charset=\"UTF-8\"></head><body><h1>Your password was changed!</h1><br><h1>סגור חלון זה ועבור חזרה לדף הלינקים...</h1><input type=\"button\" value=\"Close\" onclick=\"window.close()\"></body></html>");
+        res.write("<html lang='he' dir='rtl'><head><meta charset=\"UTF-8\"></head><body><h1>Your password was changed!</h1><br><h1>סגור חלון זה ועבור חזרה לדף הלינקים...<input type=\"button\" value=\"Close\" onClick=\"open(location, '_self').close(); window.close();\"></h1></body></html>");
 
 
 
@@ -1899,8 +1903,8 @@ app.get('/replacePassword', async (req, res) =>
 app.get('/changePassword', async (req, res) => 
 {
     var user = req.user.id;
-    if (db == null) db = new sqlite3.Database('C:\\develop\\Node.js\\Participation\\Participation.db', (err) => {
-        if (err) 
+    if (db == null) db = new sqlite3.Database('C:\\develop\\Node.js\\Participation\\'+DB_NAME, (err) => {
+        if (err)
         {
             console.log("error connecting to db...:"+err);
         }
@@ -1909,9 +1913,19 @@ app.get('/changePassword', async (req, res) =>
     var users = await query("select Name, Branch from rakazim where ID="+user);
 
     res.write(`<html lang="he" dir="rtl"><head><meta charset="utf-8"><meta content='width=device-width, initial-scale=1' name='viewport'/></head><body>:`);
-    res.write(`<section style="direction: rtl; height:150px; border:50px; border-width: 5px; border-style: solid; border-color: "#4a90e2" background: "#4a90e2"><h1><img src="./html/style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px; position: fixed; top: 32px; right: 15;"/>`);
-    res.write(`<span style="position: absolute; top: 30; right: 150;">כנפים של קרמבו - אפליקציית 'השתתפות'</span></h1><br><div style="position: fixed; right: 150px;"><h3><span id="instNameHtml">${users[0].Name}</span> מסניף '<span id="branch">${users[0].Branch}</span>'</span></h3></div></section>`);
-    res.write(`<span style="right:150px;"><br><br><br>שלום ${users[0].Name}!<br><br></span><span style="position: static;"><form method='get' name='updatePassword' action='/replacePassword'>הסיסמא הנוכחית שלך: <input type='password' name='firstPassword'><br>סיסמא חדשה (לפחות 6 תוים!):<input type='password' name='newPassword'><input type='hidden' name='user' value="${user}"><br><input type='submit' value='בצע!'></form></span><br><br></body></html>`);
+    
+    var totalHtml = "";
+    totalHtml += `<table style="border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;">`;
+    totalHtml += `<tr><td><img src="./html/style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px;"/>`;
+    totalHtml += `<tr></td><td><h1>כנפים של קרמבו - אפליקציית 'השתתפות'</td></h1></tr>`;
+    totalHtml +=  `<tr><td>שלום ${users[0].Name} מסניף '${users[0].Branch}'. כאן תוכל\\י להחליף סיסמא!</span></h1><br><div style="position: fixed; right: 150px;"></span></div></section></tr></table>`;
+    totalHtml += `<input type="text" style="visibility: hidden" name="InstructorID" id="InstructorID">`;//<h3>`;
+    res.write(totalHtml);
+
+
+    //res.write(`<section style="direction: rtl; height:150px; border:50px; border-width: 5px; border-style: solid; border-color: "#4a90e2" background: "#4a90e2"><h1><img src="./html/style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px; position: fixed; top: 32px; right: 15;"/>`);
+    //res.write(`<span style="position: absolute; top: 30; right: 150;">כנפים של קרמבו - אפליקציית 'השתתפות'</span></h1><br><div style="position: fixed; right: 150px;"><h3><span id="instNameHtml">${users[0].Name}</span> מסניף '<span id="branch">${users[0].Branch}</span>'</span></h3></div></section>`);
+    res.write(`<span style="right:150px;"></span><span style="position: static;"><form method='get' name='updatePassword' action='/replacePassword'>הסיסמא הנוכחית שלך: <input type='password' name='firstPassword'><br>סיסמא חדשה (לפחות 6 תוים!):<input type='password' name='newPassword'><input type='hidden' name='user' value="${user}"><br><input type='submit' value='בצע!'></form></span><br><br></body></html>`);
     res.send();
 });
 ////////////////////////////////////////////////////////////////////////////////////////////

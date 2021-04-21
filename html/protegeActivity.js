@@ -34,6 +34,11 @@ function selectAll()
     }
 }
 
+function alertMe()
+{
+    alert('alerted!');
+}
+
 var changedVars = "";
 
 function setChangeVars(checkId)
@@ -56,6 +61,7 @@ async function deactivateMembers()
 {
     await deactivateOnServer();
     alert("בחירתך נשמרה...");
+    window.parent.location.reload();
 }
 
 async function deactivateOnServer()

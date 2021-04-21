@@ -23,7 +23,7 @@ a:active {
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 </head>
 <body onLoad="getUserDetails();">
-    <section style="direction: rtl; height:170px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;"><h1><img src="./style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px; position: fixed; top: 13; right: 15;"/><span style="position: fixed; top: 30; right: 150;">כנפים של קרמבו - אפליקציית 'השתתפות'</span></h1><br><br><br><br><div style="position: fixed; right: 150px;"><h3><span id="instNameHtml"></span> מסניף <span id="branch"></span> (<span id="role"></span>)</h3><img></section></span></h3></div></section>
+    <section style="direction: rtl; height:170px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;"><h1><img src="./style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px; position: fixed; top: 13; right: 15;"/><span style="position: fixed; top: 30; right: 150;">כנפים של קרמבו - אפליקציית 'השתתפות'</span></h1><br><br><br><br><div style="position: fixed; right: 150px;"><h3><span id="instNameHtml"></span></h3><img></section></span></h3></div></section>
   <!--
   <span><section style="direction: rtl; height:120px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2;; background: #4a90e2;"><img style="width:70px; height:70px;" src="./style/סמל_קרמבו_חדש_עברית.jpg"><h2> כנפים של קרמבו. שלום '<span id="instNameHtml"></span> מסניף <span id="branch"></span>'<img></h2></section></span>
 --> 
@@ -42,7 +42,7 @@ async function getUserDetails()
     {
         user = JSON.parse(json);
         userId = user.id;
-        userName = user.name;
+        userName = "רכז/ת סניף "+user.branch;//user.name;
         admin = user.admin;
         branch = user.branch;
         role = user.role;
@@ -68,6 +68,7 @@ function arrangeLinks()
 
   
   document.getElementById("link8").href += userId;
+  document.getElementById("link1").href += userId;
   
   
   /*
@@ -109,8 +110,8 @@ function arrangeLinks()
 document.write(`<p><b><a href="http://${window.location.hostname}:${PORT}/changePassword" target="_blank">החלפת סיסמא!</a></b></p>`);
 document.write(`<span id="myMembersLink"><p><b><a href="http://${window.location.hostname}:${PORT}/myTeam" target="_blank">רשימת החניכים בסניף שלי</a></b></p></span>`);
 document.write(`<p><b><a id=\"link8\" href="http://${window.location.hostname}:${PORT}/html/viewActivity.html?instID=" target="_blank">צפיה ברשימות ההשתתפות של החניכים שלי!</a></b><b><br>(יצירת פעולה ניתן לבצע ממסך הצפיה ברשימות ההשתתפות)<br></b></p>`);
-document.write(`<p><b><a id="link1" target="_blank" href="http://${window.location.hostname}:${PORT}/html/Activiyut.html?instID=">ערוך אקטיביות החניכים שלי!</a></b></p>`);
-document.write(`<p><b><a id="link11" target="_blank" href="wow.com">דווח על בעיה...!</a></b></p>`);
+document.write(`<p><b><a id="link1" target="_blank" href="http://${window.location.hostname}:${PORT}/html/ActiviyutTop.html?instID=">ערוך אקטיביות החניכים שלי!</a></b></p>`);
+document.write(`<p><b><a id="link11" target="_blank" href="./sendMsg.html">דווח על בעיה...!</a></b></p>`);
 //document.write(`<p><b><a id="link2" href="amazing.com" target="_blank">החזר אקטיביות של חניכים (לינק שצריך לעוף מפה!)</a></b></p>`);
 </script>
 </body>

@@ -10,6 +10,7 @@ var urlParams = new URLSearchParams(location.search);
         var admin = 0;
         var userName = "";
         var userId = -9;
+        var branch = "";
 
         async function getUserDetails()
         {    
@@ -20,7 +21,7 @@ var urlParams = new URLSearchParams(location.search);
                 loggedUserId = user.id;
                 userName = user.name;
                 admin = user.admin;
-                branch = user.Branch;
+                branch = user.branch;
 
                 //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
                 document.getElementById("instNameHtml").innerHTML = userName;
@@ -133,14 +134,11 @@ function loadRakazim()
                 chk.parentNode.nextSibling.style.color = rightColor;
             }
  
-            async function sleep(ms) {
-                return new Promise(resolve => setTimeout(resolve, ms));
-            }
-
+     
             async function instName()
             {
                 await getUserDetails();
-                await sleep(1000);
+                 
                 if (admin < 1)
                 {
                     if (instID != loggedUserId)
@@ -199,6 +197,11 @@ function loadRakazim()
 
 </head>
 <body onLoad="instName();">
+    </tr>
+     <table style="border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;">
+        <tr><td><img src="./style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px;"/>
+        </td><td><h1>כנפים של קרמבו - אפליקציית 'השתתפות'</td></h1><br></table>
+    </tr>
 
     <input type="text" style="visibility: hidden" name="InstructorID" id="InstructorID"><h3>
     החניכים של המדריך '<span id="instNameHtml"></span> (מסניף '<span id='branch'></span>'):</h3><br>

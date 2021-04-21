@@ -1,7 +1,7 @@
 {
     "sqltools.connections": [
         {
-            "database": ".\\Participation/Participation.db",
+            "database": ".\\Participation/‏‏Participation2.db",
             "dialect": "SQLite",
             "name": "participation"
         }

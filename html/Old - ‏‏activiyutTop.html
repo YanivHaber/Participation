@@ -1,18 +1,13 @@
 <html lang='heb' dir='rtl'>
     <head>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
-<script src="/html/protegeActivity.js"></script>
-
 
 <script language="javascript">
-var instID = -1;
-const queryString = window.parent.location.search;
-
+//var instID = -1;
+const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
-var stam = window.location.hash;
-instID = urlParams.get('instID');
-
-
+const instID = urlParams.get('instID');
+var html = getMembers(instID);
 var instructor = "";
 var admin = 0;
 var userName = "";
@@ -22,7 +17,6 @@ var branch = "";
 
 async function getUserDetails() 
 {    
-    
     await $.get("/userName", "", function(json)
     {
         user = JSON.parse(json);
@@ -31,16 +25,12 @@ async function getUserDetails()
         admin = user.admin;
         branch = user.branch;
 
-        createBasis();
-
         //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
-        //document.getElementById("instNameHtml").innerHTML = userName;
+        document.getElementById("instNameHtml").innerHTML = userName;
         if (admin == 1) loadRakazim();
         //else alert("you are NOT marked as 'admin' user thus cannot view this page...");
         else getMembersToClient(instID);
-        //document.getElementById("branch").innerHTML = branch;
-
-        var html = getMembers(instID);
+        document.getElementById("branch").innerHTML = branch;
     });
 };
 
@@ -66,8 +56,7 @@ function getMembersToClient(instID)
     var url = `/getParticipation?instID=`+instID;
     var html = `<th class="straight"><div><span></span></div></th>`;
 
-    getMembers();
-    /* $.get(url, "", function (json2) 
+    $.get(url, "", function (json2) 
     {
         //alert(json2);
         //alert("got participation for "+instID);
@@ -103,7 +92,6 @@ function getMembersToClient(instID)
                 var members = new Array();
                 var memberInsideAlready = new Array();
 
-                // yanivicent!
                 //$('#myMembers tbody tr').remove();
 
                 //alert("compare to each of the "+part.length+" participants' dates to show participation for each...");
@@ -154,8 +142,7 @@ function getMembersToClient(instID)
 
                     html += "</tr>";
                 }
-                if (admin)
-                    document.getElementById('theHtml').innerHTML = `<table id=\"partTable\">`+html+`</table>`;    
+                document.getElementById('myMembers').innerHTML = "<table id=\"partTable\">"+html+"</table>";    
                 //document.getElementById("createbutt").style.visibility = "visible";
             }
             catch (e)
@@ -164,61 +151,37 @@ function getMembersToClient(instID)
             }
         });
     });
-            */
 
 }
 
     //
     // Get the HTML that lists all members of a selected rakaz (inst)!
     //
-
     function getMembers(inst)
     {
         // inst is good!
         $.get("/membersForInstructor?instID="+inst, function (json2)
         {
             // get the HTML that lists all members and add some button function to it!
-            
-            
-            if (json2 != "none!")
-            {
-                var html = "<script src=\"/html/protegeActivity.js\"></sc"+"ript>";
-                html += "<scr"+"ipt src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js\"></sc"+"ript>"
-                html += drawMembers(json2, inst);
-                        html += "<div dir='rtl'><h3>הסר את ה-V מחניכים שברצונך להפוך ללא אקטיביים ולחץ על כפתור 'שמור'...</h3><br><button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">שמור</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button><button id=\"selAll\" type=\"button\" onclick=\"activateAll()\" value=\"\">הפוך כולם ל'פעילים'!!</button></div>";
-                //window.parent.document.getElementById("main").srcdoc = "<button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">סמן חניכים והקש כאן כדי להפכם ל'לא אקטיביים'...!</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button>"+reHtml;
-                //window.parent.document.getElementById("main").document.innerHTML =  html;
-                if (user.admin == "1")
-                {
-                    var tab =  window.parent.document.getElementById("main");
-                    if (tab != null)
-                        tab.srcdoc = html;
-                  }
-                else
-                {
-                    document.write(html);
-                }
-            }
-            else
-            {
-                var html = "<span dir='rtl'><h3>לא מסומנים כל חניכים למדריך זה...:(</h3></span>";
-                //window.parent.document.getElementById("main").srcdoc = "<button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">סמן חניכים והקש כאן כדי להפכם ל'לא אקטיביים'...!</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button>"+reHtml;
-                window.parent.document.getElementById("main").srcdoc =  html;
-  
-            }
-            //document.getElementById("theHtml").innerHTML = html;
+            var reHtml =  drawMembers(json2, inst);
+            var html = "<h3>הסר את ה-V מחניכים שברצונך להפוך ללא אקטיביים ולחץ על כפתור 'שמור'...</h3><br><button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">שמור</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button><button id=\"selAll\" type=\"button\" onclick=\"activateAll()\" value=\"\">הפוך כולם ל'פעילים'!!</button>"+reHtml;
+            //window.parent.document.getElementById("main").srcdoc = "<button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">סמן חניכים והקש כאן כדי להפכם ל'לא אקטיביים'...!</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button>"+reHtml;
+            window.parent.document.getElementById("main").srcdoc =  html;
+            //window.parent.document.getElementById("main").dir = "rtl";
         });
     }
+
+
 
     function drawMembers(json2, inst)
     {
         // json2 is good!
         try
         {
-            var clientHTML = `<form id="form1" action="/editMembers" dir="rtl" method="get"><table><tr><th>אקטיבי?</th><th>שם</tr>`;
+            var clientHTML = `<html lang='heb' dir='rtl'><head><script src="/html/protegeActivity.js"></sc`+`ript><script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></sc`+`ript></head><body><form id="form1" action="/editMembers" method="get"><table><tr><th>אקטיבי?</th><th>שם</tr>`;
             var members = JSON.parse(`${json2}`); 
             members.forEach(function(m) {
-                        var isChecked = ((m.Active == "1" || m.Active == "TRUE")? "checked": "");
+                        var isChecked = (m.Active == "1"? "checked": "");
                     clientHTML += `<tr><td><input id="ID-${m.memberID}" name="ID-${m.memberID}" type="checkbox" onclick="setChangeVars('ID-${m.memberID}')" ${isChecked}></td><td>${m.name}</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>`;
             });
            clientHTML += "</tr></table></form></body></html>";
@@ -262,10 +225,8 @@ function setChangeVars(checkId)
 
     async function doSelect(id)
     {
-        var html = await getMembers(id);
-        table = window.parent.document.getElementById("main");
-        if (table != null)
-            table.srcdoc = html;
+        
+        window.parent.document.getElementById("main").srcdoc = html;
     }
 
     function loadData(rakazimArray)
@@ -281,52 +242,50 @@ function setChangeVars(checkId)
             });
             html += "</select>";
 
-            document.getElementById("myMembers").innerHTML = html;
             $("#rakazim").innerHTML = html;
+
+            document.getElementById("selector").innerHTML = html;
     }
         </script>
     </head>
-    <body dir='rtl' onload="getUserDetails()">
+    <body onload="getUserDetails();">
 
     <script language="javascript">
         
-        function createBasis()
-        {
-            document.write(`<div dir="rtl"> המשתמש שכרגע מחובר הינו הרכז מסניף '${user.branch}'</div>:<br>`);
-            drawElements();
-        }
+        document.write(`המשתמש שכרגע מחובר הינו: '<span id="instNameHtml"></span> (מסניף '<span id='branch'></span>'):<br>`);
         async function drawElements()
         {
-            //await getUserDetails();
+            await getUserDetails();
             if (admin == 1)
             {
                 document.write(`<div dir="rtl"><h3>בחר מדריך כדי לבחון אקטיביות חניכיו.</h3><br>`);
-                document.write(`בחר מדריך: <span id="myMembers">?</span></div>`);
+                document.write(`<span dir="rtl">בחר מדריך: <span id="selector">?</span></div>`);
             }
             else
             {
-                document.write(`המשתמש שכרגע מחובר הינו הרכז מסניף '<span id='branch'></span>'):<br>`);
+                document.write(`המשתמש שכרגע מחובר הינו: '<span id="instNameHtml"></span> (מסניף '<span id='branch'></span>'):<br>`);
             }
         }
-        
-        
+        drawElements();
         </script>
         
             
-            <div id="theHtml">
-            <table border=0 id="main">
+            
+            <table border="0" id="myMembers" >
+                    <tbody>
                         <tr>
                             <th></th>
                         </tr>
                         <tr>
                             <td></td>
                         </tr>
-                    </div>
-            </table>
-            <div>
+                        
+                    </tbody>
+                </table>
+
 
         
                 
-    </body>
+    </!--body>
 </html>
 

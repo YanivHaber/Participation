@@ -1,7 +1,7 @@
 {
   "name": "myfirst",
   "version": "1.0.0",
-  "description": "",
+  "description": "This project is for Krembo for instructors",
   "dependencies": {
     "body-parser": "^1.19.0",
     "connect-ensure-login": "^0.1.1",
@@ -21,6 +21,7 @@
     "passport-strategy": "^1.0.0",
     "read-excel-file": "^4.0.1",
     "rootpath": "^0.1.2",
+    "selenium-webdriver": "^4.0.0-beta.1",
     "sqlite3": "^5.0.0",
     "utf8": "^3.0.0"
   },
@@ -29,5 +30,15 @@
     "start": "node instructors.js"
   },
   "author": "yaniv",
-  "license": "ISC"
+  "license": "ISC",
+  "main": "Instructors.js",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YanivHaber/Participation.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YanivHaber/Participation/issues"
+  },
+  "homepage": "https://github.com/YanivHaber/Participation#readme"
 }
