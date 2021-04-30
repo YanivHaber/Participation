@@ -2,7 +2,7 @@ const REALLYSENDALLMAILS = false;
 const REALLYSENDALLMAILS_INWARD = true;
 const AMOUNT_DAYS_OF_LAST = 14;
 const querystring = require('querystring');
-const DB_NAME = "‏‏Participation2.db";
+const DB_NAME = "PartDB.db";
 
 const express = require('express');
 const sqlite3 = require('sqlite3');
@@ -33,7 +33,7 @@ const { Console } = require('console');
         //For now only support Yaniv/king
 
         // check user\pw against db:
-        let ret = await query("select * from users where username = \"" + username + "\"");
+        let ret = await query("select * from users where username = LOWER(\"" + username + "\")");
 
         if (ret.length > 0 && ret[0].password == password) 
         {
@@ -48,8 +48,9 @@ const { Console } = require('console');
         else 
         {
             // login failure!
-            res.redirect(`http://localhost:1000/html\login.html?user=`+username);
-            return;// doneCallback("Error! wrong user and/or password!", null);
+            //res.redirect(`HTTP://localhost:1000/html/badAuth.html`)
+            //res.redirect(`http://localhost:1000/html\login.html?user=`+username);
+            doneCallback("Error in login: wrong user and/or password!", null);
         }
 
     }));
@@ -480,12 +481,8 @@ function sendMail(userName, msgHtml, subject, mailaddress)
         service: 'gmail',
         auth: 
         {
-/*            user: 'yaniv.haber@gmail.com',
-            pass: 'Y2a7niv!8' 
-            user: 'krembo@krembo.org.il',
-            pass: 'Wings2020' */
-            user: 'james@bond.com',
-            pass: ',yPass'
+          user: 'yaniv@krembo.org.il',
+            pass: 'Omeryoav25'
 
         }
     });
@@ -1282,7 +1279,7 @@ app.get('/getInactiveUsers', async (req, res) => {
         // no changes. just get list of in-active...
         console.log("listing all in-active users!");
         res.header("Content-Type", "text/html; charset=utf-8");
-        let rows = await query(`select * from members where active <> "TRUE"`);
+        let rows = await query(`select * from members where active <> '1'`);
 
         var retArray = "[";
         try {
@@ -1850,7 +1847,7 @@ function csvNextLine(fileName)
     var stream = fs.createWriteStream(fileName);
     tream.once('open', function(fd) 
     {
-    stream.write("\n");
+        stream.write("\n");
         stream.end();
     });
 }
@@ -1875,7 +1872,7 @@ app.get('/replacePassword', async (req, res) =>
     var newPass = req.query.newPassword;
     var user = req.query.user;
 
-    if (db == null) db = new sqlite3.Database('C:\\develop\\Node.js\\Participation\\'+DB_NAME, (err) => {
+    if (db == null) db = new sqlite3.Database(DB_NAME, (err) => {
         if (err) 
         {
             console.log("error connecting to db...:"+err);
@@ -1903,7 +1900,7 @@ app.get('/replacePassword', async (req, res) =>
 app.get('/changePassword', async (req, res) => 
 {
     var user = req.user.id;
-    if (db == null) db = new sqlite3.Database('C:\\develop\\Node.js\\Participation\\'+DB_NAME, (err) => {
+    if (db == null) db = new sqlite3.Database(DB_NAME, (err) => {
         if (err)
         {
             console.log("error connecting to db...:"+err);

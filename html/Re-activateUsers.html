@@ -43,11 +43,17 @@ async function getMembers()
 
 function drawMembers(json)
 {
-    var membersHtml = "<table border='1'><tr><th>שם</th><th>סניף</th><th>הפוך אקטיבי!</th></tr>";
-
-    try 
+  try 
+  {
+    var members = JSON.parse(json);
+    var membersHtml;
+    if (members.length == 0)
     {
-        var members = JSON.parse(json);
+      membersHtml = `<b>אין חניכים לא אקטיביים!</b>`;
+    }
+    else
+    {
+      membersHtml = "<table border='1'><tr><th>שם</th><th>סניף</th><th>הפוך אקטיבי!</th></tr>";
 
         var userNumber = 1;
         members.forEach(m => 
@@ -56,9 +62,11 @@ function drawMembers(json)
             userNumber++;
         });
         membersHtml += "</table>";
-        memHtml = document.getElementById("membersTable");
-        if (memHtml) memHtml.innerHTML = membersHtml;
         //document.getElementById("submitButt").style.visibility = "visible";
+      }
+      memHtml = document.getElementById("membersTable");
+        if (memHtml) memHtml.innerHTML = membersHtml;
+
     }
     catch(e)
     {

@@ -52,6 +52,7 @@ function loadRakazim()
         try 
         {
             var rakazimArray = JSON.parse(json);
+            rakazimArray = rakazimArray.sort(compareRakazim);
             loadData(rakazimArray);
         }
         catch(e)
@@ -60,6 +61,17 @@ function loadRakazim()
         }
     });
 }
+
+function compareRakazim(a,b)
+    {
+        if (a.snif == " " || a.snif == "") return 100;
+        if (b.snif == " " || b.snif == "") return -100;
+        if(a.snif.substring(0,1) > b.snif.substring(0,1))
+            return 1;
+        else 
+        return -1;
+    }
+
 
 function getMembersToClient(instID)
 {        
@@ -277,7 +289,10 @@ function setChangeVars(checkId)
     
             $.each(rakazimArray, function (i, value) 
             {
-                html += `<option  id="${rakazimArray[i].id}" value="+rakazimArray[i].snif">${rakazimArray[i].snif}</option>`;
+                if (rakazimArray[i].snif.length > 0)
+                {
+                    html += `<option  id="${rakazimArray[i].id}" value="+rakazimArray[i].snif">${rakazimArray[i].snif}</option>`;
+                }
             });
             html += "</select>";
 
@@ -300,8 +315,8 @@ function setChangeVars(checkId)
             //await getUserDetails();
             if (admin == 1)
             {
-                document.write(`<div dir="rtl"><h3>בחר מדריך כדי לבחון אקטיביות חניכיו.</h3><br>`);
-                document.write(`בחר מדריך: <span id="myMembers">?</span></div>`);
+                document.write(`<div dir="rtl"><h3>בחר סניף כדי לבחון אקטיביות חניכיו.</h3><br>`);
+                document.write(`בחר סניף: <span id="myMembers">?</span></div>`);
             }
             else
             {

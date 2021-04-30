@@ -303,7 +303,7 @@ async function getMembersToClient(instID)
                     }
                        
 
-                    if (!part[p].dates[part[p].dates.length - 1].participated)
+                    if (!part[p].dates[0].participated)
                     {
                         html += (p+1)+". <font color='red'>"+currName+"</font></th>";
                     }
