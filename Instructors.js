@@ -1,5 +1,5 @@
-const REALLYSENDALLMAILS = false;
-const REALLYSENDALLMAILS_INWARD = true;
+const REALLYSENDALLMAILS = true;
+const REALLYSENDALLMAILS_ONLY_INWARD = true;
 const AMOUNT_DAYS_OF_LAST = 14;
 const querystring = require('querystring');
 const DB_NAME = "PartDB.db";
@@ -362,11 +362,11 @@ app.use('/', (req, res, next) => {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 async function sendFormalMail(userName, msgHtml, subject, mailaddress)
 { 
-    if (!sendMails)
+    if (sendMails)
     {
-        if ( REALLYSENDALLMAILS_INWARD )
+        if ( REALLYSENDALLMAILS_ONLY_INWARD )
         {
-            mailaddress += ", yaniv@krembo.org.il, gil@krembo.org.il";
+            mailaddress = "yaniv@krembo.org.il, gil@krembo.org.il";
         }
         else
         {
@@ -387,15 +387,15 @@ async function sendFormalMail(userName, msgHtml, subject, mailaddress)
         ciphers:'SSLv3'
         },
         auth: {
-            user: 'yaniv@krembo.org.il',
-            pass: 'Omeryoav25'
+            user: 'participation@krembo.org.il',
+            pass: 'Yaniv123456'
         }
     });
 
 // setup e-mail data, even with unicode symbols
     var mailOptions = 
     {
-        from: 'yaniv@krembo.org.il', // sender address (who sends)
+        from: 'participation@krembo.org.il', // sender address (who sends)
         to:mailaddress, // list of receivers (who receives)
         subject: subject, // Subject line
         html: `<html dir="rtl">` + msgHtml + `</html>` // html body
@@ -413,8 +413,13 @@ async function sendFormalMail(userName, msgHtml, subject, mailaddress)
             }
             console.log('Message sent: ' + info.response);
         });
+        console.log("mail with meesage was sent to "+mailaddress+ "!");
     }
-    console.log("mail with meesage was sent to "+mailaddress+ "!");
+    else
+    {
+            console.log("NOT SENDING ANY MAILS!!!");
+    }
+    
 
 
 }
@@ -458,11 +463,11 @@ async function sendFormalMail(userName, msgHtml, subject, mailaddress)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 var sendToDistrictManagers = false;
 var yanivReporter = true;
-var sendMails = false;
+var sendMails = true;
 //////////////////////////////////////////////////////////////////////////////////////
 function sendMail(userName, msgHtml, subject, mailaddress)
 { 
-    if (!sendMails)
+    if (sendMails)
     {
         // do not send mails BUT maybe only inward ones...
 
@@ -1386,7 +1391,8 @@ app.get('/membersForInstructor', async (req, res) => {
     }
 });
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-app.get('/sendMessage', async (req, res) => {
+app.get('/sendMessage', async (req, res) => 
+{
     var msg = req.query["sendMsg"];
     instID = req.query.instID;
 

@@ -190,8 +190,6 @@ function getMembersToClient(instID)
         $.get("/membersForInstructor?instID="+inst, function (json2)
         {
             // get the HTML that lists all members and add some button function to it!
-            
-            
             if (json2 != "none!")
             {
                 var html = "<script src=\"/html/protegeActivity.js\"></sc"+"ript>";
@@ -291,7 +289,7 @@ function setChangeVars(checkId)
             {
                 if (rakazimArray[i].snif.length > 0)
                 {
-                    html += `<option  id="${rakazimArray[i].id}" value="+rakazimArray[i].snif">${rakazimArray[i].snif}</option>`;
+                    html += `<option  id="${rakazimArray[i].id}" value=${rakazimArray[i].snif}>${rakazimArray[i].snif}</option>`;
                 }
             });
             html += "</select>";
