@@ -1,6 +1,6 @@
 <html dir='rtl' lang='heb'>
     <head>
-      ><title>החזר אקטיביות חניכים</title>
+      ><title>החזר אקטיביות פעילים</title>
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script language="javascript">
 
@@ -49,7 +49,7 @@ function drawMembers(json)
     var membersHtml;
     if (members.length == 0)
     {
-      membersHtml = `<b>אין חניכים לא אקטיביים!</b>`;
+      membersHtml = `<b>אין פעילים לא אקטיביים!</b>`;
     }
     else
     {
@@ -106,7 +106,7 @@ function drawMembers(json)
     
     <input type="text" style="visibility:visible" name="activateUsers" id="activateUsers" value="" onclick="submit">
  
-<h1>חניכים אשר סומנו כ'לא אקטיביים' הינם:</h1>
+<h1>פעילים אשר סומנו כ'לא אקטיביים' הינם:</h1>
 
     <div id="membersTable"></div>
     <input type="submit" value="Submit"></button>

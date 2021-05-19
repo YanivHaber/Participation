@@ -28,7 +28,7 @@ function notify(id, userName, password, mail)
         from: 'yaniv@krembo.org.il',
         to: mail,
         subject: 'Account was created for you in the Krembo user participation app!',
-        html: '<html lang="he" dir="rtl">נוצר עבורך חשבון באפליקצייה שמאפשרת שמירת דוחות נוכחות החניכים בפעולות! כדי להיכנס לאפליקציה (מהמחשב או הנייד) היכנס ללינק זה: <br>http://yanivh-lapton:1000/html/instructorLinks.html<br><br><h2>(עדיף לחכות למצב שיניב יהיה במשרד עם לפטופ מחובר לרשת לפני שמקליקים...)</h2>'    
+        html: '<html lang="he" dir="rtl">נוצר עבורך חשבון באפליקצייה שמאפשרת שמירת דוחות נוכחות הפעילים בפעולות! כדי להיכנס לאפליקציה (מהמחשב או הנייד) היכנס ללינק זה: <br>http://yanivh-lapton:1000/html/instructorLinks.html<br><br><h2>(עדיף לחכות למצב שיניב יהיה במשרד עם לפטופ מחובר לרשת לפני שמקליקים...)</h2>'    
     };
 
     mailOptions.html += "<br><br> שם משתמש וסיסמא ראשונית נוצרו לכם כך:<br>";

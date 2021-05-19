@@ -79,7 +79,7 @@ function getMembersToClient(instID)
             for (k = dates.length - 1; k > -1; k--)
             {
                 var totalAmount = Number(dates[k].yes) + Number(dates[k].no);
-                html += "<td style=\"border:2px solid gray;\">כמות חניכים כוללת:"  +totalAmount+ "<br> היו: <font color=\"ForestGreen\">"+dates[k].yes+"</font>\nנעדרו: <font color=\"red\">"+dates[k].no + "</font>";
+                html += "<td style=\"border:2px solid gray;\">כמות פעילים כוללת:"  +totalAmount+ "<br> היו: <font color=\"ForestGreen\">"+dates[k].yes+"</font>\nנעדרו: <font color=\"red\">"+dates[k].no + "</font>";
             }
             html += "</tr>";
 
@@ -164,8 +164,8 @@ function getMembersToClient(instID)
         {
             // get the HTML that lists all members and add some button function to it!
             var reHtml =  drawMembers(json2, inst);
-            var html = "<h3>הסר את ה-V מחניכים שברצונך להפוך ללא אקטיביים ולחץ על כפתור 'שמור'...</h3><br><button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">שמור</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button><button id=\"selAll\" type=\"button\" onclick=\"activateAll()\" value=\"\">הפוך כולם ל'פעילים'!!</button>"+reHtml;
-            //window.parent.document.getElementById("main").srcdoc = "<button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">סמן חניכים והקש כאן כדי להפכם ל'לא אקטיביים'...!</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button>"+reHtml;
+            var html = "<h3>הסר את ה-V מפעילים שברצונך להפוך ללא אקטיביים ולחץ על כפתור 'שמור'...</h3><br><button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">שמור</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button><button id=\"selAll\" type=\"button\" onclick=\"activateAll()\" value=\"\">הפוך כולם ל'פעילים'!!</button>"+reHtml;
+            //window.parent.document.getElementById("main").srcdoc = "<button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">סמן פעילים והקש כאן כדי להפכם ל'לא אקטיביים'...!</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button>"+reHtml;
             window.parent.document.getElementById("main").srcdoc =  html;
             //window.parent.document.getElementById("main").dir = "rtl";
         });
@@ -201,7 +201,7 @@ function setChangeVars(checkId)
     var chk = document.getElementById(checkId);
     if (chk.checked) 
     {
-        alert("לא ניתן להשתמש בדף זה כדי לסמן חניך חזרה כאקטיבי! בצע refresh כדי לחזור לראות מצב אקטיביות נוכחי, או בקש מאדמיניסטרטור של המערכת להפוך חניכים חזרה לאקטיביים, אם יש בכך צורך.");
+        alert("לא ניתן להשתמש בדף זה כדי לסמן חניך חזרה כאקטיבי! בצע refresh כדי לחזור לראות מצב אקטיביות נוכחי, או בקש מאדמיניסטרטור של המערכת להפוך פעילים חזרה לאקטיביים, אם יש בכך צורך.");
         chk.checked = false;
         return;
     }

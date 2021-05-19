@@ -177,7 +177,7 @@ function selectedInstructor()
 
 }
 //
-// הצג את החניכים של מדריך זה בטבלת השתתפות!
+// הצג את הפעילים של מדריך זה בטבלת השתתפות!
 //
 async function getMembersToClient(instID)
 {
@@ -234,7 +234,7 @@ async function getMembersToClient(instID)
                 var select = document.getElementById("rakazim");
                 var instName = select[select.selectedIndex].innerHTML; // first load of page! no selection yet...
 
-                document.getElementById("messages").innerHTML =  "הפעולות של "+instName +":<br><font size='-1'>(שמם של חניכים שלא השתתפו בפעולה <u>האחרונה</u>, יופיע ב<font color='red'>אדום</font>...)";
+                document.getElementById("messages").innerHTML =  "הפעולות של "+instName +":<br><font size='-1'>(שמם של פעילים שלא השתתפו בפעולה <u>האחרונה</u>, יופיע ב<font color='red'>אדום</font>...)";
                 
             }
             //let activities = await getActivityDetails(dates);
@@ -272,7 +272,7 @@ async function getMembersToClient(instID)
                     var totalAmount = Number(dates[o].yes) + Number(dates[o].no);
                     // get activity details:
                     var yes = dates[o].yes;
-                    html += "<td style=\"border:2px solid gray;\">כמות חניכים כוללת:" + totalAmount + "<br> היו: <font color=\"ForestGreen\">" + yes + "</font><br>נעדרו: <font color=\"red\">" + dates[o].no + "<br></font><span dir='ltr' id='Activity'+k><br>"+activityHtml+"<span>";
+                    html += "<td style=\"border:2px solid gray;\">כמות פעילים כוללת:" + totalAmount + "<br> היו: <font color=\"ForestGreen\">" + yes + "</font><br>נעדרו: <font color=\"red\">" + dates[o].no + "<br></font><span dir='ltr' id='Activity'+k><br>"+activityHtml+"<span>";
                 }
             }
             html += "</tr>";

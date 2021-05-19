@@ -126,7 +126,7 @@ function drawMembers(json2, inst)
 {    
     getUserDetails();
     
-    var membersHtml = `<table><br><tr><th>חניך</th><th>אקטיבי?</th></tr><br> סה"כ חניכים אקטיביים (בשכבה 'שכבהפה'): <span id="activeMembers"></span><br>חניכים שהפסיקו השתתפותם (הפכו ל'לא אקטיביים'): <span id="nonActive"></span><br>`;
+    var membersHtml = `<table><br><tr><th>חניך</th><th>אקטיבי?</th></tr><br> סה"כ פעילים אקטיביים (בשכבה 'שכבהפה'): <span id="activeMembers"></span><br>פעילים שהפסיקו השתתפותם (הפכו ל'לא אקטיביים'): <span id="nonActive"></span><br>`;
 
     try 
     {

@@ -91,10 +91,27 @@ async function isCheckNow(dist)
     {
         distDate = new Date("8/27/1970");
     }
-    var diffFromLastCheck = Math.round((today - new Date(distDate)) / FULL_DAY);
+    var diffFromLastCheck = Math.round(((new Date()).getTime() - weeklyDate.getTime()) / FULL_DAY);
     if (diffFromLastCheck < 7) return false;
     else return true;
 }
+//////////////////////////////////////////////////////////////////////////////////////
+async function isCheckNow2()
+{
+    today = new Date();
+    // check last time check for district:
+    lastCheckSql = "select membersCheckDate from districts where Name='weekly'";
+    var lastCheck = await query(lastCheckSql);
+    var lastCeckDate = lastCheck[0].membersCheckDate;
+    if (lastCeckDate == "") 
+    {
+        distDate = new Date("5/22/2021");
+    }
+    var diffFromLastCheck = Math.round((today - new Date(lastCeckDate)) / FULL_DAY);
+    if (diffFromLastCheck <= 7) return false;
+    else return true;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////
 // run this check will run for ALL districts (once a week)!
 async function checkMembersAvailability()
@@ -132,7 +149,7 @@ async function checkMembersAvailability()
             var resultArray = new Array();
 
             // check dates of all members to assert availability in last 2 weeks!
-                            var today = Intl.DateTimeFormat('en-US').format(new Date());
+                            var today = Intl.DateTimeFormat('he-IL').format(new Date());
 
             for (i = 0; i < ret.length; i++)
             {
@@ -177,10 +194,13 @@ async function checkMembersAvailability()
             }
             // update 'last check date' in DB...
         }
-        // write when district was tested
-        var addSql = `UPDATE districts SET membersCheckDate='${today}' WHERE id='${dist}'`;
+        if (dist != 8)
+        {
+            // write when district was tested
+            var addSql = `UPDATE districts SET membersCheckDate='${today}' WHERE id='${dist}'`;
 
-        await query(addSql);
+            await query(addSql);
+        }
 
         // do not return those results as mails where sent instead! see alertMissingMembers
         //res.write(returnResult);
@@ -225,7 +245,7 @@ async function alertMissingMembers(myDist, memberArr, instID)
     var instName = instRes[0].Name;
 
     // now send alerting mail:
-    var subject = `: שים לב: החניכים הבאים לא היו כבר שבועיים או יותר!`;
+    var subject = `: שים לב: הפעילים הבאים לא היו כבר שבועיים או יותר!`;
     var msgHtml = `היי,<br><b><font color='red'>מייל זה יישלח בעתיד ל ${distMgrName} מנהל מחוז ${myDistName}</font></b><br><br><font color='blue'>:לתשומת לבך הפעילים הבאים (של המדריך ${instName})  :לא הגיעו לפעילות בשבועיים האחרונים (בהן הייתה פעילות של הקבוצה)</font><br>`;
 
     for (p = 0; p < missingNames.length; p++)
@@ -293,7 +313,7 @@ app.get('/forgotPassword', async (req, res) =>
 async function countRequests(user)
 {
     if (typeof(loginAmount) === "undefined") loginAmount = 0;
-    if (typeof(loginDivider) === "undefined") loginDivider = 100;
+    if (typeof(loginDivider) === "undefined") loginDivider = 1;//100;
 
     var u = await query("select * from users where id="+user);
     var username = u[0].username;
@@ -366,7 +386,7 @@ async function sendFormalMail(userName, msgHtml, subject, mailaddress)
     {
         if ( REALLYSENDALLMAILS_ONLY_INWARD )
         {
-            mailaddress = "yaniv@krembo.org.il, gil@krembo.org.il";
+            mailaddress = "yaniv@krembo.org.il";//, gil@krembo.org.il";
         }
         else
         {
@@ -719,12 +739,12 @@ app.get('/myTeam', async (req, res) =>
     totalHtml += `<table style="border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;">`;
     totalHtml += `<tr><td><img src="./html/style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px;"/>`;
     totalHtml += `<tr></td><td><h1>כנפים של קרמבו - אפליקציית 'השתתפות'</td></h1></tr>`;
-    totalHtml +=  `<tr><td>אלו החניכים של ${name[0].Name} מסניף '${name[0].Branch}':</span></h1><br><div style="position: fixed; right: 150px;"></span></div></tr></table>`;
+    totalHtml +=  `<tr><td>אלו הפעילים של ${name[0].Name} מסניף '${name[0].Branch}':</span></h1><br><div style="position: fixed; right: 150px;"></span></div></tr></table>`;
     totalHtml += `<input type="text" style="visibility: hidden" name="InstructorID" id="InstructorID">`;//<h3>`;
     totalHtml += `<br>`;
 
     //totalHtml += `<section style="direction: rtl;  border:50px; border-width: 5px; border-style: solid; border-color: navy; background-color: "#4a90e2"><img src="http://`+req.get("host")+`\/html\/לוגו_כנפיים_של_קרמבו.jpg" alt='כנפים של קרמבו' style="height: 150px; width: 150px;"></img>`;
-    //totalHtml +=  `<br>אלו החניכים של ${name[0].Name} מסניף '${name[0].Branch}:'</span></h1><br><div style="position: fixed; right: 150px;"></span></div></section>`;
+    //totalHtml +=  `<br>אלו הפעילים של ${name[0].Name} מסניף '${name[0].Branch}:'</span></h1><br><div style="position: fixed; right: 150px;"></span></div></section>`;
     
     totalHtml += '<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>\n';
     totalHtml +=  `<script src="./html/protegeActivity.js"></script>\n`;
@@ -752,7 +772,7 @@ app.get('/myTeam', async (req, res) =>
     layersHtml += "</select></form>";
     totalHtml += "var layersHtml = \""+layersHtml + "\";";
     
-    totalHtml += `\ndocument.writeln("<br>סנן חניכים לפי שכבת גיל: "+layersHtml);`;
+    totalHtml += `\ndocument.writeln("<br>סנן פעילים לפי שכבת גיל: "+layersHtml);`;
     totalHtml += `\n var user = JSON.parse('{ "yaniv":"haber", "name": "${name[0].Name}", "id": "${req.user.id}", "branch": "${name[0].Branch}"`;
     
     admin = await query("select * from users where id="+req.user.id); 
@@ -992,7 +1012,7 @@ app.get('/retActivityLink', async (req, res) =>
     if (ret[0].admin == 1)
     {
         // admin users:
-        res.write("<p><b><a href=\"/html/re-activateUsers.html?instid=6\" target=\"_blank\">החזר אקטיביות של חניכים</a></b></p>");
+        res.write("<p><b><a href=\"/html/re-activateUsers.html?instid=6\" target=\"_blank\">החזר אקטיביות של פעילים</a></b></p>");
     }
     else
     {
@@ -1011,12 +1031,12 @@ app.get('/htmlForUsers', async (req, res) => {
     if (ret[0].admin == 1)
     {
         // admin users:
-        res.write("<p>שלום '"+ret[0].username+"'</p><b><a href=\"/html/Participation.html\" target=\"_blank\">צפיה בהשתתפות החניכים שלך</a></b></p>");
+        res.write("<p>שלום '"+ret[0].username+"'</p><b><a href=\"/html/Participation.html\" target=\"_blank\">צפיה בהשתתפות הפעילים שלך</a></b></p>");
     }
     else
     {
         // regular users:
-        res.write("<p>שלום '"+ret[0].username+"'</p><b><a href=\"/html/PartUser.html?user="+req.user.id+"\" target=\"_blank\">צפיה בהשתתפות החניכים שלך</a></b></p></html>");
+        res.write("<p>שלום '"+ret[0].username+"'</p><b><a href=\"/html/PartUser.html?user="+req.user.id+"\" target=\"_blank\">צפיה בהשתתפות הפעילים שלך</a></b></p></html>");
 
     }
     res.send();
@@ -1474,7 +1494,7 @@ app.get('/addParticipation', async (req, res) => {
     var instID = req.query.instID;
     var date = req.query.actDate;
     var paramCount = 0;
-    for (i = 0; i < 8000; i++) 
+    for (i = 0; i < 20000; i++) 
     {
         if (req.query["ID-" + i] != undefined) 
         {
@@ -1503,9 +1523,10 @@ app.get('/addParticipation', async (req, res) => {
             res.send();
             return;
         }
+        
         // first create such an activity...
-        actSql = "INSERT into Activity (Name, Type, subtype, InstructorID, Date) VALUES ("
-        actSql += `'`+escapeSingleApos(`${actName}`)+`', '`+escapeSingleApos(`${actType}`)+`', '`+escapeSingleApos(`${actSubtype}`)+`', "${instID}", "${date}")`;
+        actSql = "INSERT into Activity (Name, Type, subtype, InstructorID, Date, createdBy, createAt) VALUES ("
+        actSql += `'`+escapeSingleApos(`${actName}`)+`', '`+escapeSingleApos(`${actType}`)+`', '`+escapeSingleApos(`${actSubtype}`)+`', "${instID}", "${date}", "${instID}", "${date}")`;
         //actSql += `'`+escapeSingleApos(`'`+${actName}+`')+', '`+escapeSingleApos(`${actType})+`', '`+`escapeSingleApos(`${actSubtype}`)+`', "${instID}", "${date}")`;
         
         let rows0 = await query(actSql);
@@ -1520,7 +1541,7 @@ app.get('/addParticipation', async (req, res) => {
     addSql = "insert into Participation (InstructorID, Date, ParticipantID, participated, Activity) VALUES ";
     var firstVal = true;
 
-    if (queryParams.length == 0)
+    if (paramCount == 0)
     {
         res.write(`<html lang='heb' dir='rtl'><head><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head>`);
         res.write("<h1>לא ניתן לייצר פעולה עם <b>אפס</b> משתתפים!</h1></html>");
@@ -1640,9 +1661,70 @@ app.get('/deactivateUsers', async (req, res) =>
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Global variables:
 
+var weeklyDate = new Date();
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/getActivity', async (req, res) => 
 {
+    var check;
+    try
+    {
+        check = await isCheckNow2();
+        if (true)
+        {
+            // send weekly status report
+            var lastWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
+            var lastActivitiesSql = `select * from Activity`;
+
+            var acts = await query(lastActivitiesSql);
+            var newActivity = new Array();
+            for (var i = 0; i < acts.length - 1; i++)
+            {
+                var act = acts[i];
+                var now = today.getDate();
+                var actD = act.Date;
+
+                if ((new Date() - new Date(actD)) / (3600 *1000 *24) < 7)
+                {
+                    newActivity.push(act);
+                }
+            }
+            var msg = `found ${newActivity.length} new activity/ies!`;
+            console.log(msg);
+
+            // send a 'new activities' status report, ONCE per week!
+            if ((new Date() - weeklyDate)  / (3600 *1000 *24) >= 7)
+            {
+                weeklyDate = new Date();
+                
+                if (newActivity.length > 0)
+                {
+                    // send status weekly mail:
+                    var weeklyStatBody = `<html lang="heb" dir="rtl"><head><meta charset="UTF-8"></head><body>זהו מייל סטטוס שבועי בדבר פעולות שנוספו למערכת ההשתתפות: <br><br><table><tr><th style="width: 100px">פעולה</th><th style="width: 100px">תאריך</th><th style="width: 100px">נוצר ע"י</th>`;
+                    var act;
+                    for (var actIn = 0; actIn < newActivity.length; actIn++)
+                    {
+                        var act = newActivity[actIn];
+                        var instID = act.InstructorID;
+                        var sqlInst = "select Name from rakazim where ID="+instID;
+                        var instName = await query(sqlInst);
+
+                        weeklyStatBody += "<tr><td>" + act.Name + "</td><td>" + act.Date + "</td><td>" + instName[0].Name + "</td></tr>";
+                    }
+
+                    weeklyStatBody += "</table></body></html>";
+                    sendFormalMail("system", weeklyStatBody, "Weekly status of new activities", "");
+                }
+            }
+        }
+    }
+    catch(e)
+    {
+        console.log("Exception at line 1671: "+e);
+    }
+
+    // start getting activities with their details:
+
     var instructor = req.query.instID;
     var date = req.query.date;
     var point = req.query.point;

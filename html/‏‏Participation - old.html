@@ -154,7 +154,7 @@ function instName(ID)
 var dates;
 
 //
-// הצג את החניכים של מדריך זה בטבלת השתתפות!
+// הצג את הפעילים של מדריך זה בטבלת השתתפות!
 //
 async function getMembersToClient(instID)
 {
@@ -210,7 +210,7 @@ async function getMembersToClient(instID)
 
                     // get activity details:
                     var yes = dates[o].yes;
-                    html += "<td style=\"border:2px solid gray;\">כמות חניכים כוללת:" + totalAmount + "<br> היו: <font color=\"ForestGreen\">" + yes + "</font><br>נעדרו: <font color=\"red\">" + dates[o].no + "<br></font><span dir='ltr' id='Activity'+k><br>"+activityHtml+"<span>";
+                    html += "<td style=\"border:2px solid gray;\">כמות פעילים כוללת:" + totalAmount + "<br> היו: <font color=\"ForestGreen\">" + yes + "</font><br>נעדרו: <font color=\"red\">" + dates[o].no + "<br></font><span dir='ltr' id='Activity'+k><br>"+activityHtml+"<span>";
                 }
             }
         });
@@ -365,7 +365,7 @@ function sleep(ms) {
     <div style="direction: rtl; height:170px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;"><h1><img src="./style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px;"/>כנפים של קרמבו - אפליקציית 'השתתפות'
     </h1><br><div style="position: fixed; right: 150px;"><h3><img></div></span></h3></div>`
             
-    <h2>רישום השתתפות של חניכים של <span id="instName"></span>  מסניף '<span id="branch"></span>'</h2>
+    <h2>רישום השתתפות של פעילים של <span id="instName"></span>  מסניף '<span id="branch"></span>'</h2>
     <br>
     <script language="javascript">
     document.write("<span id='rakazSelector'></span>");

@@ -137,7 +137,7 @@ async function getMyUserDetails()
                 // get activity details:
                 var yes = dates[o].yes;
                 var no = dates[o].no;
-                html += "<td style=\"border:2px solid gray;\">כמות חניכים כוללת:" + totalAmount + "<br> היו: <font color=\"ForestGreen\">" + yes + "</font><br>נעדרו: <font color=\"red\">" + dates[o].no + "<br></font><span dir='ltr' id='Activity'+k><br>"+activityHtml+"<span>";
+                html += "<td style=\"border:2px solid gray;\">כמות פעילים כוללת:" + totalAmount + "<br> היו: <font color=\"ForestGreen\">" + yes + "</font><br>נעדרו: <font color=\"red\">" + dates[o].no + "<br></font><span dir='ltr' id='Activity'+k><br>"+activityHtml+"<span>";
             }
         }
         else
@@ -198,9 +198,14 @@ async function getMyUserDetails()
                 */
                 html += (p+1)+". ";
                 
-                
+                var former = null;
                 var ladstEv = part[p].dates[part[p].dates.length - 1].participated;
-                var former =  part[p].dates[part[p].dates.length - 2].participated;
+                if (part[p].dates.length > 1)
+                {
+                    former =  part[p].dates[part[p].dates.length - 2].participated;
+                }
+
+
                 
                 if (ladstEv || former)
                 {
@@ -217,6 +222,8 @@ async function getMyUserDetails()
                 cols = -1;
                 else
                 cols = dates.length - 1;
+                
+                // go over all possible dates
                 for (i= cols ; i > -1; i--)
                 {
                     var currDate = dates[i];
@@ -236,7 +243,8 @@ async function getMyUserDetails()
                         var fixedDayInd = i-1;
                         if (fixedDateInd < 0) fixedDateInd = 0;
                         if (d != dates[fixedDateInd].date && part[p].dates[dateInd].date != currDate.date)
-                             alert(part[p].member + "should be red!");
+                             //alert(part[p].member + "should be red!");
+                             sleep(200);
 
                         if (part[p].dates[dateInd].date == currDate.date) 
                         {
@@ -319,7 +327,7 @@ var partByMembers = new Array();
 var dates;
 
 //
-// הצג את החניכים של מדריך זה בטבלת השתתפות!
+// הצג את הפעילים של מדריך זה בטבלת השתתפות!
 //
 async function getMembersToClient(instID)
 {
@@ -415,8 +423,8 @@ function sleep(ms) {
         </table>
                     
         <div id="htmlAll">
-    <h2>רישום השתתפות של חניכים של <span id="instName"></span>  מסניף '<span id="branch"></span>'
-    <br><font size='-1'>( שמם של חניכים שלא השתתפו <U> בשתי הפעולות האחרונות</u> יופיעו <font color='red'>באדום</font>...)
+    <h2>רישום השתתפות של פעילים של <span id="instName"></span>  מסניף '<span id="branch"></span>'
+    <br><font size='-1'>( שמם של פעילים שלא השתתפו <U> בשתי הפעולות האחרונות</u> יופיעו <font color='red'>באדום</font>...)
     </font>
 </h2><br>
     <script language="javascript">

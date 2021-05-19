@@ -76,7 +76,7 @@ function getMembersToClient(instID)
                 for (k = dates.length - 1; k > -1; k--)
             {
                 var totalAmount = Number(dates[k].yes) + Number(dates[k].no);
-                html += "<td style=\"border:2px solid gray;\">כמות חניכים כוללת:"  +totalAmount+ "<br> היו: <font color=\"ForestGreen\">"+dates[k].yes+"</font>\nנעדרו: <font color=\"red\">"+dates[k].no + "</font>";
+                html += "<td style=\"border:2px solid gray;\">כמות פעילים כוללת:"  +totalAmount+ "<br> היו: <font color=\"ForestGreen\">"+dates[k].yes+"</font>\nנעדרו: <font color=\"red\">"+dates[k].no + "</font>";
             }
             html += "</tr>";
             try 
@@ -223,7 +223,7 @@ function createNew()
 </head>
 /<body onload="" dir="rtl">
 
-    <h2>רישום השתתפות של חניכים</h2>
+    <h2>רישום השתתפות של פעילים</h2>
     <br>
      <h3>בחר רכז:
          <div id="selector"></div>

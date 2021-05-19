@@ -32,7 +32,7 @@
 
                     document.getElementById("userName").innerHTML = userName;
 
-                    var html = `<center><h2>טבלת מנהלי מחוזות:</h2><table border="1" id="distManagers2" dir='rtl'><tr><td>שם</trd><td>מחוז</td><td>כמות סניפים</td><td>כמות חניכים כוללת</td></tr>`;
+                    var html = `<center><h2>טבלת מנהלי מחוזות:</h2><table border="1" id="distManagers2" dir='rtl'><tr><td>שם</trd><td>מחוז</td><td>כמות סניפים</td><td>כמות פעילים כוללת</td></tr>`;
     
                     $.get("/distManagers", "", function (json) 
                     {

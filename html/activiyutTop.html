@@ -102,7 +102,7 @@ function getMembersToClient(instID)
             for (k = dates.length - 1; k > -1; k--)
             {
                 var totalAmount = Number(dates[k].yes) + Number(dates[k].no);
-                html += "<td style=\"border:2px solid gray;\">כמות חניכים כוללת:"  +totalAmount+ "<br> היו: <font color=\"ForestGreen\">"+dates[k].yes+"</font>\nנעדרו: <font color=\"red\">"+dates[k].no + "</font>";
+                html += "<td style=\"border:2px solid gray;\">כמות פעילים כוללת:"  +totalAmount+ "<br> היו: <font color=\"ForestGreen\">"+dates[k].yes+"</font>\nנעדרו: <font color=\"red\">"+dates[k].no + "</font>";
             }
             html += "</tr>";
 
@@ -195,8 +195,8 @@ function getMembersToClient(instID)
                 var html = "<script src=\"/html/protegeActivity.js\"></sc"+"ript>";
                 html += "<scr"+"ipt src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js\"></sc"+"ript>"
                 html += drawMembers(json2, inst);
-                        html += "<div dir='rtl'><h3>הסר את ה-V מחניכים שברצונך להפוך ללא אקטיביים ולחץ על כפתור 'שמור'...</h3><br><button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">שמור</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button><button id=\"selAll\" type=\"button\" onclick=\"activateAll()\" value=\"\">הפוך כולם ל'פעילים'!!</button></div>";
-                //window.parent.document.getElementById("main").srcdoc = "<button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">סמן חניכים והקש כאן כדי להפכם ל'לא אקטיביים'...!</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button>"+reHtml;
+                        html += "<div dir='rtl'><h3>הסר את ה-V מפעילים שברצונך להפוך ללא אקטיביים ולחץ על כפתור 'שמור'...</h3><br><button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">שמור</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button><button id=\"selAll\" type=\"button\" onclick=\"activateAll()\" value=\"\">הפוך כולם ל'פעילים'!!</button></div>";
+                //window.parent.document.getElementById("main").srcdoc = "<button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">סמן פעילים והקש כאן כדי להפכם ל'לא אקטיביים'...!</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button>"+reHtml;
                 //window.parent.document.getElementById("main").document.innerHTML =  html;
                 if (user.admin == "1")
                 {
@@ -211,8 +211,8 @@ function getMembersToClient(instID)
             }
             else
             {
-                var html = "<span dir='rtl'><h3>לא מסומנים כל חניכים למדריך זה...:(</h3></span>";
-                //window.parent.document.getElementById("main").srcdoc = "<button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">סמן חניכים והקש כאן כדי להפכם ל'לא אקטיביים'...!</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button>"+reHtml;
+                var html = "<span dir='rtl'><h3>לא מסומנים כל פעילים למדריך זה...:(</h3></span>";
+                //window.parent.document.getElementById("main").srcdoc = "<button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">סמן פעילים והקש כאן כדי להפכם ל'לא אקטיביים'...!</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button>"+reHtml;
                 window.parent.document.getElementById("main").srcdoc =  html;
   
             }
@@ -248,7 +248,7 @@ function setChangeVars(checkId)
     var chk = document.getElementById(checkId);
     if (chk.checked) 
     {
-        alert("לא ניתן להשתמש בדף זה כדי לסמן חניך חזרה כאקטיבי! בצע refresh כדי לחזור לראות מצב אקטיביות נוכחי, או בקש מאדמיניסטרטור של המערכת להפוך חניכים חזרה לאקטיביים, אם יש בכך צורך.");
+        alert("לא ניתן להשתמש בדף זה כדי לסמן חניך חזרה כאקטיבי! בצע refresh כדי לחזור לראות מצב אקטיביות נוכחי, או בקש מאדמיניסטרטור של המערכת להפוך פעילים חזרה לאקטיביים, אם יש בכך צורך.");
         chk.checked = false;
         return;
     }
