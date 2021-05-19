@@ -1709,7 +1709,7 @@ app.get('/getActivity', async (req, res) =>
                         var sqlInst = "select Name from rakazim where ID="+instID;
                         var instName = await query(sqlInst);
 
-                        weeklyStatBody += "<tr><td>" + act.Name + "</td><td></td><td>" + act.Date + "</td><td>" + instName[0].Name + "</td></tr>";
+                        weeklyStatBody += "<tr><td>" + act.Name + "</td><td>" + act.Date + "</td><td>" + instName[0].Name + "</td></tr>";
                     }
 
                     weeklyStatBody += "</table></body></html>";
