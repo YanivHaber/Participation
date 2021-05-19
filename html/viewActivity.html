@@ -32,6 +32,7 @@
                 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 
 <script language="javascript">
+
 var instID = -1;
 var loggedUser = "";
 var instructor = "";
@@ -51,7 +52,7 @@ async function getUserDetails(ID)
 {
     if (ID === undefined) ID = instID;
 
-    $.get("/userDetails?ID="+ID, "", function(json)
+    json = await getUrl("/userDetails?ID="+ID, "");
     {
         user = JSON.parse(json); 
         loggedUser = user.loggedUser;
@@ -75,19 +76,29 @@ async function getUserDetails(ID)
         
 
         return userName;
-    });
+    }
 
 }
 var html = "";
 
 var doneUserDetails = false;
 
+async function getUrl(url, data) {
+    return new Promise(resolve => $.get(url, data, result => resolve(result)));
+}
+
 async function getMyUserDetails()
 {    
     if (doneUserDetails) return;
     var myMembers = document.getElementById("myMembers");
-    $.get("/getInstDates?instID="+instID, "", function (datesJson)
+    var myHeaders = document.getElementById("myHeaders");
+
+    
+    var datesJson = await getUrl("/getInstDates?instID="+instID, "");
+    
+    // function (datesJson)
     {    
+
         dates = JSON.parse(datesJson);
 
         if (dates.length == 0)
@@ -111,7 +122,7 @@ async function getMyUserDetails()
                 //var activityHtml = "<span dir='rtl' id='act"+o+"Description'>"+o+"</span>";
                 var activityHtml = "<span dir='ltr' id='act"+o+"Description'>Loading Details (it's slow)...<img style='width:20px; height:20px' src='/html/loading.gif'></span>";
                 
-                $.get("/getActivity?instID=" + instID + "&date=" + dates[o].date + "&point=" + o, "", (actJson) => 
+                var actJson = await getUrl("/getActivity?instID=" + instID + "&date=" + dates[o].date + "&point=" + o, "");
                 {
                     activity = JSON.parse(actJson);
 
@@ -131,7 +142,7 @@ async function getMyUserDetails()
                     */
 
                     window.setTimeout(`writeActDescription(${activity.point}, encodeURI(\`${activityHtml}\`))`, 20000);
-                });
+                }
                 var totalAmount = Number(dates[o].yes) + Number(dates[o].no);
 
                 // get activity details:
@@ -139,6 +150,9 @@ async function getMyUserDetails()
                 var no = dates[o].no;
                 html += "<td style=\"border:2px solid gray;\">כמות פעילים כוללת:" + totalAmount + "<br> היו: <font color=\"ForestGreen\">" + yes + "</font><br>נעדרו: <font color=\"red\">" + dates[o].no + "<br></font><span dir='ltr' id='Activity'+k><br>"+activityHtml+"<span>";
             }
+
+            var tabHtml = html;
+            
         }
         else
         {
@@ -146,25 +160,17 @@ async function getMyUserDetails()
         }
         html += "</tr>";
 
-        //var htmlPlace = document.getElementById("htmlAll");
+        //var htmlPlace = document.getElementById("partTable");
         //htmlPlace.innerHTML = html;
-    });
-    //alert("Loding data from server...(might be slow...)");
-    $.get("/checkMembersAvailability?instID="+instID, "", function (probMembers)
-    {
-        var pMembers = JSON.parse(probMembers);
-        //alert("got "+pMembers.length+ " results!");
-    });   
-
-    // yaniv
-    var url = "/getParticipation?instID="+instID;
-    html = "<th class=\"straight\"><div><span></span></div></th>";
-
+    }
     function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    $.get(url, "", function (json2) 
+    var url = "/getParticipation?instID="+instID;
+    html = "<th class=\"straight\"><div><span></span></div></th>";
+
+    json2 = await getUrl(url, ""); 
     {
         if (true) 
         {
@@ -186,16 +192,6 @@ async function getMyUserDetails()
                 html += "<tr>";
                 html += "<th>";
 
-/*
-                if(typeof(part[p].dates[p].participated != "undefined") && pnoteart[p].dates[p].participated)
-                {
-                    html += ` style="color: green"`;
-                }
-                else
-                {
-                    html += ` style="color: red"`;
-                }
-                */
                 html += (p+1)+". ";
                 
                 var former = null;
@@ -288,7 +284,7 @@ async function getMyUserDetails()
                 html += "</tr>";
                 
             }
-            myMembers.innerHTML = "<table id=\"partTable\">"+html+"</table>";    
+            myHeaders.innerHTML = `<table id="partTable"></td><td>`+tabHtml+html+`</tr><tr>`;    
             //myMembers.innerHTML = html;
             //document.getElementById("createbutt").style.visibility = "visible";
         }
@@ -299,9 +295,9 @@ async function getMyUserDetails()
         //var csvFile = "C:\\develop\\node.js\\part"+instructor + "\\participation.csv";
         var csvFile = "/partCsv?instID=" + instID;
         
-        myMembers.innerHTML = `<a href="${csvFile}" onClick="window.open('csvDirections.html', 'How to open this CSV', 'width=500,height=500,top=100,left=600');" download>View in Excel</a>`+html;
+        myMembers.innerHTML = `<a href="${csvFile}" onClick="window.open('csvDirections.html', 'How to open this CSV', 'width=500,height=500,top=100,left=600');" download>View in Excel</a>`;
         document.getElementById("waitMsg").remove();
-    });
+    }
     doneUserDetails = true;
 };
 
@@ -438,6 +434,9 @@ function sleep(ms) {
          <!-- used to be:'selector-->
         <hr>
         
+        <table border=0 id="myHeaders">
+
+        </table>
         <table border=0 id="myMembers">
                     <tr>
                         <th></th>
