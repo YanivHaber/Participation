@@ -1304,7 +1304,7 @@ app.get('/getInactiveUsers', async (req, res) => {
         // no changes. just get list of in-active...
         console.log("listing all in-active users!");
         res.header("Content-Type", "text/html; charset=utf-8");
-        let rows = await query(`select * from members where active <> '1'`);
+        let rows = await query(`select * from members where active <> '1' AND Active <> "TRUE"`);
 
         var retArray = "[";
         try {

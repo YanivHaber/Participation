@@ -41,6 +41,18 @@ async function getMembers()
   
 }
 
+function flipAll()
+{
+    var checks  = document.getElementsByTagName("input");
+
+    for (var i = 0; i < checks.length; i++)
+    {
+      if (checks[i].type == "checkbox" && checks[i].id.startsWith("ID-"))
+      {
+           checks[i].click();
+       }
+    }
+}
 function drawMembers(json)
 {
   try 
@@ -53,7 +65,7 @@ function drawMembers(json)
     }
     else
     {
-      membersHtml = "<table border='1'><tr><th>שם</th><th>סניף</th><th>הפוך אקטיבי!</th></tr>";
+      membersHtml = "<table border='1'><tr><th>שם</th><th>סניף</th><th>הפוך אקטיביות! <input type='checkbox' onclick='flipAll()'></th></tr>";
 
         var userNumber = 1;
         members.forEach(m => 
