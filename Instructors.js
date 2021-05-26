@@ -1,3 +1,4 @@
+const onAir = false;
 const REALLYSENDALLMAILS = true;
 const REALLYSENDALLMAILS_ONLY_INWARD = true;
 const AMOUNT_DAYS_OF_LAST = 14;
@@ -325,7 +326,8 @@ async function countRequests(user)
     {
         if (loginDivider < 100) loginDivider = loginDivider * 2;
         else loginDivider = 100;
-        sendFormalMail("application", `There were <b>${loginAmount}</b> logins untill now...:), (last one: '${username}').`, `${loginAmount} logins`, "");
+        
+        if (onAir) sendFormalMail("application", `There were <b>${loginAmount}</b> logins untill now...:), (last one: '${username}').`, `${loginAmount} logins`, "");
         
     }
 }
@@ -843,7 +845,7 @@ app.get('/good-login', async (req, res) => {
 //
 app.get("/userName", async(req, res) => 
 {
-    var rakaz = await query("select Name, Branch, Role, District from rakazim where ID="+req.user.id);
+    var rakaz = await query("select Name, Tel, Branch, Role, District from rakazim where ID="+req.user.id);
 
     var rightBranch = ((rakaz[0].Branch !== "undefined") ? rakaz[0].Branch: "לא ידוע...");
     //if (rakaz[0].Role == "מנהל מחוז")
@@ -853,7 +855,7 @@ app.get("/userName", async(req, res) =>
         dName = await query(distNameSql);
     }
     distName = 
-    res.write(`{ "name": "${rakaz[0].Name}", "id": "${req.user.id}", "role":"${rakaz[0].Role}", "District":"${dName[0].district}", "branch":"${rightBranch}"`);
+    res.write(`{ "name": "${rakaz[0].Name}", "id": "${req.user.id}", "role":"${rakaz[0].Role}", "District":"${dName[0].district}", "branch":"${rightBranch}", "phone": "${rakaz[0].Tel}"`);
 
     //test = "{ \"name\": \""+name[0].Name+"\", \"id\": "+req.user.id + ", \"role\":\""+name[0].role + "\", \"branch\":"+((name[0].Branch!== 'undefined') ? "\""+name[0].Branch+"\"": 'unknown');
 
@@ -1493,12 +1495,19 @@ app.get('/addParticipation', async (req, res) => {
 
     var instID = req.query.instID;
     var date = req.query.actDate;
+
+    // get the instructor's branch:
+    brSql = "select Branch from rakazim where ID="+instID;
+    brData = await query(brSql);
+    var branch = brData[0].Branch;
+
     var paramCount = 0;
+    var participantsNo = 0;
     for (i = 0; i < 20000; i++) 
     {
         if (req.query["ID-" + i] != undefined) 
         {
-            queryParams[i] = req.query["ID-" + i];
+            queryParams[i] = "on";
             paramCount++;
         }
 
@@ -1514,12 +1523,41 @@ app.get('/addParticipation', async (req, res) => {
             // instead of updating the activity, delete it completely and add a new one...
             actSql = `UPDATE Activity SET Name="`+escapeSingleApos(actName)+`", Type="`+escapeSingleApos(actType)+`", subtype="`+escapeSingleApos(actSubtype)+`"`;
             actSql += ` , InstructorID="${instID}", Date="${date}" WHERE ActivityID="${noDouble[0].ActivityID}"`;
+
+            getParticipSql = `select * from Participation where Activity="${noDouble[0].ActivityID}"`;
+            partDBData = await query(getParticipSql);
+
+            // now update ALL participants. one by one :(
+            for (var part = 0; part < partDBData.length; part++)
+            {
+                var id = partDBData[part].ParticipantID;
+                var dbPpart = partDBData[part].participated;
+
+                if (queryParams[id] == "on")
+                {
+                    if (!dbPpart)
+                    {
+                        // this participant was turned ON! set it in DB:
+                        lightSql = `update Participation SET participated="1" WHERE Activity="${noDouble[0].ActivityID}" AND ParticipantID="${id}"`;
+                        lightData = await query(lightSql);
+                    }
+                }
+                else if (dbPpart)  //checkbox is UNCHECKED & ON in DB!
+                {
+                    // ON in DB but turned off!
+                    lightSql = `update Participation SET participated="0" WHERE Activity="${noDouble[0].ActivityID}" AND ParticipantID="${id}"`;
+                    lightData = await query(lightSql);
+                }
+                participant = queryParams[part];
+                updateSql = `update Participation set participated = "1" where Activity="267" AND ParticipantID="${id}"`;
+                await query(updateSql);
+            }
     
             // run update query:
             await query(actSql);
 
             res.write(`<html lang='heb' dir='rtl'><head><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head>`);
-            res.write("<h1>הנתונים היבשים של הפעולה עודכנו...(ללא עדכון משתתפים)!</h1></html>");
+            res.write("<h1>הפעולה עודכנה! :-)</h1></html>");
             res.send();
             return;
         }
@@ -1699,6 +1737,7 @@ app.get('/getActivity', async (req, res) =>
                 
                 if (newActivity.length > 0)
                 {
+                    var mjr;
                     // send status weekly mail:
                     var weeklyStatBody = `<html lang="heb" dir="rtl"><head><meta charset="UTF-8"></head><body>זהו מייל סטטוס שבועי בדבר פעולות שנוספו למערכת ההשתתפות: <br><br><table><tr><th style="width: 100px">פעולה</th><th style="width: 100px">תאריך</th><th style="width: 100px">נוצר ע"י</th>`;
                     var act;
@@ -1706,14 +1745,17 @@ app.get('/getActivity', async (req, res) =>
                     {
                         var act = newActivity[actIn];
                         var instID = act.InstructorID;
-                        var sqlInst = "select Name from rakazim where ID="+instID;
+                        var sqlInst = "select Name, District from rakazim where ID="+instID;
                         var instName = await query(sqlInst);
 
                         weeklyStatBody += "<tr><td>" + act.Name + "</td><td>" + act.Date + "</td><td>" + instName[0].Name + "</td></tr>";
+
+                        var sqlManager = `select * from rakazim where Role='מנהל מחוז' and  district='${instName[0].district}'`;
+                        mjr = await (sqlManager);
                     }
 
                     weeklyStatBody += "</table></body></html>";
-                    sendFormalMail("system", weeklyStatBody, "Weekly status of new activities", "");
+                    sendFormalMail("system", weeklyStatBody, "Weekly status of new activities", mjr[0].email);
                 }
             }
         }
@@ -1997,20 +2039,24 @@ app.get('/changePassword', async (req, res) =>
 
     var users = await query("select Name, Branch from rakazim where ID="+user);
 
-    res.write(`<html lang="he" dir="rtl"><head><meta charset="utf-8"><meta content='width=device-width, initial-scale=1' name='viewport'/></head><body>:`);
-    
+    res.write(`<html lang="he" dir="rtl"><head><script src="./html/drawHeader.js"></script><script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script><meta charset="utf-8"></head>`);
+  
     var totalHtml = "";
-    totalHtml += `<table style="border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;">`;
-    totalHtml += `<tr><td><img src="./html/style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px;"/>`;
-    totalHtml += `<tr></td><td><h1>כנפים של קרמבו - אפליקציית 'השתתפות'</td></h1></tr>`;
-    totalHtml +=  `<tr><td>שלום ${users[0].Name} מסניף '${users[0].Branch}'. כאן תוכל\\י להחליף סיסמא!</span></h1><br><div style="position: fixed; right: 150px;"></span></div></section></tr></table>`;
+
+    //totalHtml += `<table style="border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;">`;
+    //totalHtml += `<tr><td><img src="./html/style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px;"/>`;
+    //totalHtml += `<tr></td><td><h1>כנפים של קרמבו - אפליקציית 'השתתפות'</td></h1></tr>`;
+    totalHtml += `<body onLoad="window.setTimeout('', 500);">`;
+    totalHtml += `<span id="header"></span>`;
+    totalHtml +=  `<tr><td><br> החלפת סיסמה:</span></h1><br><div style="position: fixed; right: 150px;"></span></div></section></tr></table>`;
     totalHtml += `<input type="text" style="visibility: hidden" name="InstructorID" id="InstructorID">`;//<h3>`;
+    //totalHtml += `<script language="javascript">document.getElementById("username").innerHTML = userName; document.getElementById("role").innerHTML = role; document.getElementById("phone").innerHTML = tel;</script>`;
     res.write(totalHtml);
 
 
     //res.write(`<section style="direction: rtl; height:150px; border:50px; border-width: 5px; border-style: solid; border-color: "#4a90e2" background: "#4a90e2"><h1><img src="./html/style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px; position: fixed; top: 32px; right: 15;"/>`);
     //res.write(`<span style="position: absolute; top: 30; right: 150;">כנפים של קרמבו - אפליקציית 'השתתפות'</span></h1><br><div style="position: fixed; right: 150px;"><h3><span id="instNameHtml">${users[0].Name}</span> מסניף '<span id="branch">${users[0].Branch}</span>'</span></h3></div></section>`);
-    res.write(`<span style="right:150px;"></span><span style="position: static;"><form method='get' name='updatePassword' action='/replacePassword'>הסיסמא הנוכחית שלך: <input type='password' name='firstPassword'><br>סיסמא חדשה (לפחות 6 תוים!):<input type='password' name='newPassword'><input type='hidden' name='user' value="${user}"><br><input type='submit' value='בצע!'></form></span><br><br></body></html>`);
+    res.write(`<span style="right:150px;"></span><span style="position: static;"><form method='get' name='updatePassword' action="/replacePassword">הסיסמא הנוכחית שלך: <input type='password' name='firstPassword'><br>סיסמא חדשה (לפחות 6 תוים!):<input type='password' name='newPassword'><input type='hidden' name='user' value="${user}"><br><input type='submit' value='בצע!'></form></span><br><br></body></html>`);
     res.send();
 });
 ////////////////////////////////////////////////////////////////////////////////////////////

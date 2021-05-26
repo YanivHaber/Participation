@@ -32,6 +32,7 @@
                 </style>
                 
     
+    <script src="./drawHeader.js"></script>
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
@@ -414,6 +415,7 @@ function initOnLoad()
         }
         //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
         //document.getElementById("selector").innerHTML = userName;
+        
         if (role == "מנהל מחוז")
         {
             document.getElementById("branch").innerHTML = " מנהל מחוז '"+district+"'";
@@ -433,18 +435,18 @@ function sleep(ms) {
             }
 </script>
 </head>
-<body onload="initOnLoad()" dir="rtl">
+<body onload="getUserDetails(); initOnLoad()" dir="rtl">
     <meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8">
-<table style="border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;">
-    <tr><td><img src="./style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px;"/>
-    </td><td><h1>כנפים של קרמבו - אפליקציית 'השתתפות'</td></h1><br>
-</tr>
+    
+    <!-- header part: -->
+    <div style="width:100%;" direction: rtl; height:100px; background: #4a90e2;  align='right'"><span id="userName" style="width:200px"></span></div>
 
 </table>
 <span id="excelFile"></span>
+<span id="header">
 <h2><span id="instName"></span><span id="branch"></span>,
 <span id=topSubject"> הצג רשימות השתתפות של אחד מרשימת הרכזים הבאה:</span> </h2>
-    <br>
+</span><br>
 
     <h3>בחר רכז: <span id="selector"></span></h3>
     
