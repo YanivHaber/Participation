@@ -1,6 +1,5 @@
 async function getUserDetails(drawMenu)
 {
-    //alert("getting details");
     try
     {
         var headerLoc = document.getElementById("header");
@@ -28,13 +27,14 @@ async function getUserDetails(drawMenu)
             });
         });
 
+        var loc = window.location.href;
         
-        if (admin != 1)
+        if (loc.indexOf("admin") > 0 && admin != 1)
         {
             document.write(`<img class="irc_mi" src="./style/NoEntry.jpg" alt="Image result for no entrance sign" width="260" height="260" style="">`)
             alert("אינך מוגדר אדמיניסטרטור ולכן אינך יכול לגשת לדף זה...");
         }
-        //window.setTimeout("afterLoad()", 500);
+                //window.setTimeout("afterLoad()", 500);
         window.setTimeout("afterLoad()", 200);
     }
     catch (e)
@@ -48,4 +48,5 @@ function afterLoad()
     document.getElementById("username").innerHTML = userName;
     document.getElementById("role").innerHTML = role;
     document.getElementById("phone").innerHTML = tel;
+    document.getElementById("branch").innerHTML = branch;
 }

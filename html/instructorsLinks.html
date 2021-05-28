@@ -23,13 +23,19 @@ a:active {
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 </head>
 <body onLoad="getUserDetails();">
-    <section style="direction: rtl; height:170px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;"><h1><img src="./style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px; position: fixed; top: 13; right: 15;"/><span style="position: fixed; top: 30; right: 150;">כנפים של קרמבו - אפליקציית 'השתתפות'</span></h1><br><br><br><br><div style="position: fixed; right: 150px;"><h3><span id="instNameHtml"></span></h3><img></section></span></h3></div></section>
-  <!--
-  <span><section style="direction: rtl; height:120px; border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2;; background: #4a90e2;"><img style="width:70px; height:70px;" src="./style/סמל_קרמבו_חדש_עברית.jpg"><h2> כנפים של קרמבו. שלום '<span id="instNameHtml"></span> מסניף <span id="branch"></span>'<img></h2></section></span>
---> 
+  <!-- HEADER part start -->
+  <table style="width:100%; direction: rtl; height:10%; border-style: solid; border-color: #4a90e2; background: #4a90e2">
+    <tr><td><span style="color:blue" id="username">משתמש</span><br><span id="role">role</span> - <span id="branch">?</span></span><br>
+    <font color="black"><b>'כנפיים של קרמבו'</b>
+    <br>תנועת נוער לצעירים<br>עם ובלי צרכים מיוחדים<br>טלפון:<span id='phone'></span><br>
+    <font color="brown">יוצרים יחד מקום ומשמעות לכל אדם</font></td>
+    <td style="width:00px">&nbsp; &nbsp;<td><img style="width:100px; height:100px;" src="./krembo_logo.jpg">
+    </td><td style="width: 100px"></table></div>
+     <!-- HEADER part end -->
+  
   <script language="javascript">
 const PORT = 1000;
-var userId = -1;
+var userId;
 var instructor = "";
 var admin = 0;
 var userName = "";
@@ -37,38 +43,43 @@ var userName = "";
 var district = "";
 
 async function getUserDetails()
-{    
-    $.get("/userName", "", function(json)
+{
+    
+    try
+    {        
+        await $.get("/userName", "", function(json)
+        {
+            user = JSON.parse(json);
+            userId = user.id;
+            userName = user.name;
+            admin = user.admin;
+            branch = user.branch;
+            role = user.role;
+            tel = user.phone;
+            
+            window.setTimeout("arrangeLinks()", 1000);
+    
+
+        });
+
+        
+     }
+    catch (e)
     {
-        user = JSON.parse(json);
-        userId = user.id;
-        userName = "רכז/ת סניף "+user.branch;//user.name;
-        admin = user.admin;
-        branch = user.branch;
-        role = user.role;
-
-        setTimeout(arrangeLinks, 1500);
-        //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
         
-        
-        document.getElementById("branch").innerHTML = branch;
-        document.getElementById("role").innerHTML = role;
-        document.getElementById("link1").href = `http://${window.location.hostname}:${PORT}/html/membersForRakaz.html?instID=`+userId;
-        document.getElementById("link11").href = `http://${window.location.hostname}:${PORT}/html/sendMsg.html?instID=`+userId;        
-        //document.getElementById("link2").href = `http://${window.location.hostname}:${PORT}/html/re-activateUsers.html`;
-        
-    });
+    }
 };
-
 function arrangeLinks()
 {
   
-  document.getElementById("instNameHtml").innerHTML = userName;
-  
+    var url = document.getElementById("link8").href;
+    
+    var newUrl = url.substring(0, url.indexOf("instID=")+7);
+    newUrl += userId;
 
-  
-  document.getElementById("link8").href += userId;
-  document.getElementById("link1").href += userId;
+    document.getElementById("link8").href = newUrl;
+    
+  //document.getElementById("link1").href += userId;
   
   
   /*
@@ -96,7 +107,7 @@ function arrangeLinks()
         var res = JSON.parse(json);
 
         //alert(res.name);
-        document.getElementById("instNameHtml").innerHTML = res.name;
+        //document.getElementById("instNameHtml").innerHTML = res.name;
     });
 
   </script>
@@ -109,10 +120,20 @@ function arrangeLinks()
 
 document.write(`<p><b><a href="http://${window.location.hostname}:${PORT}/changePassword" target="_blank">החלפת סיסמא!</a></b></p>`);
 document.write(`<span id="myMembersLink"><p><b><a href="http://${window.location.hostname}:${PORT}/myTeam" target="_blank">רשימת הפעילים בסניף שלי</a></b></p></span>`);
-document.write(`<p><b><a id=\"link8\" href="http://${window.location.hostname}:${PORT}/html/viewActivity.html?instID=" target="_blank">צפיה ברשימות ההשתתפות של הפעילים שלי!</a></b><b><br>(יצירת פעולה חדשה, ,תוכל לבצע בדף של הצפיה ברשימות ההשתתפות)<br></b></p>`);
+document.write(`<p><b><a id=\"link8\" href="http://${window.location.hostname}:${PORT}/html/viewActivity.html?instID=${userId}" target="_blank">צפיה ברשימות ההשתתפות של הפעילים שלי!</a></b><b><br>(יצירת פעולה חדשה, ,תוכל לבצע בדף של הצפיה ברשימות ההשתתפות)<br></b></p>`);
 /* document.write(`<p><b><a id="link1" target="_blank" href="http://${window.location.hostname}:${PORT}/html/ActiviyutTop.html?instID=">ערוך אקטיביות הפעילים שלי!</a></b></p>`); */
 document.write(`<p><b><a id="link11" target="_blank" href="./sendMsg.html">דווח על בעיה...!</a></b></p>`);
 //document.write(`<p><b><a id="link2" href="amazing.com" target="_blank">החזר אקטיביות של פעילים (לינק שצריך לעוף מפה!)</a></b></p>`);
+
+function setDetails()
+    {
+        document.getElementById("username").innerHTML = userName;
+        document.getElementById("role").innerHTML = role;
+        document.getElementById("phone").innerHTML = tel;
+        document.getElementById("branch").innerHTML = branch;
+    }
+    window.setTimeout("setDetails()", 200);
+
 </script>
 </body>
 </html>

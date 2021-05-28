@@ -1,5 +1,8 @@
-const onAir = false;
+const onAir = true;
 const REALLYSENDALLMAILS = true;
+var sendToDistrictManagers = true;
+var yanivReporter = true;
+var sendMails = false;
 const REALLYSENDALLMAILS_ONLY_INWARD = true;
 const AMOUNT_DAYS_OF_LAST = 14;
 const querystring = require('querystring');
@@ -483,9 +486,6 @@ async function sendFormalMail(userName, msgHtml, subject, mailaddress)
 }
 */
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-var sendToDistrictManagers = false;
-var yanivReporter = true;
-var sendMails = true;
 //////////////////////////////////////////////////////////////////////////////////////
 function sendMail(userName, msgHtml, subject, mailaddress)
 { 
@@ -737,13 +737,25 @@ app.get('/myTeam', async (req, res) =>
         name = await query("select Name, Branch from rakazim where ID="+req.user.id);
     
     totalHtml += `<html lang="he" dir="rtl"><head><meta charset="utf-8" /></head>`;
-
+    //   <!-- HEADER part start -->
+    totalHtml += `<table style="width:100%; direction: rtl; height:10%; border-style: solid; border-color: #4a90e2; background: #4a90e2">`;
+    totalHtml += `<tr><td><span style="color:blue" id="username">משתמש</span><br><span id="role">role</span> - <span id="branch">?</span></span><br>`;
+    totalHtml += `<font color="black"><b>'כנפיים של קרמבו'</b>`;
+    totalHtml += `<br>תנועת נוער לצעירים<br>עם ובלי צרכים מיוחדים<br>טלפון:<span id='phone'></span><br>`;
+    totalHtml += `<font color="brown">יוצרים יחד מקום ומשמעות לכל אדם</font></td>`;
+    totalHtml += `<td style="width:00px">&nbsp; &nbsp;<td><img style="width:100px; height:100px;" src="./krembo_logo.jpg">`;
+    totalHtml += `</td><td style="width: 100px"></table></div>`;
+  //<!-- HEADER part end -->
+    
+  
+    /*
     totalHtml += `<table style="border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;">`;
     totalHtml += `<tr><td><img src="./html/style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px;"/>`;
     totalHtml += `<tr></td><td><h1>כנפים של קרמבו - אפליקציית 'השתתפות'</td></h1></tr>`;
-    totalHtml +=  `<tr><td>אלו הפעילים של ${name[0].Name} מסניף '${name[0].Branch}':</span></h1><br><div style="position: fixed; right: 150px;"></span></div></tr></table>`;
+    totalHtml +=  `<tr><td></span></h1><br><div style="position: fixed; right: 150px;"></span></div></tr></table>`;
     totalHtml += `<input type="text" style="visibility: hidden" name="InstructorID" id="InstructorID">`;//<h3>`;
     totalHtml += `<br>`;
+    */
 
     //totalHtml += `<section style="direction: rtl;  border:50px; border-width: 5px; border-style: solid; border-color: navy; background-color: "#4a90e2"><img src="http://`+req.get("host")+`\/html\/לוגו_כנפיים_של_קרמבו.jpg" alt='כנפים של קרמבו' style="height: 150px; width: 150px;"></img>`;
     //totalHtml +=  `<br>אלו הפעילים של ${name[0].Name} מסניף '${name[0].Branch}:'</span></h1><br><div style="position: fixed; right: 150px;"></span></div></section>`;
@@ -757,24 +769,25 @@ app.get('/myTeam', async (req, res) =>
     var layersHtml = `<form id='myTeamForm' action='./myTeam' method='get'><select name='filterLayer' id='layers' onChange='selectLayer(this.options[this.selectedIndex].value)'>`;
     
     layersHtml += `<option id='layer0' value='כולם'>כולם</option>`;
+    
     for (var i = 0; i < layers.length; i++)
     {
         var lay = layers[i];
-        if (layers[i].layer == "") lay.layer = "לא הוגדר";
+        if (layers[i].layer == "") lay.layer = "לא הוגדרה שכבה";
         if (lay.layer == null && i == 0) break;        
     
         var filterBy = false;
-        if (lay.layer == layerFilter || (layerFilter == "" && lay.layer == "לא הוגדר")) filterBy = true;
+        if (lay.layer == layerFilter || (layerFilter == "" && lay.layer == "לא הוגדרה שכבה")) filterBy = true;
         if (lay.layer == null)  { break; };
         var currLayer = lay.layer;
-        if (currLayer == "לא הוגדר") currLayer = "";
+        if (currLayer == "לא הוגדרה שכבה") currLayer = "";
         layersHtml += `<option id='layer${layNum}' value='${currLayer}'`+(filterBy? " selected>": ">")+`${lay.layer}</option>`;
         layNum++;
     }
     layersHtml += "</select></form>";
     totalHtml += "var layersHtml = \""+layersHtml + "\";";
     
-    totalHtml += `\ndocument.writeln("<br>סנן פעילים לפי שכבת גיל: "+layersHtml);`;
+    totalHtml += `\ndocument.writeln("<h3>אלו הפעילים של סניף '${name[0].Branch}':</h3><br>סנן פעילים לפי שכבת גיל: "+layersHtml);`;
     totalHtml += `\n var user = JSON.parse('{ "yaniv":"haber", "name": "${name[0].Name}", "id": "${req.user.id}", "branch": "${name[0].Branch}"`;
     
     admin = await query("select * from users where id="+req.user.id); 
@@ -875,10 +888,10 @@ app.get("/userDetails", async(req, res) =>
         return;
     }
     var retJson = "";
-    name = await query("select Name, Branch from rakazim where ID="+id);
+    var name = await query("select Name, Branch, Role from rakazim where ID="+id);
     if (name.length > 0)
     {
-        retJson = "{ \"name\": \""+name[0].Name+"\", \"id\": "+id + ", \"branch\":"+((name[0].Branch!== 'undefined') ? "\""+name[0].Branch+"\"": 'unknown');
+        retJson = "{ \"name\": \""+name[0].Name+"\", \"id\": "+id + ", \"role\":\"  "+name[0].Role + "\",  \"branch\":"+((name[0].Branch!== 'undefined') ? "\""+name[0].Branch+"\"": 'unknown');
 
         logInUser = await query("select * from users where id="+id); 
         retJson += ", \"admin\":"+((logInUser.length > 0)? logInUser[0].admin: "0") + `, "loggedUser":"${req.user.id}"}`;
@@ -1308,19 +1321,18 @@ app.get('/getInactiveUsers', async (req, res) => {
         res.header("Content-Type", "text/html; charset=utf-8");
         let rows = await query(`select * from members where active <> '1' AND Active <> "TRUE"`);
 
-        var retArray = "[";
+        var retArray = `<div lang='heb' dir='rtl'><br><form action="/deactivateUsers"><table border="1"><tr><th>שם</th><th>סניף</th><th>החזר לאקטיביות?</th></tr><tr>`;
         try {
             console.log("found " + rows.length + " non-active users!");
 
-            for (i = 0; i < rows.length; i++) {
-                if (i > 0) retArray += ", ";
-                retArray += "{";
-                retArray += "\"name\": \"" + rows[i].FullName + "\", ";
-                retArray += "\"branch\": \"" + rows[i].Branch + "\", ";
-                retArray += "\"memberID\": \"" + rows[i].ID + "\"";
-                retArray += "}";
+            for (i = 0; i < rows.length; i++) 
+            {
+                retArray += "<tr><td>" + rows[i].FullName + "</td>";
+                retArray += "<td>" + rows[i].Branch + "</td>";
+                retArray += `<td><input type="checkbox" id="ID-${rows[i].ID}" onclick="setUsersInput('ID-${rows[i].ID}')"></td></tr>`;
             }
-            retArray += "]";
+            retArray += "</table>";
+            retArray += `<br><br><input type="submit" value="שלח"></form></div>`;
 
             res.write(retArray);
             res.send();
@@ -1378,12 +1390,9 @@ app.get('/membersForInstructor', async (req, res) => {
     }
     else
     {
-        var dist = rows[0].Branch;
+        var branch = rows[0].Branch;
 
-        var q = `select ID, FullName, Active from members where`;
-        q += " Branch=";
-        q += `"`+dist+`"`;
-        q += ` order by FullName`;
+        var q = `select ID, FullName, Active from members where Branch="${branch}" order by FullName`;
 
         var retArray = "[";
         try 
@@ -2039,7 +2048,7 @@ app.get('/changePassword', async (req, res) =>
 
     var users = await query("select Name, Branch from rakazim where ID="+user);
 
-    res.write(`<html lang="he" dir="rtl"><head><script src="./html/drawHeader.js"></script><script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script><meta charset="utf-8"></head>`);
+    res.write(`<html lang="he" dir="rtl"><head><script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script><meta charset="utf-8"></head>`);
   
     var totalHtml = "";
 
@@ -2051,6 +2060,7 @@ app.get('/changePassword', async (req, res) =>
     totalHtml +=  `<tr><td><br> החלפת סיסמה:</span></h1><br><div style="position: fixed; right: 150px;"></span></div></section></tr></table>`;
     totalHtml += `<input type="text" style="visibility: hidden" name="InstructorID" id="InstructorID">`;//<h3>`;
     //totalHtml += `<script language="javascript">document.getElementById("username").innerHTML = userName; document.getElementById("role").innerHTML = role; document.getElementById("phone").innerHTML = tel;</script>`;
+    totalHtml += `<script language="javascript">getUserDetails();</script>`;
     res.write(totalHtml);
 
 

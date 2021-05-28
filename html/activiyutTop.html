@@ -20,28 +20,35 @@ var userId = -9;
 var branch = "";
 
 
-async function getUserDetails() 
-{    
+async function getUserDetails(drawMenu)
+{
+    try
+    {        
+        await $.get("/userName", "", function(json)
+        {
+            user = JSON.parse(json);
+            userId = user.id;
+            userName = user.name;
+            admin = user.admin;
+            branch = user.branch;
+            role = user.role;
+            tel = user.phone;
+            
     
-    await $.get("/userName", "", function(json)
+
+        });
+
+        
+        if (admin != 1)
+        {
+            document.write(`<img class="irc_mi" src="./style/NoEntry.jpg" alt="Image result for no entrance sign" width="260" height="260" style="">`)
+            alert("אינך מוגדר אדמיניסטרטור ולכן אינך יכול לגשת לדף זה...");
+        }
+    }
+    catch (e)
     {
-        user = JSON.parse(json);
-        userId = user.id;
-        userName = user.name;
-        admin = user.admin;
-        branch = user.branch;
-
-        createBasis();
-
-        //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
-        //document.getElementById("instNameHtml").innerHTML = userName;
-        if (admin == 1) loadRakazim();
-        //else alert("you are NOT marked as 'admin' user thus cannot view this page...");
-        else getMembersToClient(instID);
-        //document.getElementById("branch").innerHTML = branch;
-
-        var html = getMembers(instID);
-    });
+        
+    }
 };
 
 
@@ -198,6 +205,7 @@ function getMembersToClient(instID)
                         html += "<div dir='rtl'><h3>הסר את ה-V מפעילים שברצונך להפוך ללא אקטיביים ולחץ על כפתור 'שמור'...</h3><br><button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">שמור</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button><button id=\"selAll\" type=\"button\" onclick=\"activateAll()\" value=\"\">הפוך כולם ל'פעילים'!!</button></div>";
                 //window.parent.document.getElementById("main").srcdoc = "<button id='deactivateMembers' type=\"button\" onclick=\"deactivateMembers("+inst+")\">סמן פעילים והקש כאן כדי להפכם ל'לא אקטיביים'...!</button><button id=\"selAll\" type=\"button\" onclick=\"selectAll()\" value=\"\">הפוך את הבחירה בכווווווולם!</button>"+reHtml;
                 //window.parent.document.getElementById("main").document.innerHTML =  html;
+                
                 if (user.admin == "1")
                 {
                     var tab =  window.parent.document.getElementById("main");
@@ -300,12 +308,23 @@ function setChangeVars(checkId)
         </script>
     </head>
     <body dir='rtl' onload="getUserDetails()">
+<!-- HEADER part start -->
+<table style="width:100%; direction: rtl; height:10%; border-style: solid; border-color: #4a90e2; background: #4a90e2">
+    <tr><td><span style="color:blue" id="username">משתמש</span><br><span id="role">role</span> - <span id="branch">?</span><br>
+    <font color="black"><b>'כנפיים של קרמבו'</b>
+    <br>תנועת נוער לצעירים<br>עם ובלי צרכים מיוחדים<br>טלפון:<span id='phone'></span><br>
+    <font color="brown">יוצרים יחד מקום ומשמעות לכל אדם</font></td>
+    <td style="width:00px">&nbsp; &nbsp;<td><img style="width:100px; height:100px;" src="./krembo_logo.jpg">
+    </td><td style="width: 100px"></table></div>
+     <!-- HEADER part end -->
+     <br><br><span id="pageHtml"></span>
+  
 
     <script language="javascript">
         
         function createBasis()
         {
-            document.write(`<div dir="rtl"> המשתמש שכרגע מחובר הינו הרכז מסניף '${user.branch}'</div>:<br>`);
+            //document.write(`<div dir="rtl"> המשתמש שכרגע מחובר הינו הרכז מסניף '${user.branch}'</div>:<br>`);
             drawElements();
         }
         async function drawElements()
@@ -313,8 +332,12 @@ function setChangeVars(checkId)
             //await getUserDetails();
             if (admin == 1)
             {
-                document.write(`<div dir="rtl"><h3>בחר סניף כדי לבחון אקטיביות חניכיו.</h3><br>`);
-                document.write(`בחר סניף: <span id="myMembers">?</span></div>`);
+                var pageHtml = `<div dir="rtl"><h3>בחר סניף כדי לבחון אקטיביות חניכיו.</h3><br>`;
+                pageHtml += `בחר סניף: <span id="myMembers">?</span></div>`;
+                document.getElementById("pageHtml").innerHTML = pageHtml;
+                loadRakazim();
+
+
             }
             else
             {
@@ -322,6 +345,17 @@ function setChangeVars(checkId)
             }
         }
         
+        
+
+    function setDetails()
+    {
+        document.getElementById("username").innerHTML = userName;
+        document.getElementById("role").innerHTML = role;
+        document.getElementById("phone").innerHTML = tel;
+        document.getElementById("branch").innerHTML = branch;
+        createBasis();
+    }
+    window.setTimeout("setDetails()", 500);
         
         </script>
         

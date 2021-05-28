@@ -27,13 +27,11 @@ a:active {
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 <script language="javascript">
-  async function getUserDetails(drawMenu)
+async function getUserDetails(drawMenu)
 {
     //alert("getting details");
     try
-    {
-        var headerLoc = document.getElementById("header");
-        
+    {        
         await $.get("/userName", "", function(json)
         {
             user = JSON.parse(json);
@@ -44,45 +42,54 @@ a:active {
             role = user.role;
             tel = user.phone;
             
-    
-
-        });
-
+         });
+    }
+    catch(e) {}
         
         if (admin != 1)
         {
             document.write(`<img class="irc_mi" src="./style/NoEntry.jpg" alt="Image result for no entrance sign" width="260" height="260" style="">`)
             alert("אינך מוגדר אדמיניסטרטור ולכן אינך יכול לגשת לדף זה...");
         }
-    }
-    catch (e)
+}
+
+function addPrivateLinks()
+{
+    if (userId == 50)
     {
-        
+        var adHtml = "";
+        adHtml += `<p><b><a id="link5" target="_blank" href=\"http://${window.location.hostname}:1000/html/activiyut.html">ערוך אקטיביות פעילים של מדריך לבחירתך!</a></b></p>`;
+        adHtml += `<p><b><a id="link6" target="_blank" href="http://${window.location.hostname}:1000/html/re-activateUsers.html">החזר אקטיביות של פעילים (אותו מדריך ספציפי)</a></b></p>`;
+
+        document.getElementById("adHtml").innerHTML = adHtml;;
     }
-};
+ }
+
+ window.setTimeout("addPrivateLinks()", 3000);
+    
 </script>
 
 </head>
     
 <body onLoad="getUserDetails(true);"  dir='rtl'>
   
+  <!-- HEADER part start -->
   <table style="width:100%; direction: rtl; height:10%; border-style: solid; border-color: #4a90e2; background: #4a90e2">
-    <tr><td><span style="color:blue" id="username">משתמש</span><br><span id="role">role</span><br>
+    <tr><td><span style="color:blue" id="username">משתמש</span><br><span id="role">role</span> - <span id="branch">?</span><br>
     <font color="black"><b>'כנפיים של קרמבו'</b>
     <br>תנועת נוער לצעירים<br>עם ובלי צרכים מיוחדים<br>טל:<span id='phone'></span><br>
     <font color="brown">יוצרים יחד מקום ומשמעות לכל אדם</font></td>
     <td style="width:00px">&nbsp; &nbsp;<td><img style="width:100px; height:100px;" src="./krembo_logo.jpg">
     </td><td style="width: 100px"></table></div>
+     <!-- HEADER part end -->
      
-     <!--<div style="width:100%;" height:100px; background: #4a90e2;  align='right'"><span id="userName" style="width:200px"></span></div>-->
 <body>
 <script language="javascript"> 
      var extraHTML = `<p><b><a ID="link3" target="_blank" href="http://${window.location.hostname}:1000/changePassword\">החלפת סיסמא!</a></b></p>`; 
      extraHTML += `<p><b><a ID="link4" target="_blank" href="http://${window.location.hostname}:1000/html/Participation.html">צפיה בהשתתפות הפעילים של מדריך כלשהוא!</a></b>`;
      extraHTML += `<b>   (יצירת פעולה חדשה יוכל לבצע המדריך/רכז בכניסה למערכת ואז לדף הצפיה בהשתתפות)</b></p>`;
-     extraHTML += `<p><b><a id="link5" target="_blank" href=\"http://${window.location.hostname}:1000/html/activiyut.html">ערוך אקטיביות פעילים של מדריך לבחירתך!</a></b></p>`;
-     extraHTML += `<p><b><a id="link6" target="_blank" href="http://${window.location.hostname}:1000/html/re-activateUsers.html">החזר אקטיביות של פעילים (אותו מדריך ספציפי)</a></b></p>`;
-     extraHTML += `<p><b><a id="link7" target="_blank" href="http://${window.location.hostname}:1000/html/districtManagers.html">רשימת מנהלי מחוזות</a></b></p>`;
+      extraHTML += `<span id="adHtml"></span></p>`;
+      extraHTML += `<p><b><a id="link7" target="_blank" href="http://${window.location.hostname}:1000/html/districtManagers.html">רשימת מנהלי מחוזות</a></b></p>`;
      extraHTML += `<p><b><a id="link7" target="_blank" href="http://${window.location.hostname}:1000/html/addRakazim.html">הוספת רכז</a></b></p>`;
      extraHTML += `<p><b><a id="link7" target="_blank" href="http://${window.location.hostname}:1000/html/addMember.html">הוספת פעיל חדש</a></b></p>`;
      extraHTML += `<p><b><a id="link7" target="_blank" href="http://${window.location.hostname}:1000/html/districtBranches.html">רשימת כל הסניפים לפי מחוזות</a></b></p>`;
@@ -94,8 +101,9 @@ a:active {
         document.getElementById("username").innerHTML = userName;
         document.getElementById("role").innerHTML = role;
         document.getElementById("phone").innerHTML = tel;
+        document.getElementById("branch").innerHTML = branch;
     }
-    window.setTimeout("setDetails()", 200);
+    window.setTimeout("setDetails()", 500);
  </script>
 
 

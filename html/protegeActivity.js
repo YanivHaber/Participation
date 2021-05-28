@@ -97,12 +97,14 @@ var userId = -1;
 var instructor = "";
 var admin = 0;
 var userName = "";
+var role = ""
+var branch = "";
+var tel = "";
 
 var district = "";
 
 async function getUserDetails()
 {    
-    /*
     $.get("/userName", "", function(json)
     {
         user = JSON.parse(json);
@@ -110,6 +112,9 @@ async function getUserDetails()
         userName = user.name;
         admin = user.admin;
         district = user.district;
+        role = user.role;
+        branch = user.branch;
+        tel = user.phone;
 
         //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
         //document.getElementById("instNameHtml").innerHTML = userName;
@@ -119,7 +124,7 @@ async function getUserDetails()
         //document.getElementById("link1").href = `http://${window.location.hostname}:1000/html/membersForRakaz.html?instID=`+userId;
         //document.getElementById("link2").href = `http://${window.location.hostname}:1000/html/re-activateUsers.html`;
         
-    });*/
+    });
 };
 
 function drawMembers(json2, inst)
@@ -142,12 +147,12 @@ function drawMembers(json2, inst)
         // draw active members
         members.forEach(m => 
         {
-            if (m.active != "TRUE") nonActive++;
+            if (m.active != "TRUE" && m.active != "1") nonActive++;
 
             activeMembers++;
             membersHtml += "<tr><td>"+m.name+"</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>";
-            var chkbox = `<input id=\"ID-${m.memberID}" name=\"ID-${m.memberID}" type="checkbox" onclick="" `+((m.active== "TRUE")? "checked": "")+` disabled>`;
-            if (m.active != "TRUE") chkbox = `&nbsp;<span style="color:red">X</span>`;
+            var chkbox = `<input id=\"ID-${m.memberID}" name=\"ID-${m.memberID}" type="checkbox" onclick="" `+((m.active== "TRUE" || m.active == "1")? "checked": "")+` disabled>`;
+            if (m.active != "TRUE" && m.active != "1") chkbox = `&nbsp;<span style="color:red">X</span>`;
             membersHtml += "<td>"+chkbox+"</td></tr>";
         });
         // draw NON active members
@@ -179,3 +184,13 @@ function drawMembers(json2, inst)
         alert(e);
     }     
 }
+
+function setDetails()
+    {
+        document.getElementById("username").innerHTML = userName;
+        document.getElementById("role").innerHTML = role;
+        document.getElementById("phone").innerHTML = tel;
+        document.getElementById("branch").innerHTML = branch;
+    }
+    window.setTimeout("setDetails()", 200);
+

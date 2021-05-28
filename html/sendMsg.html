@@ -25,29 +25,45 @@ function getUserDetails()
     {
         user = JSON.parse(json);
         userId = user.id;
-        userName = "רכז/ת סניף " + user.branch;
+        userName = user.name;
+    branch = user.branch;
         admin = user.admin;
         district = user.district;
+        role = user.role;
+        tel = user.phone;
 
         document.getElementById("instID").value = user.id; 
 
         //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
-        document.getElementById("instNameHtml").innerHTML = userName;
+        document.getElementById("instNameHtml").innerHTML = "רכז/ת סניף " + userName;
         //if (admin == 1) loadRakazim();
         //else alert("you are NOT marked as 'admin' user thus cannot view this page...");
         //else getMembersToClient(instID);
         //document.getElementById("branch").innerHTML = user.branch;
     });
 }
+function setDetails()
+    {
+        document.getElementById("username").innerHTML = userName;
+        document.getElementById("role").innerHTML = role;
+        document.getElementById("phone").innerHTML = tel;
+        document.getElementById("branch").innerHTML = branch;
+    }
+    window.setTimeout("setDetails()", 200);
 
      </script>
             </head>
             <body onLoad="getUserDetails(); setID()">
 
-                <table style="border:50px; border-width: 5px; border-style: solid; border-color: #4a90e2; background: #4a90e2;">
-                    <tr><td><img src="./style/סמל_קרמבו_חדש_עברית.jpg" alt="כנפים של קרמבו" style="width:120px; height:120px;"/>
-                    </td><td><h1>כנפים של קרמבו - אפליקציית 'השתתפות'</td></h1><br></table>
-            
+ <!-- HEADER part start -->
+ <table style="width:100%; direction: rtl; height:10%; border-style: solid; border-color: #4a90e2; background: #4a90e2">
+    <tr><td><span style="color:blue" id="username">משתמש</span><br><span id="role">role</span> - <span id="branch">?</span></span><br>
+    <font color="black"><b>'כנפיים של קרמבו'</b>
+    <br>תנועת נוער לצעירים<br>עם ובלי צרכים מיוחדים<br>טלפון:<span id='phone'></span><br>
+    <font color="brown">יוצרים יחד מקום ומשמעות לכל אדם</font></td>
+    <td style="width:00px">&nbsp; &nbsp;<td><img style="width:100px; height:100px;" src="./krembo_logo.jpg">
+    </td><td style="width: 100px"></table></div>
+     <!-- HEADER part end -->            
             <form id="sendForm" action="/sendMessage" method="get">
                 <input id="instID" name="instID" value="" style="visibility: hidden"></input>
                 <h3>

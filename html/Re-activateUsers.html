@@ -34,9 +34,9 @@ async function getMembers()
 {
   var goodLogin = await getUserDetails();
   //if (!goodLogin) return;
-    $.get("/getInactiveUsers", function (json)
+    $.get("/getInactiveUsers", function (html)
     {
-        drawMembers(json);
+      document.getElementById("membersTable").innerHTML = html;
     });
   
 }
@@ -85,7 +85,8 @@ function drawMembers(json)
         alert(e);
     }     
 }
-            var changedVars = "";
+            
+var changedVars = "";
 
             function setUsersInput(usr)
             {
@@ -121,7 +122,7 @@ function drawMembers(json)
 <h1>פעילים אשר סומנו כ'לא אקטיביים' הינם:</h1>
 
     <div id="membersTable"></div>
-    <input type="submit" value="Submit"></button>
+    
   </form>
 
     <br><br></br></br><hr>
