@@ -303,8 +303,8 @@ async function getMembersToClient(instID)
                         yaniv = 9;
                     }
                        
-
-                    if (!part[p].dates[0].participated)
+                    var  numDates = part[p].dates.length - 1;
+                    if (!part[p].dates[numDates].participated)
                     {
                         html += (p+1)+". <font color='red'>"+currName+"</font></th>";
                     }
@@ -424,7 +424,7 @@ function initOnLoad()
         {
             document.getElementById("branch").innerHTML = " מסניף '"+branch+"'";
         }
-        document.getElementById("instName").innerHTML = userName;
+        //document.getElementById("instName").innerHTML = userName;
 
         await loadRakazim();
     });

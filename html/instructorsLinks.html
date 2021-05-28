@@ -57,6 +57,7 @@ async function getUserDetails()
             role = user.role;
             tel = user.phone;
             
+            setDetails();
             window.setTimeout("arrangeLinks()", 1000);
     
 
@@ -132,7 +133,6 @@ function setDetails()
         document.getElementById("phone").innerHTML = tel;
         document.getElementById("branch").innerHTML = branch;
     }
-    window.setTimeout("setDetails()", 200);
 
 </script>
 </body>

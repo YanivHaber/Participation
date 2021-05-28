@@ -880,26 +880,24 @@ app.get("/userName", async(req, res) =>
 // get a description of a user with a certain id {}name: , id: , branch: ,admin: ?}
 app.get("/userDetails", async(req, res) => 
 {
-    var id = req.query.ID;
-    if (id == "")
-    {
-        res.write("No user ID!");
-        res.send();
-        return;
-    }
-    var retJson = "";
-    var name = await query("select Name, Branch, Role from rakazim where ID="+id);
-    if (name.length > 0)
-    {
-        retJson = "{ \"name\": \""+name[0].Name+"\", \"id\": "+id + ", \"role\":\"  "+name[0].Role + "\",  \"branch\":"+((name[0].Branch!== 'undefined') ? "\""+name[0].Branch+"\"": 'unknown');
+    var rakaz = await query("select Name, Tel, Branch, Role, District from rakazim where ID="+req.user.id);
 
-        logInUser = await query("select * from users where id="+id); 
-        retJson += ", \"admin\":"+((logInUser.length > 0)? logInUser[0].admin: "0") + `, "loggedUser":"${req.user.id}"}`;
-        res.write(retJson);
-        res.send();
-
-        console.log("returned:\n"+retJson);
+    var rightBranch = ((rakaz[0].Branch !== "undefined") ? rakaz[0].Branch: "לא ידוע...");
+    //if (rakaz[0].Role == "מנהל מחוז")
+    {
+        // get name of district
+        distNameSql = `select * from Branches where Name="`+rakaz[0].Branch+`"`;
+        dName = await query(distNameSql);
     }
+    distName = 
+    res.write(`{ "name": "${rakaz[0].Name}", "id": "${req.user.id}", "role":"${rakaz[0].Role}", "District":"${dName[0].district}", "branch":"${rightBranch}", "phone": "${rakaz[0].Tel}"`);
+
+    //test = "{ \"name\": \""+name[0].Name+"\", \"id\": "+req.user.id + ", \"role\":\""+name[0].role + "\", \"branch\":"+((name[0].Branch!== 'undefined') ? "\""+name[0].Branch+"\"": 'unknown');
+
+    admin = await query("select * from users where id="+req.user.id); 
+    res.write(", \"admin\":"+admin[0].admin+"}");
+    res.send();
+});
     
 
     

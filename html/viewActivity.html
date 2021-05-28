@@ -40,6 +40,7 @@ var admin = 0;
 var userName = "";
 var branch = "";
 var userId = -9;
+var tel = "";
 
 function urlVar(name)
 {
@@ -59,6 +60,9 @@ async function getUserDetails(ID)
         instID = user.id;
         userName = user.name;
         role = user.role;
+        tel = user.phone;
+        
+        setDetails();
         document.getElementById("instName").innerHTML = userName;
         document.getElementById("branch").innerHTML = user.branch;
 
@@ -442,7 +446,7 @@ function sleep(ms) {
         document.getElementById("phone").innerHTML = tel;
         document.getElementById("branch").innerHTML = branch;
     }
-    window.setTimeout("setDetails()", 200);
+    
 
     </script>
     

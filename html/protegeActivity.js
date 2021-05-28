@@ -116,6 +116,8 @@ async function getUserDetails()
         branch = user.branch;
         tel = user.phone;
 
+        setDetails();
+
         //alert("user ''"+userName+"'' is "+(user.admin == 1? "": "NOT an ")+"admin!");
         //document.getElementById("instNameHtml").innerHTML = userName;
         
@@ -192,5 +194,5 @@ function setDetails()
         document.getElementById("phone").innerHTML = tel;
         document.getElementById("branch").innerHTML = branch;
     }
-    window.setTimeout("setDetails()", 200);
+    
 
