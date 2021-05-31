@@ -743,7 +743,7 @@ app.get('/myTeam', async (req, res) =>
     totalHtml += `<font color="black"><b>'כנפיים של קרמבו'</b>`;
     totalHtml += `<br>תנועת נוער לצעירים<br>עם ובלי צרכים מיוחדים<br>טלפון:<span id='phone'></span><br>`;
     totalHtml += `<font color="brown">יוצרים יחד מקום ומשמעות לכל אדם</font></td>`;
-    totalHtml += `<td style="width:00px">&nbsp; &nbsp;<td><img style="width:100px; height:100px;" src="./krembo_logo.jpg">`;
+    totalHtml += `<td style="width:00px">&nbsp; &nbsp;<td><img style="width:100px; height:100px;" src="./html/krembo_logo.jpg">`;
     totalHtml += `</td><td style="width: 100px"></table></div>`;
   //<!-- HEADER part end -->
     

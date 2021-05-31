@@ -25,7 +25,7 @@ a:active {
 <body onLoad="getUserDetails();">
   <!-- HEADER part start -->
   <table style="width:100%; direction: rtl; height:10%; border-style: solid; border-color: #4a90e2; background: #4a90e2">
-    <tr><td><span style="color:blue" id="username">משתמש</span><br><span id="role">role</span> - <span id="branch">?</span></span><br>
+    <tr><td><span style="color:blue" id="username"></span><br><span id="role">role</span><br>
     <font color="black"><b>'כנפיים של קרמבו'</b>
     <br>תנועת נוער לצעירים<br>עם ובלי צרכים מיוחדים<br>טלפון:<span id='phone'></span><br>
     <font color="brown">יוצרים יחד מקום ומשמעות לכל אדם</font></td>
@@ -54,7 +54,7 @@ async function getUserDetails()
             userName = user.name;
             admin = user.admin;
             branch = user.branch;
-            role = user.role;
+            role = "סניף " + branch;// user.role;
             tel = user.phone;
             
             setDetails();
@@ -128,7 +128,7 @@ document.write(`<p><b><a id="link11" target="_blank" href="./sendMsg.html">דו�
 
 function setDetails()
     {
-        document.getElementById("username").innerHTML = userName;
+        //document.getElementById("username").innerHTML = userName;
         document.getElementById("role").innerHTML = role;
         document.getElementById("phone").innerHTML = tel;
         document.getElementById("branch").innerHTML = branch;
