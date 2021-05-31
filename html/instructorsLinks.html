@@ -121,7 +121,7 @@ function arrangeLinks()
 
 document.write(`<p><b><a href="http://${window.location.hostname}:${PORT}/changePassword" target="_blank">החלפת סיסמא!</a></b></p>`);
 document.write(`<span id="myMembersLink"><p><b><a href="http://${window.location.hostname}:${PORT}/myTeam" target="_blank">רשימת הפעילים בסניף שלי</a></b></p></span>`);
-document.write(`<p><b><a id=\"link8\" href="http://${window.location.hostname}:${PORT}/html/viewActivity.html?instID=${userId}" target="_blank">צפיה ברשימות ההשתתפות של הפעילים שלי!</a></b><b><br>(יצירת פעולה חדשה, ,תוכל לבצע בדף של הצפיה ברשימות ההשתתפות)<br></b></p>`);
+document.write(`<p><b><a id=\"link8\" href="http://${window.location.hostname}:${PORT}/html/viewActivity.html?instID=" target="_blank">צפיה ברשימות ההשתתפות של הפעילים שלי!</a></b><b><br>(יצירת פעולה חדשה, ,תוכל לבצע בדף של הצפיה ברשימות ההשתתפות)<br></b></p>`);
 /* document.write(`<p><b><a id="link1" target="_blank" href="http://${window.location.hostname}:${PORT}/html/ActiviyutTop.html?instID=">ערוך אקטיביות הפעילים שלי!</a></b></p>`); */
 document.write(`<p><b><a id="link11" target="_blank" href="./sendMsg.html">דווח על בעיה...!</a></b></p>`);
 //document.write(`<p><b><a id="link2" href="amazing.com" target="_blank">החזר אקטיביות של פעילים (לינק שצריך לעוף מפה!)</a></b></p>`);
@@ -131,7 +131,8 @@ function setDetails()
         //document.getElementById("username").innerHTML = userName;
         document.getElementById("role").innerHTML = role;
         document.getElementById("phone").innerHTML = tel;
-        document.getElementById("branch").innerHTML = branch;
+        //document.getElementById("branch").innerHTML = branch;
+        document.getElementById("link8").href += userId;
     }
 
 </script>
