@@ -2,7 +2,7 @@ const onAir = true;
 const REALLYSENDALLMAILS = true;
 var sendToDistrictManagers = true;
 var yanivReporter = true;
-var sendMails = false;
+var sendMails = true;
 const REALLYSENDALLMAILS_ONLY_INWARD = true;
 const AMOUNT_DAYS_OF_LAST = 14;
 const querystring = require('querystring');
@@ -880,24 +880,26 @@ app.get("/userName", async(req, res) =>
 // get a description of a user with a certain id {}name: , id: , branch: ,admin: ?}
 app.get("/userDetails", async(req, res) => 
 {
-    var rakaz = await query("select Name, Tel, Branch, Role, District from rakazim where ID="+req.user.id);
-
-    var rightBranch = ((rakaz[0].Branch !== "undefined") ? rakaz[0].Branch: "לא ידוע...");
-    //if (rakaz[0].Role == "מנהל מחוז")
+    var id = req.query.ID;
+    if (id == "")
     {
-        // get name of district
-        distNameSql = `select * from Branches where Name="`+rakaz[0].Branch+`"`;
-        dName = await query(distNameSql);
+        res.write("No user ID!");
+        res.send();
+        return;
     }
-    distName = 
-    res.write(`{ "name": "${rakaz[0].Name}", "id": "${req.user.id}", "role":"${rakaz[0].Role}", "District":"${dName[0].district}", "branch":"${rightBranch}", "phone": "${rakaz[0].Tel}"`);
+    var retJson = "";
+    var name = await query("select Name, Branch, Role from rakazim where ID="+id);
+    if (name.length > 0)
+    {
+        retJson = "{ \"name\": \""+name[0].Name+"\", \"id\": "+id + ", \"role\":\"  "+name[0].Role + "\",  \"branch\":"+((name[0].Branch!== 'undefined') ? "\""+name[0].Branch+"\"": 'unknown');
 
-    //test = "{ \"name\": \""+name[0].Name+"\", \"id\": "+req.user.id + ", \"role\":\""+name[0].role + "\", \"branch\":"+((name[0].Branch!== 'undefined') ? "\""+name[0].Branch+"\"": 'unknown');
+        logInUser = await query("select * from users where id="+id); 
+        retJson += ", \"admin\":"+((logInUser.length > 0)? logInUser[0].admin: "0") + `, "loggedUser":"${req.user.id}"}`;
+        res.write(retJson);
+        res.send();
 
-    admin = await query("select * from users where id="+req.user.id); 
-    res.write(", \"admin\":"+admin[0].admin+"}");
-    res.send();
-});
+        console.log("returned:\n"+retJson);
+    }
     
 
     
@@ -1060,7 +1062,7 @@ app.get('/rakazById', async (req, res) => {
 
     let ret = await query("select Name, Branch from rakazim where ID = " + instructor);
     res.header("Content-Type", "text/html; charset=utf-8");
-    res.write("{\"Name\":\" רכז/ת" + ret[0].Branch + "\", \"branch\":\"" + ret[0].Branch + "\"");
+    res.write("{\"Name\":\"" + ret[0].Name + "\", \"branch\":\"" + ret[0].Branch + "\"");
 
     // add 'admin' flag
     let AD = await query("select * from users where id=" + instructor);
@@ -1084,8 +1086,9 @@ app.get('/getInstDates', async (req, res) => {
     var op = "[";
     for (var row = 0; row < rows.length; row++) 
     {
-        if (row > 0) op += ", ";
+
         if (rows[row].Date == "") continue;
+        if (row > 0) op += ", ";
         var msg = await getParticipationSummary(instID, rows[row].Date);
         var datesSummary = JSON.parse(msg);
          op += "\{\"date\":\"" + rows[row].Date + "\", \"yes\":\""+datesSummary.participated+"\", \"no\":\""+datesSummary.notParticipated+"\"}";
@@ -1555,9 +1558,6 @@ app.get('/addParticipation', async (req, res) => {
                     lightSql = `update Participation SET participated="0" WHERE Activity="${noDouble[0].ActivityID}" AND ParticipantID="${id}"`;
                     lightData = await query(lightSql);
                 }
-                participant = queryParams[part];
-                updateSql = `update Participation set participated = "1" where Activity="267" AND ParticipantID="${id}"`;
-                await query(updateSql);
             }
     
             // run update query:
@@ -1734,7 +1734,7 @@ app.get('/getActivity', async (req, res) =>
                     newActivity.push(act);
                 }
             }
-            var msg = `found ${newActivity.length} new activity/ies!`;
+            var msg = `found ${newActivity.length} new activities!`;
             console.log(msg);
 
             // send a 'new activities' status report, ONCE per week!
@@ -1782,10 +1782,10 @@ app.get('/getActivity', async (req, res) =>
 
     rows = await query(sql);
 
-    if (rows.length == 0)
+    if (rows.length > 0)
     {
-        //retJson = `{"Name": ${rows[0].Name}, "type":${rows[0].Type}, "subtype":${rows[0].subtype}, "ActID":"${rows[0].ActivityID}", "point":"${point}"}`;
-        retJson = `{"Name":"<font color='red'><b>לא תועד!</b></font>", "type":"<font color='red'><b>לא תועד!</b></font>", "subtype":"<font color='red'><b>לא תועד!</b></font>", "point":"${point}"}, "ActID":"${rows[0].ActivityID}`;
+        retJson = `{"Name": "${rows[0].Name}", "type":"${rows[0].Type}", "subtype":"${rows[0].subtype}", "ActID":"${rows[0].ActivityID}", "point":"${point}"}`;
+        //retJson = `{"Name":"<font color='red'><b>לא תועד!</b></font>", "type":"<font color='red'><b>לא תועד!</b></font>", "subtype":"<font color='red'><b>לא תועד!</b></font>", "point":"${point}"}, "ActID":"${rows[0].ActivityID}`;
     }
     else
     {
@@ -1835,19 +1835,22 @@ app.get('/deleteActivity', async (req, res) => {
     
     try
     {
-        var actID = req.query.actid;
+     // fund the activity id to delete:
+       var date = req.query.date;
         var instID = req.query.instid;
+        var result = await query(`select * from Activity where Date='${date}' and InstructorID = '${instID}'`);
+        var actID = result[0].ActivityID;
 
         // get axt details:
         actDetails = "select * from Activity where ActivityID="+actID;
         var qRes = await query(actDetails);
-    var actName = qRes[0].Name;
+        var actName = qRes[0].Name;
 
         // FIRSTdelete all participation of this activity (due to FK...)
         removePartSql = "DELETE FROM Participation where Activity="+actID;
         await query(removePartSql);
 
-    removeActSql = "DELETE FROM Activity where ActivityID="+actID;
+        removeActSql = "DELETE FROM Activity where ActivityID="+actID;
         await query(removeActSql);
             
         var name = await query("select Name, Branch from rakazim where ID="+instID);
@@ -1856,15 +1859,15 @@ app.get('/deleteActivity', async (req, res) => {
         sendFormalMail(name, "המשתמש '"+name+"' מחק פעולה '"+actName+"'!", "מחיקת פעולה!", "");
 
         res.write(`{"msg":"הפעולה נמחקה בהצלחה!"}`);
-        res.end();
+        res.send();
     }
     catch(e)
     {
-        msg = `{"msg":"פעולת המחיקה נכשלה כי "+e.toString()}`;
-        res.write(`{msg=${msg}`);
-        res.end();
-    }
+        msg = `{"msg":"פעולת המחיקה נכשלה כי "`+e.toString() + "}";
+        console.log(`{msg=${msg}`);
+    };
 });
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/getParticipation', async (req, res) => {
     var partSof = new Array();

@@ -14,13 +14,15 @@
         instid = urlParams.get('instid');
         date = urlParams.get('date');
 
+        document.getElementById("instIDinput").value = instid;
+
         $.get("/getActivity?instID=" + instid + "&date=" + date, "", (actJson) => 
         {
 
             activity = JSON.parse(actJson);
             document.getElementById("ActivityName").value = activity.Name;
             actType = activity.type;
-            actID = activity.actID;
+            actID = activity.ActID;
 
             window.setTimeout(`document.getElementById("subtypeInput").value = "${activity.subtype}";`, 500);
 
@@ -89,9 +91,11 @@
             {
                 instructor = JSON.parse(json);
                 document.getElementById("instructor").innerHTML = instructor.Name;
+                document.getElementById("instIDinput").innerHTML = instructorID;
                 getMembersToClient(instid);
             });
             document.getElementById("instIDinput").value=instid;
+            //document.getElementById("instID").value=instid;
             document.getElementById("actDate").value = date;
         }
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -155,7 +159,7 @@
                     {
                         membersHtml += "<tr><td>"+m.name+"</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"ID-"+m.memberID+"\" name=\"ID-"+m.memberID+"\" type=\"checkbox\"></td></tr>";
                     });
-                    membersHtml += "</table>";
+                    membersHtml += "</table></form>";
                     document.getElementById("membersTable").innerHTML = membersHtml;
                     document.getElementById("submitButt").style.visibility = "visible";
                 }
@@ -225,7 +229,7 @@
                 if (res)
                 {
                     // delete this activity:
-                    $.get("/deleteActivity?actid=" + actID + "&instid=" + instid, "", function (resjson) 
+                    $.get("/deleteActivity?date=" + date + "&instid=" + instid, "", (resjson) =>
                     {
                         result = JSON.parse(resjson);
                         alert(result.msg);
@@ -234,6 +238,10 @@
                 }
             }
 
+            function alertDate()
+            {
+                alert("לא ניתן לשנות תאריך של פעולה! אם היא נוצרה בטעות, מחק אותה וצור חדשה...");
+            }
             function editAct()
             {
                 //res = confirm("אין אפשרות לעדכן משתתפים בפעולה קיימת! אם הייתה טעות בסימון המשתתפים, יש למחוק את הפעולה וליצור אותה  מ ח ד ש...");
@@ -247,11 +255,13 @@
             </script>
             </head>
             <body onLoad="init();">
-                ערוך פעולה של המדריך:<span id="selector"></span>
+                <span id="selector"></span>, ערוך את הפעולה:
                 <br>
                 <br></br></br>
                 <form id="addForm" action="/addParticipation" method="get">
-                תאריך הפעולה: <input type="date" id="actDate" name="actDate"></input>
+                    תאריך הפעולה: <input type="date" id="actDate" name="actDate"></input>
+                    <input name="instID" id="instIDinput" style="visibility: hidden"></input>
+                
                 <br><br></br></br>
                 <b>שם הפעולה:</b>
                 <input type="text" id="ActivityName" name="ActivityName" onkeypress="keyPress(event)">
@@ -274,12 +284,11 @@
                 <div id="membersTable"></div>
                 
                 
-                    <input id="instIDinput" name="instID" value="99" style="visibility: hidden"></input><br>
+                    <!--<input id="instIDinput" name="instID" style="visibility: hidden"></input><br>-->
                     <!--input type="button" id="markAllButton" onclick="selectAll()" value="סמן את כווווולם!"></input-->
                     <span id="membersTable">
                     </span>
                     <input id="submitButt" type="button" onclick="editAct()" style="visibility: hidden" value="עדכן!"></input>
                     <input type="button" id="erase" onclick="eraseAct();" style="visibility: visible" value="מחק פעולה זו!"></input>
-                </form>                
             </body>
     </html>
