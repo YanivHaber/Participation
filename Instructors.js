@@ -37,7 +37,8 @@ const { Console } = require('console');
         //For now only support Yaniv/king
 
         // check user\pw against db:
-        let ret = await query("select * from users where username = LOWER(\"" + username + "\")");
+        var getUserSql = "select * from users where username = LOWER(\"" + username + "\")";
+        let ret = await query(getUserSql);
 
         if (ret.length > 0 && ret[0].password == password) 
         {
@@ -773,7 +774,7 @@ app.get('/myTeam', async (req, res) =>
     for (var i = 0; i < layers.length; i++)
     {
         var lay = layers[i];
-        if (layers[i].layer == "") lay.layer = "לא הוגדרה שכבה";
+        if (layers[i].layer == "" || layers[i].layer == " ") lay.layer = "לא הוגדרה שכבה";
         if (lay.layer == null && i == 0) break;        
     
         var filterBy = false;
@@ -802,6 +803,7 @@ app.get('/myTeam', async (req, res) =>
 
     var q = "select * from members where Branch='" + dist + "'";
     if (layerFilter !== undefined && layerFilter != 'כולם') q += " AND layer='"+layerFilter+"'";
+    if (layerFilter.length == 0) q += " or layer = ' '";
     q += " order by FullName";
     //let rows = await query("Select * from members where Branch='"+req.query.Branch+"'");
     var retArray = "[";
