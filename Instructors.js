@@ -1009,9 +1009,14 @@ async function getParticipationSummary(instID, date)
     var ret = await query("select * from Participation where InstructorID="+instID+" and Date='"+date+"'  and Participated=1");
     var participated = ret.length;
 
+    // firsdt get branch of instructor:
+    branchQ = "select Branch from rakazim where ID="+instID;
+    var branchRes = await query(branchQ);
+var branch = branchRes[0].Branch;
+
     // now find TOTAL amount of users, then find 'not participated'...
     
-    var total = await query("select DISTINCT ParticipantID from participation where InstructorID = "+instID);
+    var total = await query("select * from members where Branch='"+branch+"' AND Active=1"); //"select DISTINCT ParticipantID from participation where InstructorID = "+instID);
     var notPart = total.length - participated;
     var instMems = await getInstMembers(instID);
     var retMsg = "{\"participated\": "+participated+", \"notParticipated\": "+(instMems.length - participated)+"}";
@@ -1359,7 +1364,7 @@ async function getInstMembers(instID)
         var dist = rows[0].Branch;
 
         var q = `select ID, FullName, Active from members where Branch=`;
-        q += `"`+dist+`"`;
+        q += `"`+dist+`" AND Active=1`;
        var retArray = new Array();
         try 
         {
@@ -1395,7 +1400,7 @@ app.get('/membersForInstructor', async (req, res) => {
     {
         var branch = rows[0].Branch;
 
-        var q = `select ID, FullName, Active from members where Branch="${branch}" order by FullName`;
+        var q = `select ID, FullName, Active from members where Branch="${branch}" AND (Active=1 or Active=TRUE) order by FullName`;
 
         var retArray = "[";
         try 
