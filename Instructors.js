@@ -392,7 +392,7 @@ async function sendFormalMail(userName, msgHtml, subject, mailaddress)
     {
         if ( REALLYSENDALLMAILS_ONLY_INWARD )
         {
-            mailaddress = "yaniv@krembo.org.il";//, gil@krembo.org.il";
+            mailaddress = "yaniv@krembo.org.il, gil@krembo.org.il";
         }
         else
         {
@@ -801,7 +801,7 @@ app.get('/myTeam', async (req, res) =>
     var dist = rows[0].Branch;
 
 
-    var q = "select * from members where Branch='" + dist + "'";
+    var q = "select * from members where Active=1 AND Branch='" + dist + "'";
     if (layerFilter !== undefined && layerFilter != 'כולם') q += " AND layer='"+layerFilter+"'";
     if (layerFilter.length == 0) q += " or layer = ' '";
     q += " order by FullName";
