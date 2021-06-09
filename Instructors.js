@@ -1400,7 +1400,7 @@ app.get('/membersForInstructor', async (req, res) => {
     {
         var branch = rows[0].Branch;
 
-        var q = `select ID, FullName, Active from members where Branch="${branch}" order by FullName`;
+        var q = `select ID, FullName, Active from members where Branch="${branch}" AND (Active=1 or Active=TRUE) order by FullName`;
 
         var retArray = "[";
         try 
