@@ -96,7 +96,10 @@ async function isCheckNow(dist)
     {
         distDate = new Date("8/27/1970");
     }
-    var diffFromLastCheck = Math.round(((new Date()).getTime() - weeklyDate.getTime()) / FULL_DAY);
+    distD = new Date(distDate);
+    properDate =  distD.getDate() + "/" + (distD.getMonth() + 1) + "/" + distD.getFullYear();
+
+    var diffFromLastCheck = Math.round(((new Date()).getTime() - new Date(properDate).getTime()) / FULL_DAY);
     if (diffFromLastCheck < 7) return false;
     else return true;
 }
@@ -154,7 +157,7 @@ async function checkMembersAvailability()
             var resultArray = new Array();
 
             // check dates of all members to assert availability in last 2 weeks!
-                            var today = Intl.DateTimeFormat('he-IL').format(new Date());
+            var today = Intl.DateTimeFormat('he-IL').format(new Date());
 
             for (i = 0; i < ret.length; i++)
             {
@@ -188,7 +191,6 @@ async function checkMembersAvailability()
                         returnResult += `{"ParticipantID": ${part.ParticipantID}}`;
                         resultArray.push(part.ParticipantID);
                     }
-                    continue;
                 }            
             }
 
@@ -248,10 +250,11 @@ async function alertMissingMembers(myDist, memberArr, instID)
     var instSql = "select * from rakazim where ID="+instID;
     var instRes = await query(instSql);
     var instName = instRes[0].Name;
+    var instMail = instRes[0].email;
 
     // now send alerting mail:
     var subject = `: שים לב: הפעילים הבאים לא היו כבר שבועיים או יותר!`;
-    var msgHtml = `היי,<br><b><font color='red'>מייל זה יישלח בעתיד ל ${distMgrName} מנהל מחוז ${myDistName}</font></b><br><br><font color='blue'>:לתשומת לבך הפעילים הבאים (של המדריך ${instName})  :לא הגיעו לפעילות בשבועיים האחרונים (בהן הייתה פעילות של הקבוצה)</font><br>`;
+    var msgHtml = `היי,<br><b><font color='red'>מייל זה נשלח בעתיד ל ${distMgrName} מנהל מחוז ${myDistName}</font></b><br><br><font color='blue'>:לתשומת לבך הפעילים הבאים (של המדריך ${instName})  :לא הגיעו לפעילות בשבועיים האחרונים (בהן הייתה פעילות של הקבוצה)</font><br>`;
 
     for (p = 0; p < missingNames.length; p++)
     {
@@ -261,7 +264,9 @@ async function alertMissingMembers(myDist, memberArr, instID)
     msgHtml += "<br><b>את/ה מכיר/ה את זה? אולי כדאי להרים טלפון לראות שהכל בסדר...<br>בהצלחה</b>";
 
     //TODO: change mail address to district manager!
-    sendFormalMail(instID, msgHtml, subject, "");
+        var distMgrMail = res[0].email;
+        var distMgrMail = res[0].email;
+    sendFormalMail(instID, msgHtml, subject, distMgrMail+ "; "+instMail);
 
     // write in DB the date of this check!
     var day = today.getDate();
@@ -797,7 +802,7 @@ app.get('/myTeam', async (req, res) =>
     // now get the instructor users
     console.log("getting members for logged-on instructor:" + req.user.id);
     
-    let rows = await query("select Branch from rakazim where ID = " + req.user.id);
+    let rows = await query("select Branch from rakazim where  Active=1 AND ID = " + req.user.id);
     var dist = rows[0].Branch;
 
 
