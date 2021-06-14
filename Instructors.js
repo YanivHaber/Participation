@@ -802,7 +802,7 @@ app.get('/myTeam', async (req, res) =>
     // now get the instructor users
     console.log("getting members for logged-on instructor:" + req.user.id);
     
-    let rows = await query("select Branch from rakazim where ID = " + req.user.id);
+    let rows = await query("select Branch from rakazim where  Active=1 AND ID = " + req.user.id);
     var dist = rows[0].Branch;
 
 
