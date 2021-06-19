@@ -7,9 +7,10 @@
     var date;
     var actID = "";
     var checkMembers = [];
-
-    function init()
+    
+    async function init()
     {
+        //sleep(1000);
         const urlParams = new URLSearchParams(window.location.search);
         instid = urlParams.get('instid');
         date = urlParams.get('date');
@@ -24,24 +25,34 @@
             actType = activity.type;
             actID = activity.ActID;
 
-            window.setTimeout(`document.getElementById("subtypeInput").value = "${activity.subtype}";`, 500);
+            document.getElementById("subtypeInput").value = "activity.subtype";
 
             options = document.getElementById("ActivityType").options;
             for (var i = 0; i < options.length - 1; i++)
             {
                 if (options[i].value == actType) options[i].selected = true;
             }
-        });
-        
+            checkMembersParticipation();
+        });        
+    }
+
+    async function checkMembersParticipation()
+    {    
         var parturl = "/getParticipation?instID="+instid;
         $.get(parturl, "", function (json2) 
         {
             part = JSON.parse(json2);
             
-            currDate = document.getElementById("actDate").value;
+            var queryString = window.location.search;
+            var urlParams = new URLSearchParams(queryString);
+            currDate = urlParams.get('date');
+
+            //currDate = document.getElementById("actDate").value;
+
             var currDateIdx;
             for (var i = 0; i < part.length; i++)
             {
+
                 hasDate = false;
                 for (d = 0; d < part[i].dates.length; d++)
                 {
@@ -49,21 +60,32 @@
                     {
                         currDateIdx = d;
                         hasDate = true;
+
+                        var box = document.getElementById("ID-"+part[i].memberID);
+                    if (box != null) 
+                        box.checked = part[i].dates[d].date.participated;
+
                     }
                 }
                 if (!hasDate) continue;
                 var name = part[i].member;
                 checkMembers[checkMembers.length] = {"name": name, "part": part[i].dates[currDateIdx].participated};
             }
-            window.setTimeout(`checkProperUsers()`, 2000);    
         });
         
             
         var instructor = "none";
         loadRakazim();
     }
-        function checkProperUsers()
+
+    async function sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+        async function checkProperUsers()
         {
+
+            //alert("בודק רשימות השתתפות...");
             var names = checkMembers;
             var arr = [];
             if (!Array.isArray(names))
@@ -72,13 +94,14 @@
              }
             names.forEach(object =>
             {
+                
                 var name = object.name;
                 var membersList = document.getElementById("memList").rows;
                 for (var j = 1; j < membersList.length; j++)
                 {
                     if (membersList[j].children[0].innerText == name) 
                     {
-                        membersList[j].children[1].children[0].checked = object.part;
+                        membersList[j].children[1].children[0].checked = (object.part)? true: false;
                         membersList[j].children[1].children[0].disabled = false;
                     }
                 }
@@ -112,7 +135,7 @@
             {
                 alert(e);
             }
-                loadData(rakazimArray);
+            loadData(rakazimArray);
         });
     }
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -166,7 +189,8 @@
                 catch(e)
                 {
                     alert(e);
-                }     
+                }  
+                window.setTimeout(`checkProperUsers()`, 1000);
             }
         
             function selectType(index)
@@ -184,27 +208,25 @@
             var allMarked = false;
             function selectAll()
             {
-                var mark = true;
                 var inputs = document.getElementsByTagName("input");
-                if (allMarked)
-                {
-                    mark = false;
-                    document.getElementById("markAllButton").value = "סמן את כווווולם!!";
-                }
-                else
-                {
-                    document.getElementById("markAllButton").value = "בטל סימון כווווולם!";
-                    mark = true;
-                }
                 for (x = 0 ; x < inputs.length ; x++)
                 {
                     myname = inputs[x].id;
                     if(myname.substring(0, 3) == "ID-")
                     {
-                        inputs[x].checked = mark;
+                        inputs[x].checked = !allMarked;
                     }
-                    allMarked = mark;
                 }
+                allMarked = !allMarked;
+                if (!allMarked)
+                {
+                    document.getElementById("markAllButton").value = "סמן את כווווולם!!";
+                }
+                else
+                {
+                    document.getElementById("markAllButton").value = "בטל סימון כווווולם!";
+                }
+
             }
 
             function checkChars(inp)
@@ -254,7 +276,7 @@
 
             </script>
             </head>
-            <body onLoad="init();">
+            <body onLoad="init(); ">
                 <span id="selector"></span>, ערוך את הפעולה:
                 <br>
                 <br></br></br>
@@ -285,7 +307,7 @@
                 
                 
                     <!--<input id="instIDinput" name="instID" style="visibility: hidden"></input><br>-->
-                    <!--input type="button" id="markAllButton" onclick="selectAll()" value="סמן את כווווולם!"></input-->
+                    <input type="button" id="markAllButton" onclick="selectAll()" value="סמן את כווווולם!"></input>
                     <span id="membersTable">
                     </span>
                     <input id="submitButt" type="button" onclick="editAct()" style="visibility: hidden" value="עדכן!"></input>

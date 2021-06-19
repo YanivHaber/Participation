@@ -1637,7 +1637,8 @@ app.get('/addParticipation', async (req, res) => {
     // TODO: find the branch email to send it to!
     let distMail = await query(`select email from Branches where Name="${name[0].Branch}"`);
     // send mail to yaniv! to be changed with line after!
-    sendFormalMail(name[0].Name, name[0].Name+` הוסיף בהצלחה את הפעולה '${actName}'`,  `הפעולה '${actName}' נוספה בהצלחה`, "${distMail[0].email}");
+    var toMail = distMail[0].email;
+    sendFormalMail(name[0].Name, name[0].Name+` הוסיף בהצלחה את הפעולה '${actName}'`,  `הפעולה '${actName}' נוספה בהצלחה`, toMail);
     // send mail to district
     //sendMail("user ID:"+name[0].Name, name[0].Name+` הוסיף בהצלחה את הפעולה '${actName}'`,  `הפעולה '${actName}' נוספה בהצלחה`, distMail[0].email);
     res.send();
@@ -1727,7 +1728,7 @@ app.get('/getActivity', async (req, res) =>
     try
     {
         check = await isCheckNow2();
-        if (true)
+        if (check)
         {
             // send weekly status report
             var lastWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
@@ -1914,16 +1915,17 @@ app.get('/getParticipation', async (req, res) => {
             }
 
             // get member name
-            var memberRes = await query("select FullName from members where ID = " + rows[u].ParticipantID);
+            var memberRes = await query("select FullName, ID from members where ID = " + rows[u].ParticipantID);
             if (memberRes.length > 0)
             {
                 if (u > 0 && retJson != "[") retJson += ", ";
                 var memberName = memberRes[0].FullName;
+                var memberID = memberRes[0].ID;
 
                 // now get all participation logged for that user and instructor
                 var memberPart = await query("select * from participation where InstructorID = " + instructor + " and ParticipantID = " + rows[u].ParticipantID)
 
-                retJson += "{\"member\":\"" + memberName + "\", \"dates\":[";
+                retJson += "{\"member\":\"" + memberName + "\", \"memberID\":\""+memberID+"\",  \"dates\":[";
                 //participSheet.set(u+2, 1, memberName);
                 for (d = 0; d < memberPart.length; d++) {
                     if (d > 0) retJson += ", ";
