@@ -157,6 +157,57 @@
                 }
             }
 
+            function filterMembers() 
+            {
+                numFound = 0;
+                var input, filter, tab, td, txtValue;
+                input = document.getElementById("searchName");
+                filter = input.value.toUpperCase();
+                tab = document.getElementById("membersTable");
+                td = tab.getElementsByTagName("td");
+                
+                var nameFound = false;
+
+                for (i = 0; i < td.length; i++) 
+                {
+                    txtValue = td[i].innerHTML;
+                    var tr = td[i].parentElement;
+                    if (!txtValue.trim().length) continue;
+                    if (txtValue.indexOf(filter) >= 0) 
+                    {
+                        nameFound = true;
+                        numFound++;
+                        
+                        document.getElementById("msgNumFound").innerHTML = "נמצאו <span id='numFound'></span> חניכים מתאימים. ";
+                        //td[i].parentElement.style.visibility = "visible";
+                        //td[i].style.visibility = "visible";
+                        tr.style.display = '';
+                        //td[i].style.visibile = "true";
+                    } 
+                    else 
+                    {
+                        if (nameFound)
+                        {
+                            // this is probably the checkbox of the found name. leave it be...
+                            nameFound = false;
+                        }
+                        else
+                        {
+                            tr.style.display = 'none';
+                            }
+                    }
+                }
+                if (filter == "") document.getElementById("msgNumFound").innerHTML = "";
+                else
+                {
+                    var msg = "";
+                    if (numFound == 1) msg = "נמצא חניך אחד!";
+                    else msg = "נמצאו "+numFound+" חניכים מתאימים. ";
+                    document.getElementById("msgNumFound").innerText = msg; 
+                }
+            }
+
+
             function createNewActivity()
             {
                 var allSet = false;
@@ -180,19 +231,21 @@
                 if (date.value != "" && actName.value != "" && checkedMembers) allSet = true;
                 
                 if (allSet)
+                {
                     document.getElementById("addForm").submit();
+                }
+                else
+                {
+                    if (!checkedMembers)
+                    {
+                        alert("לא סימנת אף חניך שהשתתף בפעולה . סמן פעילים שהשתתפו ורק אז לחץ על 'עדכן'...");
+                    }
                     else
                     {
-                        if (!checkedMembers)
-                        {
-                            alert("לא סימנת אף חניך שהשתתף בפעולה . סמן פעילים שהשתתפו ורק אז לחץ על 'עדכן'...");
-                        }
-                        else
-                        {
-                            alert("אנא מלא\\י את כל הטופס לפני ניסיון עדכון הפרטים!");
-                        }
-                        return false;
+                        alert("אנא מלא\\י את כל הטופס לפני ניסיון עדכון הפרטים!");
                     }
+                    return false;
+                }
             }
             </script>
             </head>
@@ -218,7 +271,8 @@
                   <b>מיקום \ מהות:</b><input type="text" name="subtype" onkeypress="keyPress(event)"/></div>
                 <br>
                 <br>
-                <b><span id="memberMessages">הפעילים של מדריך זה:</b>
+                <b><span id="memberMessages">הפעילים של מדריך זה:</b><br><b><font color="red">חפש חניך:</font></b><input type="text" id="searchName" onkeyup="filterMembers()" placeholder="חפש שם..." title="הקלד שם...">
+                    <br><span id="msgNumFound"></span>
 
                 <div id="membersTable"></div></span>
                 
