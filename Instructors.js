@@ -405,6 +405,10 @@ async function sendFormalMail(userName, msgHtml, subject, mailaddress)
             return;
         }
     }
+    var fs = require('fs');
+    var ini = require('ini');
+    var config = ini.parse(fs.readFileSync('./participation.ini', 'utf-8'));
+    var mailPass = config.frommail.pass;
  
     var nodemailer = require('nodemailer');
 
@@ -419,7 +423,7 @@ async function sendFormalMail(userName, msgHtml, subject, mailaddress)
         },
         auth: {
             user: 'participation@krembo.org.il',
-            pass: 'Yaniv123456'
+            pass: mailPass
         }
     });
 
