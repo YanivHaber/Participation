@@ -11,7 +11,7 @@
     "crypto": "^1.0.1",
     "csv-writer": "^1.6.0",
     "excel4node": "^1.7.2",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "express-session": "^1.17.0",
     "node-outlook": "^1.1.8",
     "nodejs-nodemailer-outlook": "^1.2.3",
